@@ -52,7 +52,7 @@ export async function POST(request: Request) {
 
     // Update the user's cliTokensRevokedBefore to now
     // This will invalidate all tokens issued before this moment
-    let updateResult: { cliTokensRevokedBefore: Date | null };
+    let updateResult = null;
     try {
       updateResult = await prisma.user.update({
         where: { id: session.user.id },
