@@ -107,12 +107,14 @@ export async function verifyCliToken(
       throw new Error("User not found");
     }
 
-    // If user has set cliTokensRevokedBefore, check if this token was issued before that
-    if (user.cliTokensRevokedBefore) {
-      const tokenIssuedAt = new Date(typedPayload.iat * 1000);
-      if (tokenIssuedAt <= user.cliTokensRevokedBefore) {
-        throw new Error("Token has been revoked");
-      }
+    // Check token revocation with constant-time behavior to mitigate timing attacks
+    // Always perform the comparison, even if cliTokensRevokedBefore is null
+    const tokenIssuedAt = new Date(typedPayload.iat * 1000);
+    const revokedBefore = user.cliTokensRevokedBefore || new Date(0);
+
+    // Both branches should take similar time
+    if (tokenIssuedAt <= revokedBefore) {
+      throw new Error("Token has been revoked");
     }
 
     return {
