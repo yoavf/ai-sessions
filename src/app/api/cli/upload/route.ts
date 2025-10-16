@@ -81,8 +81,27 @@ export async function POST(request: Request) {
       );
     }
 
-    // Parse request body
-    const { fileData: originalFileData, title } = await request.json();
+    // Parse request body with explicit error handling
+    let body: { fileData?: unknown; title?: string };
+    try {
+      body = await request.json();
+    } catch (jsonError) {
+      console.warn("Invalid JSON in CLI upload request", {
+        userId,
+        error:
+          jsonError instanceof Error ? jsonError.message : String(jsonError),
+      });
+      return NextResponse.json(
+        {
+          error: "Invalid JSON",
+          message:
+            "Request body must be valid JSON. Please check your request format.",
+        },
+        { status: 400 },
+      );
+    }
+
+    const { fileData: originalFileData, title } = body;
 
     if (!originalFileData || typeof originalFileData !== "string") {
       return NextResponse.json(
