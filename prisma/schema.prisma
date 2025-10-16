@@ -66,14 +66,16 @@ model VerificationToken {
 }
 
 model Transcript {
-  id          String   @id @default(cuid())
-  userId      String
-  secretToken String   @unique @default(cuid())
-  title       String?
-  source      String   @default("claude-code") // AI source: "claude-code", "codex", "gemini-cli", etc.
-  fileData    String   @db.Text
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  userId        String
+  secretToken   String   @unique @default(cuid())
+  title         String?
+  source        String   @default("claude-code") // AI source: "claude-code", "codex", "gemini-cli", etc.
+  fileData      String   @db.Text
+  messageCount  Int      @default(0) // Cached count of messages in transcript
+  fileSizeBytes Int      @default(0) // Cached file size in bytes
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

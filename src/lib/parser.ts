@@ -107,6 +107,90 @@ export function isUuidOrSessionId(title: string | null | undefined): boolean {
   return uuidPattern.test(title);
 }
 
+/**
+ * Map raw model IDs to friendly display names
+ * Returns null for synthetic/invalid models
+ *
+ * Examples:
+ * - "claude-opus-4-20250514" → "Claude Opus 4"
+ * - "claude-sonnet-4-5-20250929" → "Claude Sonnet 4.5"
+ * - "claude-3-5-sonnet-20241022" → "Claude Sonnet 3.5"
+ */
+function formatModelName(modelId: string): string | null {
+  // Ignore synthetic model entries
+  if (modelId === "<synthetic>" || modelId.includes("synthetic")) {
+    return null;
+  }
+
+  // Extract model family and version from ID
+  // Pattern: claude-{family}-{version}-{date} or claude-{version}-{family}-{date}
+  const patterns = [
+    // Pattern: claude-opus-4-20250514 → Claude Opus 4
+    /^claude-(opus|sonnet|haiku)-(\d+(?:-\d+)?)-\d{8}$/,
+    // Pattern: claude-3-5-sonnet-20241022 → Claude Sonnet 3.5
+    /^claude-(\d+)-(\d+)-(opus|sonnet|haiku)-\d{8}$/,
+  ];
+
+  for (const pattern of patterns) {
+    const match = modelId.match(pattern);
+    if (match) {
+      if (pattern === patterns[0]) {
+        // claude-{family}-{version}-{date}
+        const [, family, version] = match;
+        const familyCapitalized =
+          family.charAt(0).toUpperCase() + family.slice(1);
+        const versionFormatted = version.replace("-", ".");
+        return `Claude ${familyCapitalized} ${versionFormatted}`;
+      }
+      if (pattern === patterns[1]) {
+        // claude-{major}-{minor}-{family}-{date}
+        const [, major, minor, family] = match;
+        const familyCapitalized =
+          family.charAt(0).toUpperCase() + family.slice(1);
+        return `Claude ${familyCapitalized} ${major}.${minor}`;
+      }
+    }
+  }
+
+  // Fallback: return the original ID if no pattern matches
+  return modelId;
+}
+
+/**
+ * Calculate model usage statistics from transcript messages
+ */
+export function calculateModelStats(messages: TranscriptLine[]): {
+  model: string;
+  count: number;
+  percentage: number;
+}[] {
+  const modelCounts = new Map<string, number>();
+  let totalWithModel = 0;
+
+  // Count messages by model (only assistant messages with model metadata)
+  for (const line of messages) {
+    if (line.message?.role === "assistant" && line.message.model) {
+      const friendlyName = formatModelName(line.message.model);
+      // Skip synthetic or invalid model names
+      if (friendlyName) {
+        modelCounts.set(friendlyName, (modelCounts.get(friendlyName) || 0) + 1);
+        totalWithModel++;
+      }
+    }
+  }
+
+  // Convert to array and calculate percentages
+  const stats = Array.from(modelCounts.entries())
+    .map(([model, count]) => ({
+      model,
+      count,
+      percentage: Math.round((count / totalWithModel) * 100),
+    }))
+    .sort((a, b) => b.count - a.count); // Sort by count descending
+
+  return stats;
+}
+
 export function parseJSONL(content: string): ParsedTranscript {
   const lines = content.trim().split("\n");
   const messages: TranscriptLine[] = [];

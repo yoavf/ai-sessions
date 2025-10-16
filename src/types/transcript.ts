@@ -44,6 +44,7 @@ export type ContentBlock =
 export interface Message {
   role: "user" | "assistant";
   content: string | ContentBlock[];
+  model?: string; // AI model used for this message (e.g., "claude-sonnet-4-20250514")
 }
 
 export interface TranscriptLine {

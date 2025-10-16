@@ -7,6 +7,7 @@ import { Message, MessageContent } from "@/components/ai-elements/message";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { addCsrfToken, useCsrfToken } from "@/hooks/useCsrfToken";
+import { calculateModelStats } from "@/lib/parser";
 import type { ParsedTranscript } from "@/types/transcript";
 import FloatingTOC from "./FloatingTOC";
 import MessageRenderer from "./MessageRenderer";
@@ -221,6 +222,12 @@ export default function TranscriptViewer({
   ).length;
   const totalMessages = userMessageCount + assistantMessageCount;
 
+  // Calculate model usage statistics
+  const modelStats = useMemo(
+    () => calculateModelStats(transcript.messages),
+    [transcript.messages],
+  );
+
   // Extract user messages for TOC (only real user messages, excluding system messages and tool results)
   const tocItems = useMemo(() => {
     return transcript.messages
@@ -366,6 +373,22 @@ export default function TranscriptViewer({
                 >
                   {totalMessages} message{totalMessages !== 1 ? "s" : ""}
                 </span>
+                {modelStats.length > 0 && (
+                  <>
+                    <span className="hidden sm:inline">•</span>
+                    <span
+                      className="cursor-help"
+                      title={modelStats
+                        .map((s) => `${s.model}: ${s.count} messages`)
+                        .join(", ")}
+                    >
+                      Models:{" "}
+                      {modelStats
+                        .map((s) => `${s.model} (${s.percentage}%)`)
+                        .join(", ")}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-2">

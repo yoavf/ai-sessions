@@ -15,6 +15,7 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Use cached metadata fields instead of parsing fileData
     const transcripts = await prisma.transcript.findMany({
       where: {
         userId: session.user.id,
@@ -24,25 +25,23 @@ export async function GET() {
         secretToken: true,
         title: true,
         createdAt: true,
-        fileData: true,
+        messageCount: true,
+        fileSizeBytes: true,
       },
       orderBy: {
         createdAt: "desc",
       },
     });
 
-    // Parse each transcript to get message count
-    const transcriptsWithMetadata = transcripts.map((transcript) => {
-      const parsed = parseJSONL(transcript.fileData);
-      return {
-        id: transcript.id,
-        secretToken: transcript.secretToken,
-        title: transcript.title,
-        createdAt: transcript.createdAt,
-        messageCount: parsed.metadata.messageCount,
-        fileSize: Buffer.byteLength(transcript.fileData, "utf8"),
-      };
-    });
+    // Return cached metadata directly (no parsing needed!)
+    const transcriptsWithMetadata = transcripts.map((transcript) => ({
+      id: transcript.id,
+      secretToken: transcript.secretToken,
+      title: transcript.title,
+      createdAt: transcript.createdAt,
+      messageCount: transcript.messageCount,
+      fileSize: transcript.fileSizeBytes,
+    }));
 
     return NextResponse.json(transcriptsWithMetadata);
   } catch (error) {
@@ -115,9 +114,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate JSONL format
+    // Validate JSONL format and extract metadata
+    let messageCount = 0;
     try {
-      parseJSONL(originalFileData);
+      const parsed = parseJSONL(originalFileData);
+      messageCount = parsed.metadata.messageCount;
     } catch (_err) {
       return NextResponse.json(
         { error: "Invalid JSONL format" },
@@ -154,6 +155,8 @@ export async function POST(request: Request) {
 
     // Create transcript with unique secret token
     const secretToken = nanoid(16);
+    // Recalculate file size for final data (may have been scrubbed)
+    const finalFileSizeBytes = Buffer.byteLength(fileData, "utf8");
 
     const transcript = await prisma.transcript.create({
       data: {
@@ -162,6 +165,8 @@ export async function POST(request: Request) {
         title: title || "Untitled Transcript",
         source: "claude-code", // Web uploads are from Claude Code browser extension
         fileData,
+        messageCount,
+        fileSizeBytes: finalFileSizeBytes,
       },
     });
 
