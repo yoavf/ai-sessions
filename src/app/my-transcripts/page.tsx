@@ -91,6 +91,17 @@ export default function MyTranscriptsPage() {
     }
   }, [cliToken]);
 
+  // Scroll to hash anchor after data loads
+  useEffect(() => {
+    if (!loading && window.location.hash) {
+      const id = window.location.hash.substring(1);
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  }, [loading]);
+
   async function handleDelete(secretToken: string) {
     if (!confirm("Are you sure you want to delete this transcript?")) {
       return;
@@ -347,7 +358,8 @@ export default function MyTranscriptsPage() {
               )}
 
               {!loading && !error && (
-                <Card className="mt-12">
+                // biome-ignore lint/correctness/useUniqueElementIds: Static ID needed for anchor link from help page
+                <Card className="mt-12" id="cli-access">
                   <CardContent className="p-6">
                     <div className="flex items-center gap-2 mb-4">
                       <Terminal className="w-5 h-5" />
@@ -457,7 +469,11 @@ export default function MyTranscriptsPage() {
               )}
 
               {!loading && !error && (
-                <Card className="mt-12 border-2 border-destructive/20">
+                // biome-ignore lint/correctness/useUniqueElementIds: Static ID needed for anchor link from help page
+                <Card
+                  className="mt-12 border-2 border-destructive/20"
+                  id="delete-account"
+                >
                   <CardContent className="p-6">
                     <h2 className="text-lg font-semibold text-destructive mb-2">
                       Delete Account

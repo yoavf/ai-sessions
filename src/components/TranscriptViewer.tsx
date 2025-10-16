@@ -282,10 +282,10 @@ export default function TranscriptViewer({
     <div className="min-h-screen bg-background">
       <div className="border-b bg-background shadow-sm">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex-1 min-w-0">
               {isEditingTitle ? (
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                   <Input
                     type="text"
                     value={editedTitle}
@@ -297,27 +297,29 @@ export default function TranscriptViewer({
                         setEditedTitle(title);
                       }
                     }}
-                    className="text-2xl font-bold h-auto"
+                    className="text-xl sm:text-2xl font-bold h-auto"
                     disabled={isSaving}
                   />
-                  <Button
-                    onClick={handleTitleSave}
-                    disabled={isSaving}
-                    size="sm"
-                  >
-                    {isSaving ? "Saving..." : "Save"}
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setIsEditingTitle(false);
-                      setEditedTitle(title);
-                    }}
-                    disabled={isSaving}
-                    variant="outline"
-                    size="sm"
-                  >
-                    Cancel
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleTitleSave}
+                      disabled={isSaving}
+                      size="sm"
+                    >
+                      {isSaving ? "Saving..." : "Save"}
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setIsEditingTitle(false);
+                        setEditedTitle(title);
+                      }}
+                      disabled={isSaving}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
                 </div>
               ) : isOwner ? (
                 <div
@@ -325,15 +327,17 @@ export default function TranscriptViewer({
                   onClick={() => setIsEditingTitle(true)}
                   title="Click to edit title"
                 >
-                  <h1 className="text-2xl font-bold group-hover:text-muted-foreground">
+                  <h1 className="text-xl sm:text-2xl font-bold group-hover:text-muted-foreground break-words">
                     {title}
                   </h1>
-                  <Pencil className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute -right-6 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <Pencil className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute -right-6 top-1/2 -translate-y-1/2 pointer-events-none hidden sm:block" />
                 </div>
               ) : (
-                <h1 className="text-2xl font-bold">{title}</h1>
+                <h1 className="text-xl sm:text-2xl font-bold break-words">
+                  {title}
+                </h1>
               )}
-              <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-2 text-xs sm:text-sm text-muted-foreground">
                 {githubUsername && (
                   <>
                     <a
@@ -351,11 +355,11 @@ export default function TranscriptViewer({
                       )}
                       <span className="hover:underline">{githubUsername}</span>
                     </a>
-                    <span>•</span>
+                    <span className="hidden sm:inline">•</span>
                   </>
                 )}
                 <span>{timeAgo}</span>
-                <span>•</span>
+                <span className="hidden sm:inline">•</span>
                 <span
                   className="cursor-help"
                   title={`${userMessageCount} user message${userMessageCount !== 1 ? "s" : ""}, ${assistantMessageCount} assistant message${assistantMessageCount !== 1 ? "s" : ""}`}
@@ -369,18 +373,28 @@ export default function TranscriptViewer({
                 onClick={handleShareClick}
                 variant={copied ? "default" : "default"}
                 className={copied ? "bg-green-600 hover:bg-green-700" : ""}
+                size="sm"
               >
-                {copied ? <Check /> : <Share2 />}
-                {copied ? "Copied!" : "Share"}
+                {copied ? (
+                  <Check className="w-4 h-4" />
+                ) : (
+                  <Share2 className="w-4 h-4" />
+                )}
+                <span className="hidden sm:inline">
+                  {copied ? "Copied!" : "Share"}
+                </span>
               </Button>
               {isOwner && (
                 <Button
                   onClick={handleDelete}
                   disabled={isDeleting}
                   variant="destructive"
+                  size="sm"
                 >
-                  <Trash2 />
-                  {isDeleting ? "Deleting..." : "Delete"}
+                  <Trash2 className="w-4 h-4" />
+                  <span className="hidden sm:inline">
+                    {isDeleting ? "Deleting..." : "Delete"}
+                  </span>
                 </Button>
               )}
             </div>

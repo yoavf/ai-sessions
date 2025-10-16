@@ -1,10 +1,9 @@
 "use client";
 
-import { LogOut } from "lucide-react";
+import { HelpCircle, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 
 interface SiteHeaderProps {
@@ -35,7 +34,12 @@ export function SiteHeader({ session }: SiteHeaderProps) {
               <Link href="/my-transcripts">My Transcripts</Link>
             </Button>
           )}
-          <ThemeToggle />
+          <Button variant="ghost" size="icon" asChild title="Help">
+            <Link href="/help">
+              <HelpCircle className="h-[1.2rem] w-[1.2rem]" />
+              <span className="sr-only">Help</span>
+            </Link>
+          </Button>
           {session && (
             <Button
               variant="ghost"
