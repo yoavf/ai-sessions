@@ -46,46 +46,91 @@ if (
   );
 }
 
-export async function checkUploadRateLimit(
-  userId: string,
-): Promise<{ success: boolean; limit?: number; remaining?: number }> {
+export async function checkUploadRateLimit(userId: string): Promise<{
+  success: boolean;
+  limit?: number;
+  remaining?: number;
+  error?: string;
+}> {
   if (!uploadRateLimit) {
     // Rate limiting not configured - allow request
     return { success: true };
   }
 
-  const { success, limit, remaining } = await uploadRateLimit.limit(
-    `upload:${userId}`,
-  );
-  return { success, limit, remaining };
+  try {
+    const { success, limit, remaining } = await uploadRateLimit.limit(
+      `upload:${userId}`,
+    );
+    return { success, limit, remaining };
+  } catch (error) {
+    // Redis/Upstash error - FAIL CLOSED for security
+    console.error("Upload rate limit check failed (Redis error):", error, {
+      userId,
+      errorType: error instanceof Error ? error.constructor.name : "Unknown",
+    });
+    return {
+      success: false,
+      error: "Rate limit service unavailable",
+    };
+  }
 }
 
-export async function checkViewRateLimit(
-  identifier: string,
-): Promise<{ success: boolean; limit?: number; remaining?: number }> {
+export async function checkViewRateLimit(identifier: string): Promise<{
+  success: boolean;
+  limit?: number;
+  remaining?: number;
+  error?: string;
+}> {
   if (!viewRateLimit) {
     // Rate limiting not configured - allow request
     return { success: true };
   }
 
-  const { success, limit, remaining } = await viewRateLimit.limit(
-    `view:${identifier}`,
-  );
-  return { success, limit, remaining };
+  try {
+    const { success, limit, remaining } = await viewRateLimit.limit(
+      `view:${identifier}`,
+    );
+    return { success, limit, remaining };
+  } catch (error) {
+    // Redis/Upstash error - FAIL CLOSED for security
+    console.error("View rate limit check failed (Redis error):", error, {
+      identifier,
+      errorType: error instanceof Error ? error.constructor.name : "Unknown",
+    });
+    return {
+      success: false,
+      error: "Rate limit service unavailable",
+    };
+  }
 }
 
-export async function checkAccountRateLimit(
-  userId: string,
-): Promise<{ success: boolean; limit?: number; remaining?: number }> {
+export async function checkAccountRateLimit(userId: string): Promise<{
+  success: boolean;
+  limit?: number;
+  remaining?: number;
+  error?: string;
+}> {
   if (!accountRateLimit) {
     // Rate limiting not configured - allow request
     return { success: true };
   }
 
-  const { success, limit, remaining } = await accountRateLimit.limit(
-    `account:${userId}`,
-  );
-  return { success, limit, remaining };
+  try {
+    const { success, limit, remaining } = await accountRateLimit.limit(
+      `account:${userId}`,
+    );
+    return { success, limit, remaining };
+  } catch (error) {
+    // Redis/Upstash error - FAIL CLOSED for security
+    console.error("Account rate limit check failed (Redis error):", error, {
+      userId,
+      errorType: error instanceof Error ? error.constructor.name : "Unknown",
+    });
+    return {
+      success: false,
+      error: "Rate limit service unavailable",
+    };
+  }
 }
 
 /**

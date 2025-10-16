@@ -25,16 +25,24 @@ export async function POST(request: Request) {
     // Rate limit: 5 token generations per hour per user
     const rateLimitResult = await checkAccountRateLimit(session.user.id);
     if (!rateLimitResult.success) {
+      // Determine if this is a rate limit exceeded or infrastructure error
+      const statusCode = rateLimitResult.error ? 503 : 429;
+      const errorMessage = rateLimitResult.error
+        ? rateLimitResult.error
+        : "Rate limit exceeded";
+      const userMessage = rateLimitResult.error
+        ? "Rate limit service is temporarily unavailable. Please try again later."
+        : "You can generate up to 5 CLI tokens per hour. Please try again later.";
+
       return NextResponse.json(
         {
-          error: "Rate limit exceeded",
-          message:
-            "You can generate up to 5 CLI tokens per hour. Please try again later.",
+          error: errorMessage,
+          message: userMessage,
           limit: rateLimitResult.limit,
           remaining: 0,
         },
         {
-          status: 429,
+          status: statusCode,
           headers: {
             "X-RateLimit-Limit": String(rateLimitResult.limit || 5),
             "X-RateLimit-Remaining": "0",

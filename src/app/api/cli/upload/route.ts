@@ -55,16 +55,24 @@ export async function POST(request: Request) {
     // Rate limit: 10 uploads per hour per user (same as web)
     const rateLimitResult = await checkUploadRateLimit(userId);
     if (!rateLimitResult.success) {
+      // Determine if this is a rate limit exceeded or infrastructure error
+      const statusCode = rateLimitResult.error ? 503 : 429;
+      const errorMessage = rateLimitResult.error
+        ? rateLimitResult.error
+        : "Rate limit exceeded";
+      const userMessage = rateLimitResult.error
+        ? "Rate limit service is temporarily unavailable. Please try again later."
+        : "You can upload up to 10 transcripts per hour. Please try again later.";
+
       return NextResponse.json(
         {
-          error: "Rate limit exceeded",
-          message:
-            "You can upload up to 10 transcripts per hour. Please try again later.",
+          error: errorMessage,
+          message: userMessage,
           limit: rateLimitResult.limit,
           remaining: 0,
         },
         {
-          status: 429,
+          status: statusCode,
           headers: {
             "X-RateLimit-Limit": String(rateLimitResult.limit || 10),
             "X-RateLimit-Remaining": "0",

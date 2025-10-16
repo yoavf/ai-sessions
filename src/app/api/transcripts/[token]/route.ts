@@ -15,13 +15,22 @@ export async function GET(
     const clientIp = getClientIp(request);
     const rateLimitResult = await checkViewRateLimit(clientIp);
     if (!rateLimitResult.success) {
+      // Determine if this is a rate limit exceeded or infrastructure error
+      const statusCode = rateLimitResult.error ? 503 : 429;
+      const errorMessage = rateLimitResult.error
+        ? rateLimitResult.error
+        : "Rate limit exceeded";
+      const userMessage = rateLimitResult.error
+        ? "Rate limit service is temporarily unavailable. Please try again later."
+        : "Too many requests. Please try again later.";
+
       return NextResponse.json(
         {
-          error: "Rate limit exceeded",
-          message: "Too many requests. Please try again later.",
+          error: errorMessage,
+          message: userMessage,
         },
         {
-          status: 429,
+          status: statusCode,
           headers: {
             "X-RateLimit-Limit": String(rateLimitResult.limit || 100),
             "X-RateLimit-Remaining": "0",
