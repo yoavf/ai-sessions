@@ -18,7 +18,7 @@ export default function TermsPage() {
             Terms of Service
           </h1>
           <p className="text-sm text-gray-600 mb-8">
-            Last updated: {new Date().toLocaleDateString("en-US")}
+            Last updated: October 16, 2025
           </p>
 
           <div className="prose prose-gray max-w-none">
@@ -30,6 +30,11 @@ export default function TermsPage() {
                 By accessing or using AI Sessions ("the Service"), you agree to
                 be bound by these Terms of Service ("Terms"). If you do not
                 agree to these Terms, you may not use the Service.
+              </p>
+              <p className="text-gray-700 mb-4">
+                <strong>Age Requirement:</strong> You must be at least 13 years
+                old to use this Service. By using AI Sessions, you represent and
+                warrant that you are at least 13 years of age.
               </p>
               <p className="text-gray-700 mb-4">
                 We reserve the right to modify these Terms at any time. Changes
@@ -220,10 +225,6 @@ export default function TermsPage() {
                 <li>
                   Upload excessive amounts of data to abuse storage resources
                 </li>
-                <li>
-                  Use the Service for any commercial purpose without explicit
-                  permission
-                </li>
               </ul>
             </section>
 
@@ -329,8 +330,16 @@ export default function TermsPage() {
                 <li>Your physical or electronic signature</li>
               </ul>
               <p className="text-gray-700">
-                Send DMCA notices to us via GitHub issues. Repeat infringers
-                will have their accounts terminated.
+                Send DMCA notices to us by opening an issue at{" "}
+                <a
+                  href="https://github.com/yoavf/ai-sessions/issues"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-700 underline"
+                >
+                  github.com/yoavf/ai-sessions/issues
+                </a>
+                . Repeat infringers will have their accounts terminated.
               </p>
             </section>
 
@@ -390,14 +399,22 @@ export default function TermsPage() {
               <p className="text-gray-700 mb-4">
                 You are solely responsible for maintaining backup copies of any
                 content you upload. We are not responsible for backing up your
-                content and may delete it at any time without notice, including
-                when you delete your account, when we terminate accounts for
-                Terms violations, due to technical issues, or service
-                discontinuation.
+                content. We may delete content without prior notice in the
+                following circumstances:
               </p>
+              <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
+                <li>When you delete your account or individual transcripts</li>
+                <li>
+                  When we terminate accounts for violations of these Terms
+                </li>
+                <li>Due to technical issues or service discontinuation</li>
+                <li>
+                  In response to legal requirements or valid legal requests
+                </li>
+              </ul>
               <p className="text-gray-700">
                 We assume no liability for any deletion, loss, or corruption of
-                your content.
+                your content. Always maintain your own backups.
               </p>
             </section>
 
@@ -459,18 +476,14 @@ export default function TermsPage() {
               </h2>
               <p className="text-gray-700 mb-4">
                 These Terms shall be governed by and construed in accordance
-                with the laws of the jurisdiction where the Service operator is
-                located, without regard to conflict of law principles.
+                with the laws of the State of Israel, without regard to conflict
+                of law principles.
               </p>
               <p className="text-gray-700 mb-4">
                 Any disputes arising from these Terms or your use of the Service
-                shall be resolved through binding arbitration, except that
-                either party may seek injunctive relief in court for violations
-                of intellectual property rights or confidentiality obligations.
-              </p>
-              <p className="text-gray-700">
-                You waive any right to a jury trial or to participate in a class
-                action lawsuit.
+                shall be subject to the exclusive jurisdiction of the courts
+                located in Tel-Aviv, Israel. Both parties consent to the
+                jurisdiction and venue of such courts.
               </p>
             </section>
 
@@ -480,8 +493,16 @@ export default function TermsPage() {
               </h2>
               <p className="text-gray-700 mb-4">
                 If you believe content on the Service violates these Terms,
-                please report it by opening an issue in our GitHub repository.
-                Include:
+                please report it by opening an issue at{" "}
+                <a
+                  href="https://github.com/yoavf/ai-sessions/issues"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-700 underline"
+                >
+                  github.com/yoavf/ai-sessions/issues
+                </a>
+                . Include:
               </p>
               <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
                 <li>The secret URL of the offending content</li>
@@ -524,7 +545,16 @@ export default function TermsPage() {
               </h2>
               <p className="text-gray-700">
                 For questions about these Terms, please contact us by opening an
-                issue in our GitHub repository.
+                issue at{" "}
+                <a
+                  href="https://github.com/yoavf/ai-sessions/issues"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-700 underline"
+                >
+                  github.com/yoavf/ai-sessions/issues
+                </a>
+                .
               </p>
             </section>
 

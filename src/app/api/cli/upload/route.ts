@@ -1,73 +1,59 @@
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { checkCsrf } from "@/lib/csrf";
 import { formatDlpFindings, scanForSensitiveData } from "@/lib/dlp";
+import { verifyCliToken } from "@/lib/jwt";
 import { parseJSONL } from "@/lib/parser";
 import { prisma } from "@/lib/prisma";
 import { checkUploadRateLimit } from "@/lib/rate-limit";
 
-export async function GET() {
-  try {
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const transcripts = await prisma.transcript.findMany({
-      where: {
-        userId: session.user.id,
-      },
-      select: {
-        id: true,
-        secretToken: true,
-        title: true,
-        createdAt: true,
-        fileData: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-
-    // Parse each transcript to get message count
-    const transcriptsWithMetadata = transcripts.map((transcript) => {
-      const parsed = parseJSONL(transcript.fileData);
-      return {
-        id: transcript.id,
-        secretToken: transcript.secretToken,
-        title: transcript.title,
-        createdAt: transcript.createdAt,
-        messageCount: parsed.metadata.messageCount,
-        fileSize: Buffer.byteLength(transcript.fileData, "utf8"),
-      };
-    });
-
-    return NextResponse.json(transcriptsWithMetadata);
-  } catch (error) {
-    console.error("Fetch transcripts error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
-  }
-}
-
+/**
+ * CLI upload endpoint
+ * Requires Bearer token authentication
+ * Accepts JSON with fileData and optional title
+ */
 export async function POST(request: Request) {
   try {
-    // Check CSRF token
-    const csrfError = await checkCsrf(request);
-    if (csrfError) return csrfError;
-
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Extract and verify Bearer token
+    const authHeader = request.headers.get("authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return NextResponse.json(
+        { error: "Missing or invalid Authorization header" },
+        { status: 401 },
+      );
     }
 
-    // Check rate limit (10 uploads per hour per user)
-    const rateLimitResult = await checkUploadRateLimit(session.user.id);
+    const token = authHeader.substring(7); // Remove "Bearer " prefix
+
+    let userId: string;
+    try {
+      const verified = await verifyCliToken(token);
+      userId = verified.userId;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Token verification failed";
+      return NextResponse.json(
+        {
+          error: "Invalid or expired token",
+          message: errorMessage,
+        },
+        { status: 401 },
+      );
+    }
+
+    // Validate Content-Type
+    const contentType = request.headers.get("content-type");
+    if (contentType !== "application/json") {
+      return NextResponse.json(
+        {
+          error: "Invalid Content-Type",
+          message: "Content-Type must be application/json",
+        },
+        { status: 415 },
+      );
+    }
+
+    // Rate limit: 10 uploads per hour per user (same as web)
+    const rateLimitResult = await checkUploadRateLimit(userId);
     if (!rateLimitResult.success) {
       // Determine if this is a rate limit exceeded or infrastructure error
       const statusCode = rateLimitResult.error ? 503 : 429;
@@ -95,10 +81,36 @@ export async function POST(request: Request) {
       );
     }
 
-    const { fileData: originalFileData, title } = await request.json();
+    // Parse request body with explicit error handling
+    let body: { fileData?: unknown; title?: string };
+    try {
+      body = await request.json();
+    } catch (jsonError) {
+      console.warn("Invalid JSON in CLI upload request", {
+        userId,
+        error:
+          jsonError instanceof Error ? jsonError.message : String(jsonError),
+      });
+      return NextResponse.json(
+        {
+          error: "Invalid JSON",
+          message:
+            "Request body must be valid JSON. Please check your request format.",
+        },
+        { status: 400 },
+      );
+    }
+
+    const { fileData: originalFileData, title } = body;
 
     if (!originalFileData || typeof originalFileData !== "string") {
-      return NextResponse.json({ error: "Invalid file data" }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: "Invalid request body",
+          message: "Request must include 'fileData' as a string",
+        },
+        { status: 400 },
+      );
     }
 
     // Check file size limit (5MB)
@@ -120,7 +132,11 @@ export async function POST(request: Request) {
       parseJSONL(originalFileData);
     } catch (_err) {
       return NextResponse.json(
-        { error: "Invalid JSONL format" },
+        {
+          error: "Invalid file format",
+          message:
+            "File must be in JSONL format (newline-delimited JSON). Each line should be a valid JSON object.",
+        },
         { status: 400 },
       );
     }
@@ -157,19 +173,29 @@ export async function POST(request: Request) {
 
     const transcript = await prisma.transcript.create({
       data: {
-        userId: session.user.id,
+        userId,
         secretToken,
         title: title || "Untitled Transcript",
         fileData,
       },
     });
 
-    return NextResponse.json({
-      secretToken: transcript.secretToken,
-      id: transcript.id,
-    });
+    // Return success with secret URL info
+    return NextResponse.json(
+      {
+        id: transcript.id,
+        secretToken: transcript.secretToken,
+        url: `${process.env.NEXTAUTH_URL || "https://aisessions.dev"}/t/${transcript.secretToken}`,
+      },
+      {
+        headers: {
+          "X-RateLimit-Limit": String(rateLimitResult.limit || 10),
+          "X-RateLimit-Remaining": String(rateLimitResult.remaining || 0),
+        },
+      },
+    );
   } catch (error) {
-    console.error("Upload error:", error);
+    console.error("CLI upload error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

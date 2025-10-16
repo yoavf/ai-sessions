@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Plus } from "lucide-react";
+import { Check, Copy, Loader2, Plus, Terminal } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -39,6 +39,11 @@ function formatDate(dateString: string): string {
   }).format(date);
 }
 
+// Security: Auto-clear CLI token from client-side state after this timeout
+// Rationale: Reduces exposure window if user leaves browser open unattended
+// 2 minutes provides balance between security and usability for copying the token
+const CLI_TOKEN_AUTO_CLEAR_MS = 120000; // 2 minutes
+
 export default function MyTranscriptsPage() {
   const { data: session } = useSession();
   const [transcripts, setTranscripts] = useState<Transcript[]>([]);
@@ -46,6 +51,10 @@ export default function MyTranscriptsPage() {
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [generatingToken, setGeneratingToken] = useState(false);
+  const [cliToken, setCliToken] = useState<string | null>(null);
+  const [tokenCopied, setTokenCopied] = useState(false);
+  const [revokingTokens, setRevokingTokens] = useState(false);
   const router = useRouter();
   const csrfToken = useCsrfToken();
 
@@ -71,6 +80,16 @@ export default function MyTranscriptsPage() {
   useEffect(() => {
     fetchTranscripts();
   }, [fetchTranscripts]);
+
+  // Auto-clear CLI token from state after timeout for security
+  useEffect(() => {
+    if (cliToken) {
+      const timer = setTimeout(() => {
+        setCliToken(null);
+      }, CLI_TOKEN_AUTO_CLEAR_MS);
+      return () => clearTimeout(timer);
+    }
+  }, [cliToken]);
 
   async function handleDelete(secretToken: string) {
     if (!confirm("Are you sure you want to delete this transcript?")) {
@@ -106,6 +125,85 @@ export default function MyTranscriptsPage() {
       alert(err instanceof Error ? err.message : "Failed to delete transcript");
     } finally {
       setDeleting(null);
+    }
+  }
+
+  async function handleGenerateToken() {
+    // Ensure we have a CSRF token before proceeding
+    if (!csrfToken) {
+      alert(
+        "Security token not loaded. Please refresh the page and try again.",
+      );
+      return;
+    }
+
+    setGeneratingToken(true);
+    try {
+      const response = await fetch(
+        "/api/cli/token",
+        addCsrfToken(csrfToken, {
+          method: "POST",
+        }),
+      );
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || "Failed to generate token");
+      }
+      const data = await response.json();
+      setCliToken(data.token);
+      setTokenCopied(false);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to generate token");
+    } finally {
+      setGeneratingToken(false);
+    }
+  }
+
+  async function handleCopyToken() {
+    if (!cliToken) return;
+    try {
+      await navigator.clipboard.writeText(cliToken);
+      setTokenCopied(true);
+      setTimeout(() => setTokenCopied(false), 2000);
+    } catch (_err) {
+      alert("Failed to copy to clipboard");
+    }
+  }
+
+  async function handleRevokeTokens() {
+    const confirmed = confirm(
+      "Are you sure you want to revoke all CLI tokens? This will invalidate all existing CLI authentication tokens. You'll need to generate a new token to use the CLI again.",
+    );
+
+    if (!confirmed) return;
+
+    // Ensure we have a CSRF token before proceeding
+    if (!csrfToken) {
+      alert(
+        "Security token not loaded. Please refresh the page and try again.",
+      );
+      return;
+    }
+
+    setRevokingTokens(true);
+    try {
+      const response = await fetch(
+        "/api/account/revoke-cli-tokens",
+        addCsrfToken(csrfToken, {
+          method: "POST",
+        }),
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to revoke tokens");
+      }
+
+      alert("All CLI tokens have been revoked successfully.");
+      setCliToken(null);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to revoke tokens");
+    } finally {
+      setRevokingTokens(false);
     }
   }
 
@@ -245,6 +343,116 @@ export default function MyTranscriptsPage() {
                       </div>
                     ))}
                   </div>
+                </Card>
+              )}
+
+              {!loading && !error && (
+                <Card className="mt-12">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Terminal className="w-5 h-5" />
+                      <h2 className="text-lg font-semibold">CLI Access</h2>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Generate an authentication token to upload transcripts
+                      from the command line. Tokens are valid for 90 days.
+                    </p>
+
+                    {!cliToken ? (
+                      <div className="space-y-4">
+                        <Button
+                          type="button"
+                          onClick={handleGenerateToken}
+                          disabled={generatingToken}
+                        >
+                          {generatingToken
+                            ? "Generating..."
+                            : "Generate CLI Token"}
+                        </Button>
+
+                        <div className="bg-muted/50 p-4 rounded-lg">
+                          <h3 className="text-sm font-semibold mb-2">
+                            Usage Instructions
+                          </h3>
+                          <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
+                            <li>Generate a token using the button above</li>
+                            <li>
+                              Copy the token and configure it in your CLI tool
+                            </li>
+                            <li>
+                              Upload transcripts:{" "}
+                              <code className="bg-muted px-1 py-0.5 rounded">
+                                aisessions upload session.jsonl
+                              </code>
+                            </li>
+                          </ol>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <Alert>
+                          <AlertDescription className="space-y-2">
+                            <p className="font-semibold">
+                              Make sure to copy your token now. You won't be
+                              able to see it again!
+                            </p>
+                            <div className="flex items-center gap-2 mt-2">
+                              <code className="flex-1 bg-muted px-3 py-2 rounded text-xs font-mono break-all">
+                                {cliToken}
+                              </code>
+                              <Button
+                                type="button"
+                                onClick={handleCopyToken}
+                                variant="outline"
+                                size="sm"
+                                className="min-w-[90px]"
+                              >
+                                {tokenCopied ? (
+                                  <>
+                                    <Check className="w-4 h-4" />
+                                    Copied
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="w-4 h-4" />
+                                    Copy
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          </AlertDescription>
+                        </Alert>
+
+                        <Button
+                          type="button"
+                          onClick={() => setCliToken(null)}
+                          variant="outline"
+                          size="sm"
+                        >
+                          Close
+                        </Button>
+                      </div>
+                    )}
+
+                    <div className="mt-6 pt-6 border-t">
+                      <h3 className="text-sm font-semibold mb-2">
+                        Revoke All CLI Tokens
+                      </h3>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        If you believe a token has been compromised, you can
+                        revoke all existing CLI tokens.
+                      </p>
+                      <Button
+                        type="button"
+                        onClick={handleRevokeTokens}
+                        disabled={revokingTokens}
+                        variant="outline"
+                        size="sm"
+                      >
+                        {revokingTokens ? "Revoking..." : "Revoke All Tokens"}
+                      </Button>
+                    </div>
+                  </CardContent>
                 </Card>
               )}
 
