@@ -11,6 +11,84 @@ import type { ParsedTranscript } from "@/types/transcript";
 import FloatingTOC from "./FloatingTOC";
 import MessageRenderer from "./MessageRenderer";
 
+// System XML tags to hide (IDE notifications, hooks, etc.)
+const SYSTEM_XML_TAGS = [
+  "ide_opened_file",
+  "ide_selection",
+  "ide_diagnostics",
+  "post-tool-use-hook",
+  "system-reminder",
+  "user-prompt-submit-hook",
+  "local-command-stdout",
+] as const;
+
+// Helper functions for message type checking
+function isToolResultMessage(content: unknown): boolean {
+  return (
+    Array.isArray(content) &&
+    content.length > 0 &&
+    content.every((block) => block.type === "tool_result")
+  );
+}
+
+function isBashOutputMessage(content: unknown): boolean {
+  return (
+    Array.isArray(content) &&
+    content.length > 0 &&
+    content.every(
+      (block) => block.type === "bash-stdout" || block.type === "bash-stderr",
+    )
+  );
+}
+
+function isSystemMessageToHide(content: unknown): boolean {
+  if (typeof content === "string") {
+    const trimmed = content.trim();
+    if (trimmed.startsWith("Caveat:")) return true;
+    for (const tag of SYSTEM_XML_TAGS) {
+      if (trimmed.startsWith(`<${tag}>`)) return true;
+    }
+    return false;
+  }
+
+  if (Array.isArray(content) && content.length === 1) {
+    const block = content[0];
+    if (block.type === "text") {
+      const trimmed = block.text.trim();
+      if (trimmed.startsWith("Caveat:")) return true;
+      for (const tag of SYSTEM_XML_TAGS) {
+        if (trimmed.startsWith(`<${tag}>`)) return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+function isBracketSystemMessage(content: unknown): {
+  isSystemMessage: boolean;
+  text: string;
+} {
+  if (typeof content === "string") {
+    const trimmed = content.trim();
+    if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+      return { isSystemMessage: true, text: trimmed };
+    }
+  }
+
+  if (Array.isArray(content) && content.length === 1) {
+    const block = content[0];
+    if (block.type === "text") {
+      const trimmed = block.text.trim();
+      if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+        return { isSystemMessage: true, text: trimmed };
+      }
+    }
+  }
+
+  return { isSystemMessage: false, text: "" };
+}
+
 interface TranscriptViewerProps {
   transcript: ParsedTranscript;
   title: string;
@@ -145,60 +223,25 @@ export default function TranscriptViewer({
 
   // Extract user messages for TOC (only real user messages, excluding system messages and tool results)
   const tocItems = useMemo(() => {
-    const SYSTEM_XML_TAGS = [
-      "ide_opened_file",
-      "ide_selection",
-      "ide_diagnostics",
-      "post-tool-use-hook",
-      "system-reminder",
-      "user-prompt-submit-hook",
-      "local-command-stdout",
-    ];
-
     return transcript.messages
       .map((line, index) => ({ line, index }))
       .filter(({ line }) => {
         if (!line.message || line.message.role !== "user") return false;
 
         // Check if this is a tool result or bash output message
-        const isToolResultMessage =
-          Array.isArray(line.message.content) &&
-          line.message.content.length > 0 &&
-          line.message.content.every((block) => block.type === "tool_result");
-
-        const isBashOutputMessage =
-          Array.isArray(line.message.content) &&
-          line.message.content.length > 0 &&
-          line.message.content.every(
-            (block) =>
-              block.type === "bash-stdout" || block.type === "bash-stderr",
-          );
-
-        if (isToolResultMessage || isBashOutputMessage) return false;
+        if (
+          isToolResultMessage(line.message.content) ||
+          isBashOutputMessage(line.message.content)
+        ) {
+          return false;
+        }
 
         // Check if this is a system message to hide
-        if (typeof line.message.content === "string") {
-          const trimmed = line.message.content.trim();
-          if (trimmed.startsWith("Caveat:")) return false;
-          for (const tag of SYSTEM_XML_TAGS) {
-            if (trimmed.startsWith(`<${tag}>`)) return false;
-          }
-          // Exclude system messages like "[Request interrupted by user]"
-          if (trimmed.startsWith("[") && trimmed.endsWith("]")) return false;
-        } else if (
-          Array.isArray(line.message.content) &&
-          line.message.content.length === 1
-        ) {
-          const block = line.message.content[0];
-          if (block.type === "text") {
-            const trimmed = block.text.trim();
-            if (trimmed.startsWith("Caveat:")) return false;
-            for (const tag of SYSTEM_XML_TAGS) {
-              if (trimmed.startsWith(`<${tag}>`)) return false;
-            }
-            // Exclude system messages
-            if (trimmed.startsWith("[") && trimmed.endsWith("]")) return false;
-          }
+        if (isSystemMessageToHide(line.message.content)) return false;
+
+        // Check if this is a bracket system message like "[Request interrupted by user]"
+        if (isBracketSystemMessage(line.message.content).isSystemMessage) {
+          return false;
         }
 
         return true;
@@ -357,26 +400,13 @@ export default function TranscriptViewer({
                 const isUser = line.message.role === "user";
 
                 // Check if this message is a tool result or bash output (should be grouped with parent)
-                const isToolResultMessage =
+                const shouldGroupWithParent =
                   isUser &&
-                  Array.isArray(line.message.content) &&
-                  line.message.content.length > 0 &&
-                  line.message.content.every(
-                    (block) => block.type === "tool_result",
-                  );
-
-                const isBashOutputMessage =
-                  isUser &&
-                  Array.isArray(line.message.content) &&
-                  line.message.content.length > 0 &&
-                  line.message.content.every(
-                    (block) =>
-                      block.type === "bash-stdout" ||
-                      block.type === "bash-stderr",
-                  );
+                  (isToolResultMessage(line.message.content) ||
+                    isBashOutputMessage(line.message.content));
 
                 // Skip rendering tool results and bash outputs separately - they'll be rendered with their parent
-                if (isToolResultMessage || isBashOutputMessage) {
+                if (shouldGroupWithParent) {
                   return null;
                 }
 
@@ -386,109 +416,25 @@ export default function TranscriptViewer({
                     return false;
 
                   const isChildUser = msg.message.role === "user";
-                  const isChildToolResult =
+                  return (
                     isChildUser &&
-                    Array.isArray(msg.message.content) &&
-                    msg.message.content.length > 0 &&
-                    msg.message.content.every(
-                      (block) => block.type === "tool_result",
-                    );
-
-                  const isChildBashOutput =
-                    isChildUser &&
-                    Array.isArray(msg.message.content) &&
-                    msg.message.content.length > 0 &&
-                    msg.message.content.every(
-                      (block) =>
-                        block.type === "bash-stdout" ||
-                        block.type === "bash-stderr",
-                    );
-
-                  return isChildToolResult || isChildBashOutput;
+                    (isToolResultMessage(msg.message.content) ||
+                      isBashOutputMessage(msg.message.content))
+                  );
                 });
 
-                // System XML tags to hide (IDE notifications, hooks, etc.)
-                const SYSTEM_XML_TAGS = [
-                  "ide_opened_file",
-                  "ide_selection",
-                  "ide_diagnostics",
-                  "post-tool-use-hook",
-                  "system-reminder",
-                  "user-prompt-submit-hook",
-                  "local-command-stdout",
-                ];
-
                 // Check if this is a system message to hide (Caveat or IDE notifications)
-                let isSystemMessageToHide = false;
-                if (isUser) {
-                  if (typeof line.message.content === "string") {
-                    const trimmed = line.message.content.trim();
-                    if (trimmed.startsWith("Caveat:")) {
-                      isSystemMessageToHide = true;
-                    } else {
-                      // Check for system XML tags
-                      for (const tag of SYSTEM_XML_TAGS) {
-                        if (trimmed.startsWith(`<${tag}>`)) {
-                          isSystemMessageToHide = true;
-                          break;
-                        }
-                      }
-                    }
-                  } else if (
-                    Array.isArray(line.message.content) &&
-                    line.message.content.length === 1
-                  ) {
-                    const block = line.message.content[0];
-                    if (block.type === "text") {
-                      const trimmed = block.text.trim();
-                      if (trimmed.startsWith("Caveat:")) {
-                        isSystemMessageToHide = true;
-                      } else {
-                        // Check for system XML tags
-                        for (const tag of SYSTEM_XML_TAGS) {
-                          if (trimmed.startsWith(`<${tag}>`)) {
-                            isSystemMessageToHide = true;
-                            break;
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-
-                if (isSystemMessageToHide) {
+                if (isUser && isSystemMessageToHide(line.message.content)) {
                   return null;
                 }
 
                 // Check if this is a system-injected message like "[Request interrupted by user]"
-                let isSystemMessage = false;
-                let systemMessageText = "";
-
-                if (isUser) {
-                  if (typeof line.message.content === "string") {
-                    const trimmed = line.message.content.trim();
-                    if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-                      isSystemMessage = true;
-                      systemMessageText = trimmed;
-                    }
-                  } else if (
-                    Array.isArray(line.message.content) &&
-                    line.message.content.length === 1
-                  ) {
-                    // Check if it's a single text block with system message
-                    const block = line.message.content[0];
-                    if (block.type === "text") {
-                      const trimmed = block.text.trim();
-                      if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-                        isSystemMessage = true;
-                        systemMessageText = trimmed;
-                      }
-                    }
-                  }
-                }
+                const bracketMessage = isUser
+                  ? isBracketSystemMessage(line.message.content)
+                  : { isSystemMessage: false, text: "" };
 
                 // For system messages, render with special styling
-                if (isSystemMessage) {
+                if (bracketMessage.isSystemMessage) {
                   return (
                     <div key={line.uuid || idx} className="flex justify-center">
                       <div className="bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-900 rounded-lg px-4 py-2 text-sm text-yellow-800 dark:text-yellow-200 italic flex items-center gap-2">
@@ -505,7 +451,7 @@ export default function TranscriptViewer({
                             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                           />
                         </svg>
-                        {systemMessageText}
+                        {bracketMessage.text}
                         {line.timestamp && (
                           <span className="text-xs opacity-70 ml-2">
                             {format(new Date(line.timestamp), "HH:mm:ss")}
