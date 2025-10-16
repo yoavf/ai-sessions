@@ -160,6 +160,7 @@ export async function POST(request: Request) {
         userId: session.user.id,
         secretToken,
         title: title || "Untitled Transcript",
+        source: "claude-code", // Web uploads are from Claude Code browser extension
         fileData,
       },
     });

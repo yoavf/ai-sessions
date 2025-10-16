@@ -50,6 +50,7 @@
     "@types/react-window": "^1.8.8",
     "@upstash/ratelimit": "^2.0.6",
     "@upstash/redis": "^1.35.6",
+    "@vercel/og": "^0.8.5",
     "@xyflow/react": "^12.8.6",
     "ai": "^5.0.72",
     "class-variance-authority": "^0.7.1",

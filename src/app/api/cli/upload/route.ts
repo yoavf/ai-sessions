@@ -176,6 +176,7 @@ export async function POST(request: Request) {
         userId,
         secretToken,
         title: title || "Untitled Transcript",
+        source: "cli", // CLI uploads
         fileData,
       },
     });

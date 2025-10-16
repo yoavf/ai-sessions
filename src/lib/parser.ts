@@ -73,6 +73,40 @@ function parseBashString(content: string): ContentBlock[] | null {
   return blocks.length > 0 ? blocks : null;
 }
 
+/**
+ * Generate a default title when no custom title is provided
+ * Format: "[Source] - [Date]" (e.g., "Claude Code - October 16, 2025")
+ */
+export function generateDefaultTitle(source: string, createdAt: Date): string {
+  const sourceDisplayNames: Record<string, string> = {
+    "claude-code": "Claude Code",
+    codex: "Codex",
+    "gemini-cli": "Gemini CLI",
+  };
+
+  const sourceName = sourceDisplayNames[source] || source;
+  const date = createdAt.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  return `${sourceName} - ${date}`;
+}
+
+/**
+ * Check if a title is likely a UUID or session ID that should be replaced
+ */
+export function isUuidOrSessionId(title: string | null | undefined): boolean {
+  if (!title) return true;
+
+  // Check for UUID pattern (8-4-4-4-12 hex digits)
+  const uuidPattern =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  return uuidPattern.test(title);
+}
+
 export function parseJSONL(content: string): ParsedTranscript {
   const lines = content.trim().split("\n");
   const messages: TranscriptLine[] = [];

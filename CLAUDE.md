@@ -114,6 +114,36 @@ Optional (for rate limiting - recommended for production):
 - `UPSTASH_REDIS_REST_URL`: Upstash Redis REST API URL
 - `UPSTASH_REDIS_REST_TOKEN`: Upstash Redis REST API token
 
+## OpenGraph & Social Media
+
+The app implements comprehensive OpenGraph and Twitter Card metadata for rich social media previews:
+
+**Homepage** (src/app/layout.tsx + src/app/opengraph-image.tsx):
+- Static OpenGraph metadata with site branding
+- Generated OG image (1200x630) with "AI Sessions" branding
+- Twitter Card support (summary_large_image)
+- Uses `NEXTAUTH_URL` for absolute URLs (defaults to https://aisessions.dev)
+
+**Individual Transcripts** (/t/[token]):
+- Dynamic metadata generated via `generateMetadata()` function
+- OG title includes transcript title + site name
+- OG description includes username, message count, and date
+- Dynamic OG images generated with @vercel/og showing:
+  - Transcript title (truncated if long)
+  - Creator's GitHub username
+  - Message count and creation date
+  - AI Sessions branding
+
+**Implementation**:
+- Uses Next.js 15 metadata API with `metadataBase`
+- Dynamic OG images use Node.js runtime (not edge) due to Prisma requirements
+- All OG images are 1200x630 (standard social media size)
+- Gracefully handles errors with fallback messages
+
+**Testing**:
+- Preview OG tags: https://www.opengraph.xyz/ or https://cards-dev.twitter.com/validator
+- Local testing: View page source and look for `<meta property="og:*">` tags
+
 ## Development Notes
 
 - Always use `npm run format` before committing (Biome formatting)

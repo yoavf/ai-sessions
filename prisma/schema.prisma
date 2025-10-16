@@ -70,6 +70,7 @@ model Transcript {
   userId      String
   secretToken String   @unique @default(cuid())
   title       String?
+  source      String   @default("claude-code") // AI source: "claude-code", "codex", "gemini-cli", etc.
   fileData    String   @db.Text
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
