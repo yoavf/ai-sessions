@@ -39,6 +39,11 @@ function formatDate(dateString: string): string {
   }).format(date);
 }
 
+// Security: Auto-clear CLI token from client-side state after this timeout
+// Rationale: Reduces exposure window if user leaves browser open unattended
+// 2 minutes provides balance between security and usability for copying the token
+const CLI_TOKEN_AUTO_CLEAR_MS = 120000; // 2 minutes
+
 export default function MyTranscriptsPage() {
   const { data: session } = useSession();
   const [transcripts, setTranscripts] = useState<Transcript[]>([]);
@@ -76,12 +81,12 @@ export default function MyTranscriptsPage() {
     fetchTranscripts();
   }, [fetchTranscripts]);
 
-  // Auto-clear CLI token from state after 2 minutes for security
+  // Auto-clear CLI token from state after timeout for security
   useEffect(() => {
     if (cliToken) {
       const timer = setTimeout(() => {
         setCliToken(null);
-      }, 120000); // 2 minutes
+      }, CLI_TOKEN_AUTO_CLEAR_MS);
       return () => clearTimeout(timer);
     }
   }, [cliToken]);

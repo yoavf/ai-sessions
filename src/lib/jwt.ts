@@ -113,7 +113,8 @@ export async function verifyCliToken(
     const revokedBefore = user.cliTokensRevokedBefore || new Date(0);
 
     // Both branches should take similar time
-    if (tokenIssuedAt <= revokedBefore) {
+    // Use < instead of <= to avoid race conditions with tokens issued at exact same millisecond
+    if (tokenIssuedAt < revokedBefore) {
       throw new Error("Token has been revoked");
     }
 
