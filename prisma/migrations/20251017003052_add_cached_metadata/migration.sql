@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Transcript" ADD COLUMN "messageCount" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN "fileSizeBytes" INTEGER NOT NULL DEFAULT 0;
