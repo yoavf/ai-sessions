@@ -76,6 +76,16 @@ export default function MyTranscriptsPage() {
     fetchTranscripts();
   }, [fetchTranscripts]);
 
+  // Auto-clear CLI token from state after 2 minutes for security
+  useEffect(() => {
+    if (cliToken) {
+      const timer = setTimeout(() => {
+        setCliToken(null);
+      }, 120000); // 2 minutes
+      return () => clearTimeout(timer);
+    }
+  }, [cliToken]);
+
   async function handleDelete(secretToken: string) {
     if (!confirm("Are you sure you want to delete this transcript?")) {
       return;
