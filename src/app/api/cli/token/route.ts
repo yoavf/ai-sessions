@@ -1,0 +1,68 @@
+import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { signCliToken } from "@/lib/jwt";
+import { checkAccountRateLimit } from "@/lib/rate-limit";
+
+/**
+ * Generate a CLI authentication token
+ * Rate limited to 5 requests per hour per user
+ */
+export async function GET() {
+  try {
+    // Check authentication
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Rate limit: 5 token generations per hour per user
+    const rateLimitResult = await checkAccountRateLimit(session.user.id);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          error: "Rate limit exceeded",
+          message:
+            "You can generate up to 5 CLI tokens per hour. Please try again later.",
+          limit: rateLimitResult.limit,
+          remaining: 0,
+        },
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Limit": String(rateLimitResult.limit || 5),
+            "X-RateLimit-Remaining": "0",
+          },
+        },
+      );
+    }
+
+    // Generate JWT token
+    const token = await signCliToken(session.user.id);
+
+    // Calculate expiration date (90 days from now)
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 90);
+
+    return NextResponse.json(
+      {
+        token,
+        expiresAt: expiresAt.toISOString(),
+        message:
+          "Make sure to copy your token now. You won't be able to see it again!",
+      },
+      {
+        headers: {
+          "X-RateLimit-Limit": String(rateLimitResult.limit || 5),
+          "X-RateLimit-Remaining": String(rateLimitResult.remaining || 0),
+        },
+      },
+    );
+  } catch (error) {
+    console.error("CLI token generation error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
+  }
+}

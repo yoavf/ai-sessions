@@ -44,16 +44,17 @@ model Session {
 }
 
 model User {
-  id            String       @id @default(cuid())
-  name          String?
-  email         String?      @unique
-  emailVerified DateTime?
-  image         String?
-  githubUsername String?
-  accounts      Account[]
-  sessions      Session[]
-  transcripts   Transcript[]
-  createdAt     DateTime     @default(now())
+  id                     String       @id @default(cuid())
+  name                   String?
+  email                  String?      @unique
+  emailVerified          DateTime?
+  image                  String?
+  githubUsername         String?
+  cliTokensRevokedBefore DateTime?
+  accounts               Account[]
+  sessions               Session[]
+  transcripts            Transcript[]
+  createdAt              DateTime     @default(now())
 }
 
 model VerificationToken {
