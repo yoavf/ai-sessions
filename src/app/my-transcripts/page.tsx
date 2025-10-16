@@ -114,9 +114,22 @@ export default function MyTranscriptsPage() {
   }
 
   async function handleGenerateToken() {
+    // Ensure we have a CSRF token before proceeding
+    if (!csrfToken) {
+      alert(
+        "Security token not loaded. Please refresh the page and try again.",
+      );
+      return;
+    }
+
     setGeneratingToken(true);
     try {
-      const response = await fetch("/api/cli/token");
+      const response = await fetch(
+        "/api/cli/token",
+        addCsrfToken(csrfToken, {
+          method: "POST",
+        }),
+      );
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.message || "Failed to generate token");

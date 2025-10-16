@@ -1,14 +1,20 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { checkCsrf } from "@/lib/csrf";
 import { signCliToken } from "@/lib/jwt";
 import { checkAccountRateLimit } from "@/lib/rate-limit";
 
 /**
  * Generate a CLI authentication token
  * Rate limited to 5 requests per hour per user
+ * Protected with CSRF token
  */
-export async function GET() {
+export async function POST(request: Request) {
   try {
+    // Check CSRF token
+    const csrfError = await checkCsrf(request);
+    if (csrfError) return csrfError;
+
     // Check authentication
     const session = await auth();
 
