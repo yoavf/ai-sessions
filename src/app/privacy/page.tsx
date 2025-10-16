@@ -18,7 +18,7 @@ export default function PrivacyPage() {
             Privacy Policy
           </h1>
           <p className="text-sm text-gray-600 mb-8">
-            Last updated: {new Date().toLocaleDateString("en-US")}
+            Last updated: October 16, 2025
           </p>
 
           <div className="prose prose-gray max-w-none">
@@ -49,6 +49,10 @@ export default function PrivacyPage() {
                 <li>
                   <strong>Transcript Files:</strong> The Claude Code session
                   transcripts (JSONL files) you upload to share with others.
+                </li>
+                <li>
+                  <strong>IP Addresses:</strong> We collect IP addresses for
+                  rate limiting, security purposes, and abuse prevention.
                 </li>
                 <li>
                   <strong>Authentication Cookies:</strong> We use strictly
@@ -150,6 +154,24 @@ export default function PrivacyPage() {
                   .
                 </li>
                 <li>
+                  <strong>Google Cloud DLP (Data Loss Prevention):</strong> Your
+                  uploaded transcripts are scanned by Google Cloud DLP API to
+                  attempt to detect and remove sensitive information such as API
+                  keys, passwords, personal data, credit card numbers, and other
+                  credentials. This scanning happens automatically before
+                  storage and is not guaranteed to detect all sensitive data.
+                  Refer to{" "}
+                  <a
+                    href="https://cloud.google.com/terms/cloud-privacy-notice"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-700 underline"
+                  >
+                    Google Cloud Privacy Notice
+                  </a>
+                  .
+                </li>
+                <li>
                   <strong>Vercel:</strong> For hosting. Refer to{" "}
                   <a
                     href="https://vercel.com/legal/privacy-policy"
@@ -174,7 +196,7 @@ export default function PrivacyPage() {
                   .
                 </li>
                 <li>
-                  <strong>Upstash:</strong> For redis hosting (rate-limiting).
+                  <strong>Upstash:</strong> For Redis hosting (rate-limiting).
                   Refer to{" "}
                   <a
                     href="https://upstash.com/trust/privacy.pdf"
@@ -182,9 +204,53 @@ export default function PrivacyPage() {
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-700 underline"
                   >
-                    Neon's Privacy Policy
+                    Upstash's Privacy Policy
                   </a>
                   .
+                </li>
+                <li>
+                  <strong>Counter.dev:</strong> For anonymized, cookie-less site
+                  analytics. No personal data is collected. Refer to{" "}
+                  <a
+                    href="https://counter.dev/privacy.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-700 underline"
+                  >
+                    Counter.dev Privacy Policy
+                  </a>
+                  .
+                </li>
+              </ul>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+                7. Data Disclosure and Legal Requests
+              </h2>
+              <p className="text-gray-700 mb-4">
+                We may disclose your information in the following circumstances:
+              </p>
+              <ul className="list-disc pl-6 text-gray-700 space-y-2">
+                <li>
+                  <strong>Legal Requirements:</strong> In response to subpoenas,
+                  court orders, legal processes, or governmental requests
+                </li>
+                <li>
+                  <strong>Law Enforcement:</strong> When we believe disclosure
+                  is necessary to investigate, prevent, or take action regarding
+                  illegal activities, suspected fraud, or violations of our
+                  Terms of Service
+                </li>
+                <li>
+                  <strong>Rights Protection:</strong> To protect and defend our
+                  rights, property, or safety, or that of our users or the
+                  public
+                </li>
+                <li>
+                  <strong>Legal Obligations:</strong> When required to report
+                  illegal content (such as child sexual abuse material) to
+                  appropriate authorities as mandated by law
                 </li>
               </ul>
             </section>
@@ -221,7 +287,7 @@ export default function PrivacyPage() {
 
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-                8. Your Rights
+                9. Your Rights
               </h2>
               <p className="text-gray-700 mb-4">You have the right to:</p>
               <ul className="list-disc pl-6 text-gray-700 space-y-2">
@@ -242,7 +308,7 @@ export default function PrivacyPage() {
 
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-                9. Data Retention
+                10. Data Retention
               </h2>
               <p className="text-gray-700 mb-4">
                 We retain your data until you delete it:
@@ -262,17 +328,20 @@ export default function PrivacyPage() {
 
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-                10. Children's Privacy
+                11. Children's Privacy
               </h2>
               <p className="text-gray-700 mb-4">
-                AI Sessions is not intended for users under 13 years of age. We
-                do not knowingly collect information from children under 13.
+                AI Sessions is not intended for users under 13 years of age. You
+                must be at least 13 years old to use this Service. We do not
+                knowingly collect information from children under 13. If you
+                believe we have inadvertently collected information from a child
+                under 13, please contact us immediately so we can delete it.
               </p>
             </section>
 
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-                11. Changes to This Policy
+                12. Changes to This Policy
               </h2>
               <p className="text-gray-700 mb-4">
                 We may update this Privacy Policy from time to time. We will
@@ -283,11 +352,20 @@ export default function PrivacyPage() {
 
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-                12. Contact Us
+                13. Contact Us
               </h2>
               <p className="text-gray-700 mb-4">
                 If you have questions about this Privacy Policy, please contact
-                us through GitHub by opening an issue in our repository.
+                us by opening an issue at{" "}
+                <a
+                  href="https://github.com/yoavf/ai-sessions/issues"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-700 underline"
+                >
+                  github.com/yoavf/ai-sessions/issues
+                </a>
+                .
               </p>
             </section>
           </div>

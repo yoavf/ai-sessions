@@ -225,8 +225,8 @@ function truncateOversizedValues(
 }
 
 /**
- * Scans content for sensitive data using Google Cloud DLP
- * Returns findings if sensitive data is detected
+ * Attempts to scan content for sensitive data using Google Cloud DLP
+ * Returns findings if sensitive data is detected (not guaranteed to detect all sensitive data)
  * Handles large files by chunking them into smaller pieces
  * Automatically scrubs IP addresses (and other configured types) instead of blocking
  */

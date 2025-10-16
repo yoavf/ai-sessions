@@ -51,8 +51,8 @@ This project does not currently have a test suite configured.
    - User authenticates via GitHub OAuth (`src/lib/auth.ts`)
    - Uploads JSONL file via `UploadDropzoneWithAuth` component on homepage
    - API route validates and parses JSONL (`src/lib/parser.ts`)
-   - **Google Cloud DLP scans content for sensitive data** (`src/lib/dlp.ts`):
-     - Detects API keys, passwords, tokens, PII, credit cards, SSNs, etc.
+   - **Google Cloud DLP attempts to detect sensitive data** (`src/lib/dlp.ts`):
+     - Attempts to detect API keys, passwords, tokens, PII, credit cards, SSNs, etc.
      - Blocks upload if sensitive data found with detailed error message
      - Gracefully skips if DLP not configured (optional feature)
    - Creates database record with nanoid-generated secret token
@@ -125,9 +125,9 @@ Optional (for rate limiting - recommended for production):
 
 ### Sensitive Data Detection (Google Cloud DLP)
 
-The app uses Google Cloud DLP API to automatically detect sensitive information in uploads:
-- Scans for: API keys, passwords, tokens, PII, credit cards, SSNs, phone numbers, emails, etc.
-- **Blocks uploads** containing sensitive data with user-friendly error message
+The app uses Google Cloud DLP API to attempt to detect and remove sensitive information in uploads:
+- Attempts to detect: API keys, passwords, tokens, PII, credit cards, SSNs, phone numbers, emails, etc.
+- **Blocks or scrubs uploads** containing sensitive data with user-friendly error message
 - Pricing: First 50k units/month FREE, then $1/1k units (very affordable for typical usage)
 - **Optional feature**: If `GOOGLE_CLOUD_PROJECT` not set, uploads proceed without scanning
 - Implementation: `src/lib/dlp.ts` contains scan logic, called from POST `/api/transcripts`

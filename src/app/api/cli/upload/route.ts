@@ -141,7 +141,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Scan for sensitive data using Google Cloud DLP
+    // Attempt to scan for sensitive data using Google Cloud DLP
     const dlpResult = await scanForSensitiveData(originalFileData);
 
     // Determine final file data (original or scrubbed)
