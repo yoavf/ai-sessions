@@ -57,6 +57,7 @@ export async function POST(request: Request) {
       updateResult = await prisma.user.update({
         where: { id: session.user.id },
         data: { cliTokensRevokedBefore: new Date() },
+        select: { cliTokensRevokedBefore: true },
       });
     } catch (dbError) {
       console.error("Failed to revoke CLI tokens (database error):", dbError, {
