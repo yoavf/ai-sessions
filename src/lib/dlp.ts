@@ -44,7 +44,27 @@ const DLP_MAX_BYTES = 512 * 1024; // 524,288 bytes
 // Info types that should be scrubbed instead of blocking upload
 // NOTE: We now pre-scrub emails and IPs with regex before DLP, so these won't appear in DLP results
 // PHONE_NUMBER is scrubbed because DLP often flags internal IDs (like tool call IDs) as phone numbers
-const SCRUB_TYPES = new Set(["IP_ADDRESS", "EMAIL_ADDRESS", "PHONE_NUMBER"]);
+// All credential types (tokens, passwords, keys) are scrubbed to allow developers to share transcripts
+const SCRUB_TYPES = new Set([
+  "IP_ADDRESS",
+  "EMAIL_ADDRESS",
+  "PHONE_NUMBER",
+  "MAC_ADDRESS",
+  // Credentials & Secrets (scrub instead of block)
+  "AUTH_TOKEN",
+  "AZURE_AUTH_TOKEN",
+  "AWS_CREDENTIALS",
+  "BASIC_AUTH_HEADER",
+  "ENCRYPTION_KEY",
+  "GCP_API_KEY",
+  "GCP_CREDENTIALS",
+  "HTTP_COOKIE",
+  "JSON_WEB_TOKEN",
+  "OAUTH_CLIENT_SECRET",
+  "PASSWORD",
+  "WEAK_PASSWORD_HASH",
+  "XSRF_TOKEN",
+]);
 
 // Regex patterns for pre-scrubbing (before DLP)
 // Note: We use lookbehind/lookahead to ensure we're not breaking escape sequences like \t, \n, etc.
@@ -546,23 +566,34 @@ export function formatDlpFindings(result: DlpScanResult): string {
   }
 
   const categoryDescriptions: Record<string, string> = {
-    API_KEY: "API keys or tokens",
+    // Credentials & Secrets
     AUTH_TOKEN: "Authentication tokens",
+    AZURE_AUTH_TOKEN: "Azure auth tokens",
     AWS_CREDENTIALS: "AWS credentials",
+    BASIC_AUTH_HEADER: "Basic auth headers",
+    ENCRYPTION_KEY: "Encryption keys",
+    GCP_API_KEY: "Google Cloud API keys",
+    GCP_CREDENTIALS: "Google Cloud credentials",
+    HTTP_COOKIE: "HTTP cookies",
+    JSON_WEB_TOKEN: "JWT tokens",
+    OAUTH_CLIENT_SECRET: "OAuth client secrets",
     PASSWORD: "Passwords",
-    EMAIL_ADDRESS: "Email addresses",
-    PHONE_NUMBER: "Phone numbers",
+    WEAK_PASSWORD_HASH: "Password hashes",
+    XSRF_TOKEN: "XSRF tokens",
+    // Personal Information
     CREDIT_CARD_NUMBER: "Credit card numbers",
     US_SOCIAL_SECURITY_NUMBER: "Social security numbers",
+    US_DRIVERS_LICENSE_NUMBER: "Driver's license numbers",
+    US_PASSPORT: "Passport numbers",
+    EMAIL_ADDRESS: "Email addresses",
+    PHONE_NUMBER: "Phone numbers",
     IP_ADDRESS: "IP addresses",
-    ENCRYPTION_KEY: "Encryption keys",
-    JSON_WEB_TOKEN: "JWT tokens",
-    GCP_CREDENTIALS: "Google Cloud credentials",
+    MAC_ADDRESS: "MAC addresses",
   };
 
   const detectedTypes = result.categories
     .map((cat) => categoryDescriptions[cat] || cat)
     .join(", ");
 
-  return `Detected ${result.findings.length} instance(s) of sensitive data: ${detectedTypes}`;
+  return `\nDetected ${result.findings.length} instance(s) of sensitive data: ${detectedTypes}`;
 }
