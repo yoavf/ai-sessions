@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Terms of Service - AI Sessions",
+  description:
+    "Terms of Service for AI Sessions - Rules and guidelines for using our Claude Code transcript sharing platform.",
+};
 
 export default function TermsPage() {
   return (

@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy - AI Sessions",
+  description:
+    "Privacy Policy for AI Sessions - Learn how we collect, use, and protect your data when sharing Claude Code transcripts.",
+};
 
 export default function PrivacyPage() {
   return (
@@ -212,7 +219,7 @@ export default function PrivacyPage() {
                   <strong>Counter.dev:</strong> For anonymized, cookie-less site
                   analytics. No personal data is collected. Refer to{" "}
                   <a
-                    href="https://counter.dev/privacy.html"
+                    href="https://counter.dev/pages/privacy.html"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-700 underline"

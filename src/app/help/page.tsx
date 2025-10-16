@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { auth } from "@/lib/auth";
+
+export const metadata: Metadata = {
+  title: "Help - AI Sessions",
+  description:
+    "Help and FAQ for AI Sessions - Learn how to upload, manage, and share Claude Code transcripts.",
+};
 
 export default async function HelpPage() {
   const session = await auth();
