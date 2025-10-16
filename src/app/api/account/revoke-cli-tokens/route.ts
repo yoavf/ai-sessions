@@ -52,15 +52,51 @@ export async function POST(request: Request) {
 
     // Update the user's cliTokensRevokedBefore to now
     // This will invalidate all tokens issued before this moment
-    await prisma.user.update({
-      where: { id: session.user.id },
-      data: { cliTokensRevokedBefore: new Date() },
-    });
+    let updateResult: { cliTokensRevokedBefore: Date | null };
+    try {
+      updateResult = await prisma.user.update({
+        where: { id: session.user.id },
+        data: { cliTokensRevokedBefore: new Date() },
+      });
+    } catch (dbError) {
+      console.error("Failed to revoke CLI tokens (database error):", dbError, {
+        userId: session.user.id,
+        errorType:
+          dbError instanceof Error ? dbError.constructor.name : "Unknown",
+      });
+
+      return NextResponse.json(
+        {
+          error: "Failed to revoke tokens",
+          message:
+            "Unable to revoke tokens due to a system error. Your tokens are still active. Please try again or contact support if the issue persists.",
+        },
+        { status: 500 },
+      );
+    }
+
+    // Verify the update was successful
+    if (!updateResult || !updateResult.cliTokensRevokedBefore) {
+      console.error("Token revocation succeeded but verification failed", {
+        userId: session.user.id,
+        updateResult,
+      });
+
+      return NextResponse.json(
+        {
+          error: "Revocation status unclear",
+          message:
+            "Token revocation may not have completed successfully. Please check your token status and try again if needed.",
+        },
+        { status: 500 },
+      );
+    }
 
     return NextResponse.json(
       {
         success: true,
         message: "All CLI tokens have been revoked successfully",
+        revokedAt: updateResult.cliTokensRevokedBefore.toISOString(),
       },
       {
         headers: {
@@ -70,7 +106,8 @@ export async function POST(request: Request) {
       },
     );
   } catch (error) {
-    console.error("Revoke CLI tokens error:", error);
+    // This catch block should now only catch unexpected errors
+    console.error("Unexpected error in token revocation:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },
