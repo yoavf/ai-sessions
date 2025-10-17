@@ -222,3 +222,4 @@ Comprehensive security headers configured for all routes:
 - **Authorization**: Ownership checks on all sensitive operations
 - **Secret Tokens**: Cryptographically secure via `nanoid(16)`
 - use shadcn ui components whenever building interfaces
+- always make migrations when making db changes!
