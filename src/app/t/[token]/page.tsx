@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import TranscriptViewer from "@/components/TranscriptViewer";
+import TranscriptPageDropzone from "@/components/TranscriptPageDropzone";
 import { auth } from "@/lib/auth";
 import {
   generateDefaultTitle,
@@ -135,7 +136,7 @@ export default async function TranscriptPage({ params }: PageProps) {
       : generateDefaultTitle(transcript.source, transcript.createdAt);
 
     return (
-      <>
+      <TranscriptPageDropzone isAuthenticated={!!session}>
         <SiteHeader session={session} />
         <TranscriptViewer
           transcript={parsed}
@@ -147,7 +148,7 @@ export default async function TranscriptPage({ params }: PageProps) {
           transcriptId={transcript.id}
           secretToken={token}
         />
-      </>
+      </TranscriptPageDropzone>
     );
   } catch (error) {
     console.error("Failed to load transcript:", error);
