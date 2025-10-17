@@ -227,7 +227,8 @@ export function useTranscriptUpload(
           };
         }
 
-        setUploading(false);
+        // Don't set uploading to false on success - keep the animation
+        // showing until redirect completes for better UX
         return { success: true, secretToken };
       } catch (err) {
         // Catch any unexpected errors
