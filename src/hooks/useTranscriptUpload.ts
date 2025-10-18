@@ -37,8 +37,11 @@ export function useTranscriptUpload(
       }
 
       // Validate file extension
-      if (!file.name.endsWith(".jsonl")) {
-        return { success: false, error: "Please upload a .jsonl file" };
+      if (!file.name.endsWith(".jsonl") && !file.name.endsWith(".json")) {
+        return {
+          success: false,
+          error: "Please upload a .json or .jsonl transcript file",
+        };
       }
 
       // Validate file size (5MB limit)
@@ -72,33 +75,69 @@ export function useTranscriptUpload(
           };
         }
 
-        // Validate JSONL format with line-specific error reporting
+        // Validate JSON/JSONL format
         try {
-          const lines = text.trim().split("\n");
-          for (let i = 0; i < lines.length; i++) {
-            const line = lines[i].trim();
-            if (!line) continue; // Skip empty lines
+          const trimmed = text.trim();
 
+          // Try parsing as single JSON object first (Gemini format)
+          if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
             try {
-              JSON.parse(line);
-            } catch (lineError) {
-              console.error(
-                `JSONL validation failed at line ${i + 1}:`,
-                lineError,
-                {
-                  lineContent: line.substring(0, 100),
-                  fileName: file.name,
-                },
-              );
-              setUploading(false);
-              return {
-                success: false,
-                error: `Invalid JSON at line ${i + 1}: ${lineError instanceof Error ? lineError.message : "Parse error"}. Content: ${line.substring(0, 50)}...`,
-              };
+              JSON.parse(trimmed);
+              // Valid single JSON object - no further validation needed
+            } catch {
+              // Not a valid single JSON object, try JSONL validation
+              const lines = trimmed.split("\n");
+              for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue; // Skip empty lines
+
+                try {
+                  JSON.parse(line);
+                } catch (lineError) {
+                  console.error(
+                    `JSONL validation failed at line ${i + 1}:`,
+                    lineError,
+                    {
+                      lineContent: line.substring(0, 100),
+                      fileName: file.name,
+                    },
+                  );
+                  setUploading(false);
+                  return {
+                    success: false,
+                    error: `Invalid JSON at line ${i + 1}: ${lineError instanceof Error ? lineError.message : "Parse error"}. Content: ${line.substring(0, 50)}...`,
+                  };
+                }
+              }
+            }
+          } else {
+            // Not a single JSON object, validate as JSONL
+            const lines = trimmed.split("\n");
+            for (let i = 0; i < lines.length; i++) {
+              const line = lines[i].trim();
+              if (!line) continue; // Skip empty lines
+
+              try {
+                JSON.parse(line);
+              } catch (lineError) {
+                console.error(
+                  `JSONL validation failed at line ${i + 1}:`,
+                  lineError,
+                  {
+                    lineContent: line.substring(0, 100),
+                    fileName: file.name,
+                  },
+                );
+                setUploading(false);
+                return {
+                  success: false,
+                  error: `Invalid JSON at line ${i + 1}: ${lineError instanceof Error ? lineError.message : "Parse error"}. Content: ${line.substring(0, 50)}...`,
+                };
+              }
             }
           }
         } catch (validationError) {
-          console.error("JSONL validation error:", validationError, {
+          console.error("JSON/JSONL validation error:", validationError, {
             fileName: file.name,
             fileSize: file.size,
           });
@@ -108,12 +147,12 @@ export function useTranscriptUpload(
             error:
               validationError instanceof Error
                 ? validationError.message
-                : "Invalid JSONL file",
+                : "Invalid JSON/JSONL file",
           };
         }
 
-        // Generate safe title (handle edge case of file named exactly ".jsonl")
-        const rawTitle = file.name.replace(/\.jsonl$/i, "");
+        // Generate safe title (handle edge case of file named exactly ".jsonl" or ".json")
+        const rawTitle = file.name.replace(/\.(jsonl|json)$/i, "");
         const title = rawTitle.substring(0, 200) || "Untitled";
 
         // Upload to API

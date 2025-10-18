@@ -5,6 +5,7 @@
 import type { ParsedTranscript } from "@/types/transcript";
 import { ClaudeCodeProvider } from "./claude-code";
 import { CodexProvider } from "./codex";
+import { GeminiProvider } from "./gemini";
 import type { DetectionResult, TranscriptProvider } from "./types";
 
 /**
@@ -13,6 +14,7 @@ import type { DetectionResult, TranscriptProvider } from "./types";
 const providers: TranscriptProvider[] = [
   new ClaudeCodeProvider(),
   new CodexProvider(),
+  new GeminiProvider(),
 ];
 
 /**
@@ -152,4 +154,5 @@ export function calculateModelStats(
 // Export providers and types
 export { ClaudeCodeProvider } from "./claude-code";
 export { CodexProvider } from "./codex";
+export { GeminiProvider } from "./gemini";
 export type { DetectionResult, TranscriptProvider } from "./types";
