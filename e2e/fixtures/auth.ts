@@ -12,6 +12,7 @@ const generateId = (length: number = 8): string => {
 };
 
 // Create Prisma client with pg adapter (same as production)
+// Returns both prisma and pool so pool can be closed later
 const createPrismaClient = () => {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
@@ -19,13 +20,14 @@ const createPrismaClient = () => {
   }
   const pool = new Pool({ connectionString });
   const adapter = new PrismaPg(pool);
-  return new PrismaClient({ adapter });
+  const prisma = new PrismaClient({ adapter });
+  return { prisma, pool };
 };
 
 // Extend the test fixtures with an authenticated page
 export const test = base.extend<{ authenticatedPage: Page }>({
   authenticatedPage: async ({ page, context }, use) => {
-    const prisma = createPrismaClient();
+    const { prisma, pool } = createPrismaClient();
 
     try {
       // Create a unique test user
@@ -85,7 +87,9 @@ export const test = base.extend<{ authenticatedPage: Page }>({
         where: { id: testUser.id },
       });
     } finally {
+      // Close both Prisma client and the underlying pool to prevent connection leaks
       await prisma.$disconnect();
+      await pool.end();
     }
   },
 });
