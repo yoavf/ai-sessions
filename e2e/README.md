@@ -71,12 +71,6 @@ services:
 
 ## Test Structure
 
-### Test Files
-
-- **`auth-unauthenticated.spec.ts`** - Unauthenticated user experience (6 tests)
-- **`auth-authenticated.spec.ts`** - Authenticated user experience (7 tests)
-- **`auth-signout.spec.ts`** - Sign-out flow (4 tests)
-
 ### Fixtures
 
 - **`fixtures/auth.ts`** - Authentication fixture
@@ -98,9 +92,9 @@ services:
 
 ```bash
 # Local development with Docker
-npm run test:e2e:docker:up    # Start test database
-npm run test:e2e               # Run all tests
-npm run test:e2e:docker:down  # Stop and cleanup test database
+npm run test:e2e:docker:up        # Start test database
+npm run test:e2e:local            # Run all tests
+npm run test:e2e:docker:down      # Stop and cleanup test database
 
 # Interactive modes
 npm run test:e2e:ui            # UI mode (recommended for development)
@@ -322,23 +316,6 @@ This ensures:
 - ✅ No leftover data between test runs
 - ✅ No conflicts from previous test data
 - ✅ Clean database state for every test
-
-## Test Coverage
-
-Current coverage: **18 tests**
-
-- ✅ Unauthenticated user experience (6 tests)
-- ✅ Authenticated user experience (7 tests)
-- ✅ Sign-out flow (4 tests)
-- ✅ Session persistence
-- ✅ Multi-tab synchronization
-
-### Not Yet Covered
-
-- Full GitHub OAuth flow (requires real credentials or mocking)
-- Upload functionality with files
-- Transcript viewing and interaction
-- Error handling edge cases
 
 ## Additional Resources
 
