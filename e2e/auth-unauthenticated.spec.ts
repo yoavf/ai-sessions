@@ -33,13 +33,11 @@ test.describe("Unauthenticated User Experience", () => {
       page.getByRole("heading", { name: "AI Sessions", level: 1 }),
     ).toBeVisible();
 
-    // 8. Verify subtitle "Share Claude Code transcripts" is visible
-    await expect(page.getByText("Share Claude Code transcripts")).toBeVisible();
+    // 8. Verify subtitle "Share AI coding sessions" is visible
+    await expect(page.getByText("Share AI coding sessions")).toBeVisible();
 
     // 9. Verify upload dropzone is visible with text about dropping transcripts
-    await expect(
-      page.getByText("Drop your Claude Code transcript"),
-    ).toBeVisible();
+    await expect(page.getByText("Drop your transcript")).toBeVisible();
   });
 
   test("Authentication Overlay Display", async ({ page }) => {

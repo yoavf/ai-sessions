@@ -17,14 +17,14 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXTAUTH_URL || "https://aisessions.dev"),
   title: "AI Sessions",
-  description: "Share Claude Code transcripts",
+  description: "Share AI coding sessions",
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "/",
     siteName: "AI Sessions",
     title: "AI Sessions",
-    description: "Share Claude Code transcripts",
+    description: "Share AI coding sessions",
     images: [
       {
         url: "/opengraph-image",
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "AI Sessions",
-    description: "Share Claude Code transcripts",
+    description: "Share AI coding sessions",
     images: ["/opengraph-image"],
   },
 };

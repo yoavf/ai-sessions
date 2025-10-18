@@ -73,6 +73,87 @@ interface TurnContextPayload {
 }
 
 /**
+ * Type guard for SessionMetaPayload
+ */
+function isSessionMetaPayload(payload: unknown): payload is SessionMetaPayload {
+  return (
+    typeof payload === "object" &&
+    payload !== null &&
+    "id" in payload &&
+    typeof (payload as SessionMetaPayload).id === "string"
+  );
+}
+
+/**
+ * Type guard for TurnContextPayload
+ */
+function _isTurnContextPayload(
+  payload: unknown,
+): payload is TurnContextPayload {
+  if (typeof payload !== "object" || payload === null) {
+    return false;
+  }
+  const p = payload as Partial<TurnContextPayload>;
+  return (
+    (p.model === undefined || typeof p.model === "string") &&
+    (p.cwd === undefined || typeof p.cwd === "string")
+  );
+}
+
+/**
+ * Type guard for ResponseItemPayload
+ */
+function isResponseItemPayload(
+  payload: unknown,
+): payload is ResponseItemPayload {
+  return (
+    typeof payload === "object" &&
+    payload !== null &&
+    "type" in payload &&
+    typeof (payload as ResponseItemPayload).type === "string"
+  );
+}
+
+/**
+ * Parse Codex tool result output
+ * Normalizes Codex format {output: "...", metadata: {...}} to string content with optional metadata
+ */
+function parseCodexToolResult(output: unknown): {
+  content: string;
+  metadata?: { exit_code?: number; duration_seconds?: number };
+} {
+  try {
+    const parsed = output ? JSON.parse(output as string) : output || "";
+
+    // Check if this is Codex format: {output: "...", metadata: {...}}
+    if (
+      typeof parsed === "object" &&
+      parsed !== null &&
+      "output" in parsed &&
+      typeof parsed.output === "string"
+    ) {
+      // Codex format - extract output and metadata
+      const metadata =
+        parsed.metadata && typeof parsed.metadata === "object"
+          ? {
+              exit_code: parsed.metadata.exit_code,
+              duration_seconds: parsed.metadata.duration_seconds,
+            }
+          : undefined;
+      return { content: parsed.output, metadata };
+    }
+    if (typeof parsed === "string") {
+      return { content: parsed };
+    }
+    // Some other object format - stringify it
+    return { content: JSON.stringify(parsed, null, 2) };
+  } catch {
+    // If not JSON, use as string
+    return { content: (output as string) || "" };
+  }
+}
+
+/**
  * Parse text that may contain <user_instructions> tags
  * Returns array of content blocks with proper splitting around tags
  */
@@ -202,9 +283,12 @@ export class CodexProvider implements TranscriptProvider {
           const parsed = JSON.parse(line) as CodexEvent & CodexDirectEntry;
 
           // Newer format: Check for session_meta event
-          if (parsed.type === "session_meta" && parsed.payload) {
-            const payload = parsed.payload as unknown as SessionMetaPayload;
-            if (payload.originator === "codex_exec") {
+          if (
+            parsed.type === "session_meta" &&
+            parsed.payload &&
+            isSessionMetaPayload(parsed.payload)
+          ) {
+            if (parsed.payload.originator === "codex_exec") {
               return true;
             }
           }
@@ -326,16 +410,19 @@ export class CodexProvider implements TranscriptProvider {
         }
 
         // Handle newer event-based format
-        if (entry.type === "session_meta" && entry.payload) {
-          const payload = entry.payload as unknown as SessionMetaPayload;
-          sessionId = payload.id || "";
-          cwd = payload.cwd || "";
-          gitBranch = payload.git?.branch || "";
+        if (
+          entry.type === "session_meta" &&
+          entry.payload &&
+          isSessionMetaPayload(entry.payload)
+        ) {
+          sessionId = entry.payload.id || "";
+          cwd = entry.payload.cwd || "";
+          gitBranch = entry.payload.git?.branch || "";
           continue;
         }
 
         if (entry.type === "turn_context" && entry.payload) {
-          const payload = entry.payload as unknown as TurnContextPayload;
+          const payload = entry.payload as TurnContextPayload;
           if (payload.model) {
             currentModel = payload.model;
           }
@@ -345,8 +432,12 @@ export class CodexProvider implements TranscriptProvider {
           continue;
         }
 
-        if (entry.type === "response_item" && entry.payload) {
-          const payload = entry.payload as unknown as ResponseItemPayload;
+        if (
+          entry.type === "response_item" &&
+          entry.payload &&
+          isResponseItemPayload(entry.payload)
+        ) {
+          const payload = entry.payload;
 
           if (payload.type === "message") {
             // Flush previous message if starting a new one with different role
@@ -435,7 +526,11 @@ export class CodexProvider implements TranscriptProvider {
                   input: args,
                 });
                 hasContent = true;
-              } catch {
+              } catch (err) {
+                console.error(
+                  `Failed to parse function call arguments for ${payload.name}:`,
+                  err,
+                );
                 // Skip invalid function calls
               }
             }
@@ -445,55 +540,16 @@ export class CodexProvider implements TranscriptProvider {
 
             // Add tool result block - normalize Codex format to string
             if (payload.call_id) {
-              try {
-                const parsed = payload.output
-                  ? JSON.parse(payload.output)
-                  : payload.output || "";
-
-                // Check if this is Codex format: {output: "...", metadata: {...}}
-                // Normalize content to string and extract metadata separately
-                let content: string;
-                let metadata:
-                  | { exit_code?: number; duration_seconds?: number }
-                  | undefined;
-
-                if (
-                  typeof parsed === "object" &&
-                  parsed !== null &&
-                  "output" in parsed &&
-                  typeof parsed.output === "string"
-                ) {
-                  // Codex format - extract output and metadata
-                  content = parsed.output;
-                  if (parsed.metadata && typeof parsed.metadata === "object") {
-                    metadata = {
-                      exit_code: parsed.metadata.exit_code,
-                      duration_seconds: parsed.metadata.duration_seconds,
-                    };
-                  }
-                } else if (typeof parsed === "string") {
-                  content = parsed;
-                } else {
-                  // Some other object format - stringify it
-                  content = JSON.stringify(parsed, null, 2);
-                }
-
-                currentMessage.content.push({
-                  type: "tool_result",
-                  tool_use_id: payload.call_id,
-                  content,
-                  metadata,
-                });
-                hasContent = true;
-              } catch {
-                // If not JSON, use as string
-                currentMessage.content.push({
-                  type: "tool_result",
-                  tool_use_id: payload.call_id,
-                  content: payload.output || "",
-                });
-                hasContent = true;
-              }
+              const { content, metadata } = parseCodexToolResult(
+                payload.output,
+              );
+              currentMessage.content.push({
+                type: "tool_result",
+                tool_use_id: payload.call_id,
+                content,
+                metadata,
+              });
+              hasContent = true;
             }
           } else if (payload.type === "reasoning") {
             // Reasoning is always from assistant - flush if we were building a user message
@@ -571,60 +627,23 @@ export class CodexProvider implements TranscriptProvider {
               input: args,
             });
             hasContent = true;
-          } catch {
+          } catch (err) {
+            console.error(
+              `Failed to parse function call arguments for ${entry.name}:`,
+              err,
+            );
             // Skip invalid function calls
           }
         } else if (entry.type === "function_call_output" && entry.call_id) {
           // Tool result in direct format - normalize Codex format to string
-          try {
-            const parsed = entry.output
-              ? JSON.parse(entry.output)
-              : entry.output || "";
-
-            // Check if this is Codex format: {output: "...", metadata: {...}}
-            // Normalize content to string and extract metadata separately
-            let content: string;
-            let metadata:
-              | { exit_code?: number; duration_seconds?: number }
-              | undefined;
-
-            if (
-              typeof parsed === "object" &&
-              parsed !== null &&
-              "output" in parsed &&
-              typeof parsed.output === "string"
-            ) {
-              // Codex format - extract output and metadata
-              content = parsed.output;
-              if (parsed.metadata && typeof parsed.metadata === "object") {
-                metadata = {
-                  exit_code: parsed.metadata.exit_code,
-                  duration_seconds: parsed.metadata.duration_seconds,
-                };
-              }
-            } else if (typeof parsed === "string") {
-              content = parsed;
-            } else {
-              // Some other object format - stringify it
-              content = JSON.stringify(parsed, null, 2);
-            }
-
-            currentMessage.content.push({
-              type: "tool_result",
-              tool_use_id: entry.call_id,
-              content,
-              metadata,
-            });
-            hasContent = true;
-          } catch {
-            // If not JSON, use as string
-            currentMessage.content.push({
-              type: "tool_result",
-              tool_use_id: entry.call_id,
-              content: entry.output || "",
-            });
-            hasContent = true;
-          }
+          const { content, metadata } = parseCodexToolResult(entry.output);
+          currentMessage.content.push({
+            type: "tool_result",
+            tool_use_id: entry.call_id,
+            content,
+            metadata,
+          });
+          hasContent = true;
         } else if (entry.type === "reasoning") {
           // Reasoning in direct format (show summary if available, skip encrypted)
           if (

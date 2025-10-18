@@ -8,7 +8,7 @@ import { auth } from "@/lib/auth";
 export const metadata: Metadata = {
   title: "Help - AI Sessions",
   description:
-    "Help and FAQ for AI Sessions - Learn how to upload, manage, and share Claude Code transcripts.",
+    "Help and FAQ for AI Sessions - Learn how to upload, manage, and Share AI coding sessions.",
 };
 
 export default async function HelpPage() {
