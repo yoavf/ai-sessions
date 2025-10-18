@@ -8,7 +8,6 @@ import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
 import { expect as authExpect, test as authTest } from "./fixtures/auth";
 
-
 // Create Prisma client
 const createPrismaClient = () => {
   const connectionString = process.env.DATABASE_URL;
@@ -49,14 +48,13 @@ const uploadTranscript = async (
   page: any,
   title: string,
   messageCount: number,
-  source = "claude-code",
   customJsonl?: string,
 ): Promise<{ secretToken: string; transcriptId: string }> => {
   // Create transcript data
   const jsonlContent = customJsonl || createTranscriptJSONL(messageCount);
 
   // Navigate to homepage
-  await page.goto("http://localhost:3000");
+  await page.goto("/");
   await page.waitForLoadState("load");
 
   // Find the hidden file input created by react-dropzone
@@ -189,8 +187,8 @@ test.describe("My Transcripts Page - Authentication and Access Control", () => {
     test("should redirect unauthenticated user to sign-in page", async ({
       page,
     }) => {
-      // 1. Navigate directly to http://localhost:3000/my-transcripts
-      await page.goto("http://localhost:3000/my-transcripts");
+      // 1. Navigate directly to /my-transcripts
+      await page.goto("/my-transcripts");
 
       // 2. Verify redirect to /api/auth/signin or sign-in page
       // NextAuth redirects to /api/auth/signin which then redirects to the signin page
@@ -223,16 +221,14 @@ test.describe("My Transcripts Page - Authentication and Access Control", () => {
       "should allow authenticated user to access the page",
       async ({ authenticatedPage: page }) => {
         // 1. Sign in via GitHub OAuth (already done by fixture)
-        // 2. Navigate to http://localhost:3000/my-transcripts
-        await page.goto("http://localhost:3000/my-transcripts");
+        // 2. Navigate to /my-transcripts
+        await page.goto("/my-transcripts");
 
         // 3. Verify page loads successfully
         await page.waitForLoadState("load");
 
         // 4. Verify URL remains /my-transcripts
-        await authExpect(page).toHaveURL(
-          "http://localhost:3000/my-transcripts",
-        );
+        await authExpect(page).toHaveURL("/my-transcripts");
 
         // Wait for loading to complete (loading spinner disappears)
         await page.waitForSelector('text="Loading..."', {
@@ -273,7 +269,7 @@ test.describe("My Transcripts Page - Authentication and Access Control", () => {
       "should display empty state when user has no transcripts",
       async ({ authenticatedPage: page }) => {
         // 1. Navigate to /my-transcripts as authenticated user with zero transcripts
-        await page.goto("http://localhost:3000/my-transcripts");
+        await page.goto("/my-transcripts");
 
         // 2. Wait for loading state to complete
         // The loading spinner should disappear
@@ -320,7 +316,7 @@ test.describe("My Transcripts Page - Authentication and Access Control", () => {
         );
 
         // 2. Navigate to /my-transcripts
-        await page.goto("http://localhost:3000/my-transcripts");
+        await page.goto("/my-transcripts");
         await page.waitForSelector('text="Loading..."', {
           state: "hidden",
           timeout: 10000,
@@ -366,7 +362,7 @@ test.describe("My Transcripts Page - Authentication and Access Control", () => {
         await createTranscriptInDB(userId, "Third Upload", 15);
 
         // 2. Navigate to /my-transcripts
-        await page.goto("http://localhost:3000/my-transcripts");
+        await page.goto("/my-transcripts");
         await page.waitForSelector('text="Loading..."', {
           state: "hidden",
           timeout: 10000,
@@ -418,7 +414,7 @@ test.describe("My Transcripts Page - Navigation", () => {
         );
 
         // 2. Navigate to /my-transcripts
-        await page.goto("http://localhost:3000/my-transcripts");
+        await page.goto("/my-transcripts");
         await page.waitForSelector('text="Loading..."', {
           state: "hidden",
           timeout: 10000,
@@ -427,25 +423,21 @@ test.describe("My Transcripts Page - Navigation", () => {
         // 3. Click on transcript title link and wait for navigation
         const titleLink = page.getByRole("link", { name: "Navigation Test" });
         await Promise.all([
-          page.waitForURL(`http://localhost:3000/t/${secretToken}`, {
+          page.waitForURL(`/t/${secretToken}`, {
             timeout: 10000,
           }),
           titleLink.click(),
         ]);
 
         // 4. Verify URL
-        await authExpect(page).toHaveURL(
-          `http://localhost:3000/t/${secretToken}`,
-        );
+        await authExpect(page).toHaveURL(`/t/${secretToken}`);
 
         // 5. Verify transcript viewer page loads
         await page.waitForLoadState("load");
 
         // 6. Verify can return via browser back button
         await page.goBack();
-        await authExpect(page).toHaveURL(
-          "http://localhost:3000/my-transcripts",
-        );
+        await authExpect(page).toHaveURL("/my-transcripts");
       },
     );
   });
@@ -464,7 +456,7 @@ test.describe("My Transcripts Page - Delete Operations", () => {
         await createTranscriptInDB(userId, "Delete Test", 5);
 
         // 2. Navigate to /my-transcripts
-        await page.goto("http://localhost:3000/my-transcripts");
+        await page.goto("/my-transcripts");
         await page.waitForSelector('text="Loading..."', {
           state: "hidden",
           timeout: 10000,
@@ -483,9 +475,8 @@ test.describe("My Transcripts Page - Delete Operations", () => {
 
         // 5. Click Delete button (first time - cancel)
         await page.getByRole("button", { name: "Delete" }).first().click();
-        await page.waitForTimeout(500);
 
-        // 6. Verify transcript still visible after cancel
+        // 6. Verify transcript still visible after cancel (wait a bit for potential updates)
         await authExpect(
           page.getByRole("link", { name: "Delete Test" }),
         ).toBeVisible();
@@ -499,13 +490,10 @@ test.describe("My Transcripts Page - Delete Operations", () => {
         // 8. Click Delete button (second time - confirm)
         await page.getByRole("button", { name: "Delete" }).first().click();
 
-        // 9. Wait for deletion to complete
-        await page.waitForTimeout(2000);
-
-        // 10. Verify transcript removed from list
+        // 9. Verify transcript removed from list (wait for disappearance)
         await authExpect(
           page.getByRole("link", { name: "Delete Test" }),
-        ).not.toBeVisible();
+        ).toBeHidden();
 
         // 11. Verify empty state appears
         await authExpect(
@@ -526,7 +514,7 @@ test.describe("My Transcripts Page - Delete Operations", () => {
         await createTranscriptInDB(userId, "Last One", 5);
 
         // 2. Navigate to /my-transcripts
-        await page.goto("http://localhost:3000/my-transcripts");
+        await page.goto("/my-transcripts");
         await page.waitForSelector('text="Loading..."', {
           state: "hidden",
           timeout: 10000,
@@ -538,10 +526,7 @@ test.describe("My Transcripts Page - Delete Operations", () => {
         // 4. Click Delete button and confirm (use first() as there's also "Delete My Account" button)
         await page.getByRole("button", { name: "Delete" }).first().click();
 
-        // 5. Wait for deletion to complete
-        await page.waitForTimeout(2000);
-
-        // 6. Verify empty state automatically appears
+        // 5. Verify empty state automatically appears (waits for deletion to complete)
         await authExpect(
           page.getByText("You haven't uploaded any transcripts yet."),
         ).toBeVisible();
@@ -560,7 +545,7 @@ test.describe("My Transcripts Page - CLI Token Management", () => {
       "should display CLI access section with all elements",
       async ({ authenticatedPage: page }) => {
         // 1. Navigate to /my-transcripts
-        await page.goto("http://localhost:3000/my-transcripts");
+        await page.goto("/my-transcripts");
         await page.waitForSelector('text="Loading..."', {
           state: "hidden",
           timeout: 10000,
@@ -606,7 +591,7 @@ test.describe("My Transcripts Page - CLI Token Management", () => {
       "should generate CLI token and display it",
       async ({ authenticatedPage: page }) => {
         // 1. Navigate to /my-transcripts
-        await page.goto("http://localhost:3000/my-transcripts");
+        await page.goto("/my-transcripts");
         await page.waitForSelector('text="Loading..."', {
           state: "hidden",
           timeout: 10000,
@@ -621,16 +606,13 @@ test.describe("My Transcripts Page - CLI Token Management", () => {
         });
         await generateButton.click();
 
-        // 4. Wait for response
-        await page.waitForTimeout(1000);
-
-        // 5. Verify alert box appears with token
+        // 4. Wait for alert box to appear with token
         await authExpect(
           page.getByText(/Make sure to copy your token now/),
         ).toBeVisible();
 
-        // 6. Verify token is displayed in monospace font
-        const tokenCode = page.locator("code.font-mono").first();
+        // 6. Verify token is displayed
+        const tokenCode = page.getByTestId("cli-token");
         await authExpect(tokenCode).toBeVisible();
         const tokenText = await tokenCode.textContent();
         authExpect(tokenText).toBeTruthy();
@@ -670,10 +652,14 @@ test.describe("My Transcripts Page - CLI Token Management", () => {
 
         await page.locator("#cli-access").scrollIntoViewIfNeeded();
         await page.getByRole("button", { name: "Generate CLI Token" }).click();
-        await page.waitForTimeout(1000);
+
+        // Wait for token to appear
+        await authExpect(
+          page.getByText(/Make sure to copy your token now/),
+        ).toBeVisible();
 
         // 2. Get the token text before copying
-        const tokenCode = page.locator("code.font-mono").first();
+        const tokenCode = page.getByTestId("cli-token");
         const tokenText = await tokenCode.textContent();
 
         // 3. Grant clipboard permissions
@@ -682,25 +668,21 @@ test.describe("My Transcripts Page - CLI Token Management", () => {
         // 4. Click "Copy" button
         await page.getByRole("button", { name: "Copy" }).click();
 
-        // 5. Wait for feedback
-        await page.waitForTimeout(500);
-
-        // 6. Verify button text changes to "Copied" with checkmark
+        // 5. Verify button text changes to "Copied" with checkmark
         await authExpect(
           page.getByRole("button", { name: "Copied" }),
         ).toBeVisible();
 
-        // 7. Verify token copied to clipboard
+        // 6. Verify token copied to clipboard
         const clipboardText = await page.evaluate(() =>
           navigator.clipboard.readText(),
         );
         authExpect(clipboardText).toBe(tokenText);
 
-        // 8. Wait for button to return to "Copy" state
-        await page.waitForTimeout(2500);
+        // 7. Wait for button to return to "Copy" state (timeout is 2 seconds in the component)
         await authExpect(
           page.getByRole("button", { name: "Copy" }),
-        ).toBeVisible();
+        ).toBeVisible({ timeout: 3000 });
       },
     );
   });
@@ -718,7 +700,11 @@ test.describe("My Transcripts Page - CLI Token Management", () => {
 
         await page.locator("#cli-access").scrollIntoViewIfNeeded();
         await page.getByRole("button", { name: "Generate CLI Token" }).click();
-        await page.waitForTimeout(1000);
+
+        // Wait for token to appear
+        await authExpect(
+          page.getByText(/Make sure to copy your token now/),
+        ).toBeVisible();
 
         // 2. Click "Close" button
         await page.getByRole("button", { name: "Close" }).click();
