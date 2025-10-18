@@ -43,8 +43,9 @@ export function isUuidOrSessionId(title: string | null | undefined): boolean {
   if (containsUuidPattern.test(title)) return true;
 
   // Check for timestamp-heavy filenames (e.g., "2025-10-11T10-35-38" or similar)
+  // Also matches Gemini CLI format: "session-2025-10-18T14-56-f86f5318"
   // These are typically auto-generated and not meaningful
-  const timestampPattern = /\d{4}-\d{2}-\d{2}[T_-]\d{2}[:-]\d{2}[:-]\d{2}/;
+  const timestampPattern = /\d{4}-\d{2}-\d{2}[T_-]\d{2}[:-]\d{2}/;
   if (timestampPattern.test(title)) return true;
 
   return false;

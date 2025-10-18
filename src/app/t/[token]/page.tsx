@@ -148,6 +148,7 @@ export default async function TranscriptPage({ params }: PageProps) {
         <TranscriptViewer
           transcript={parsed}
           title={title}
+          source={transcript.source}
           createdAt={transcript.createdAt.toISOString()}
           userImage={transcript.user?.image ?? undefined}
           githubUsername={transcript.user?.githubUsername ?? undefined}

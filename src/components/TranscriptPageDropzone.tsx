@@ -67,8 +67,8 @@ export default function TranscriptPageDropzone({
       if (!file) return;
 
       // Basic validation for better UX
-      if (!file.name.endsWith(".jsonl")) {
-        setError("Please upload a .jsonl file");
+      if (!file.name.endsWith(".jsonl") && !file.name.endsWith(".json")) {
+        setError("Please upload a .json or .jsonl transcript file");
         return;
       }
 
@@ -90,7 +90,7 @@ export default function TranscriptPageDropzone({
     onDrop,
     accept: {
       "application/x-jsonl": [".jsonl"],
-      "application/json": [".jsonl"],
+      "application/json": [".json", ".jsonl"],
     },
     maxFiles: 1,
     disabled: uploading || !isAuthenticated,
@@ -118,7 +118,7 @@ export default function TranscriptPageDropzone({
                 Drop transcript here to upload
               </div>
               <div className="text-sm text-muted-foreground">
-                Upload a new transcript (.jsonl file)
+                Upload a new transcript (JSON or JSONL file)
               </div>
             </div>
           </div>
