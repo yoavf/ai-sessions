@@ -86,22 +86,6 @@ function isSessionMetaPayload(payload: unknown): payload is SessionMetaPayload {
 }
 
 /**
- * Type guard for TurnContextPayload
- */
-function _isTurnContextPayload(
-  payload: unknown,
-): payload is TurnContextPayload {
-  if (typeof payload !== "object" || payload === null) {
-    return false;
-  }
-  const p = payload as Partial<TurnContextPayload>;
-  return (
-    (p.model === undefined || typeof p.model === "string") &&
-    (p.cwd === undefined || typeof p.cwd === "string")
-  );
-}
-
-/**
  * Type guard for ResponseItemPayload
  */
 function isResponseItemPayload(
