@@ -223,3 +223,4 @@ Comprehensive security headers configured for all routes:
 - **Secret Tokens**: Cryptographically secure via `nanoid(16)`
 - use shadcn ui components whenever building interfaces
 - always make migrations when making db changes!
+- never commit with --no-verify - it will just fail on ci

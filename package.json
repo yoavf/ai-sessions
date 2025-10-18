@@ -108,6 +108,9 @@
     "vitest": "^3.2.4"
   },
   "lint-staged": {
+    "src/components/ai-elements/**/*.{ts,tsx}": [
+      "biome format --write"
+    ],
     "*.{js,jsx,ts,tsx,json,css}": [
       "biome check --write --unsafe"
     ]
