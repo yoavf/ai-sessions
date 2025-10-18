@@ -423,7 +423,10 @@ export default function MyTranscriptsPage() {
                               able to see it again!
                             </p>
                             <div className="flex items-center gap-2 mt-2">
-                              <code className="flex-1 bg-muted px-3 py-2 rounded text-xs font-mono break-all">
+                              <code
+                                data-testid="cli-token"
+                                className="flex-1 bg-muted px-3 py-2 rounded text-xs font-mono break-all"
+                              >
                                 {cliToken}
                               </code>
                               <Button
