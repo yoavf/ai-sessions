@@ -61,12 +61,18 @@ export default function MessageRenderer({
       const toolResults: ToolResult[] = [];
       let j = i + 1;
 
+      // Collect only matching tool_results that immediately follow
+      // Stop at the first non-matching tool_result or non-tool_result block
       while (j < content.length && content[j].type === "tool_result") {
         const result = content[j] as ToolResult;
         if (result.tool_use_id === toolUse.id) {
           toolResults.push(result);
+          j++;
+        } else {
+          // Stop when we encounter a tool_result for a different tool_use_id
+          // This prevents skipping/losing tool_results that belong to other tool_use blocks
+          break;
         }
-        j++;
       }
 
       groupedContent.push({
