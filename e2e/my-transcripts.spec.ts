@@ -8,10 +8,6 @@ import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
 import { expect as authExpect, test as authTest } from "./fixtures/auth";
 
-// Helper to generate random ID
-const generateId = (length = 8): string => {
-  return randomBytes(length).toString("base64url").slice(0, length);
-};
 
 // Create Prisma client
 const createPrismaClient = () => {
