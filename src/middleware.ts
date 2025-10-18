@@ -1,5 +1,6 @@
 import { nanoid } from "nanoid";
 import { type NextRequest, NextResponse } from "next/server";
+import { CSRF_TOKEN_LENGTH } from "@/lib/csrf";
 
 const CSRF_TOKEN_COOKIE = "csrf-token";
 
@@ -16,7 +17,7 @@ export function middleware(request: NextRequest) {
 
   if (!existingToken) {
     // Generate new token if none exists
-    const newToken = nanoid(32);
+    const newToken = nanoid(CSRF_TOKEN_LENGTH);
 
     // Set cookie with same options as in csrf.ts
     response.cookies.set(CSRF_TOKEN_COOKIE, newToken, {
