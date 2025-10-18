@@ -118,7 +118,7 @@ export default function TranscriptPageDropzone({
                 Drop transcript here to upload
               </div>
               <div className="text-sm text-muted-foreground">
-                Upload a new Claude Code transcript (.jsonl file)
+                Upload a new transcript (.jsonl file)
               </div>
             </div>
           </div>

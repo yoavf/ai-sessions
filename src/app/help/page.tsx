@@ -91,13 +91,19 @@ export default async function HelpPage() {
 
                 <div>
                   <h3 className="text-lg font-semibold mb-2">
-                    Where do I find my Claude Code transcripts?
+                    Where do I find my transcripts?
                   </h3>
                   <p className="text-muted-foreground text-sm mb-2">
-                    Claude Code saves transcripts to:
+                    <strong>Claude Code</strong> saves transcripts to:
+                  </p>
+                  <code className="block bg-muted p-3 rounded font-mono text-xs border mb-3">
+                    ~/.claude/projects/&lt;project-name&gt;/&lt;session-id&gt;.jsonl
+                  </code>
+                  <p className="text-muted-foreground text-sm mb-2">
+                    <strong>Codex</strong> saves transcripts to:
                   </p>
                   <code className="block bg-muted p-3 rounded font-mono text-xs border">
-                    ~/.claude/projects/
+                    ~/.codex/sessions/&lt;year&gt;/&lt;month&gt;/&lt;day&gt;/&lt;session-id&gt;.jsonl
                   </code>
                 </div>
               </CardContent>

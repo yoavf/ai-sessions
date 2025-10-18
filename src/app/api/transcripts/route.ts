@@ -32,6 +32,7 @@ export async function GET() {
         createdAt: true,
         messageCount: true,
         fileSizeBytes: true,
+        source: true,
       },
       orderBy: {
         createdAt: "desc",
@@ -46,6 +47,7 @@ export async function GET() {
       createdAt: transcript.createdAt,
       messageCount: transcript.messageCount,
       fileSize: transcript.fileSizeBytes,
+      source: transcript.source,
     }));
 
     return NextResponse.json(transcriptsWithMetadata);

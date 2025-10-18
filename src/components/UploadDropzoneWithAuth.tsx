@@ -109,9 +109,7 @@ export default function UploadDropzoneWithAuth({
               </div>
             ) : (
               <div>
-                <div className="text-xl font-medium">
-                  Drop your Claude Code transcript
-                </div>
+                <div className="text-xl font-medium">Drop your transcript</div>
                 <div className="text-sm text-muted-foreground mt-2">
                   or click to browse for a .jsonl file
                 </div>

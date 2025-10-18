@@ -21,10 +21,10 @@ export default async function Home() {
           <div className="text-center mb-8">
             <h1 className="text-5xl font-bold mb-4">AI Sessions</h1>
             <p className="text-lg text-muted-foreground mb-2">
-              Share Claude Code transcripts
+              Share AI coding sessions
             </p>
             <p className="text-sm text-muted-foreground/70">
-              (Other coding agents coming soon!)
+              Supports Claude Code, Codex, and more coming soon
             </p>
           </div>
 
