@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
+import TranscriptPageDropzone from "@/components/TranscriptPageDropzone";
 import TranscriptViewer from "@/components/TranscriptViewer";
 import { auth } from "@/lib/auth";
+import { getCsrfToken } from "@/lib/csrf";
 import {
   generateDefaultTitle,
   isUuidOrSessionId,
@@ -98,6 +100,12 @@ export default async function TranscriptPage({ params }: PageProps) {
   const { token } = await params;
   const session = await auth();
 
+  // CSRF token is guaranteed to exist because middleware ensures it
+  const csrfToken = await getCsrfToken();
+  if (!csrfToken) {
+    throw new Error("CSRF token missing - middleware may not be running");
+  }
+
   try {
     // Fetch directly from database instead of through API route
     const transcript = await prisma.transcript.findUnique({
@@ -135,7 +143,7 @@ export default async function TranscriptPage({ params }: PageProps) {
       : generateDefaultTitle(transcript.source, transcript.createdAt);
 
     return (
-      <>
+      <TranscriptPageDropzone isAuthenticated={!!session} csrfToken={csrfToken}>
         <SiteHeader session={session} />
         <TranscriptViewer
           transcript={parsed}
@@ -147,7 +155,7 @@ export default async function TranscriptPage({ params }: PageProps) {
           transcriptId={transcript.id}
           secretToken={token}
         />
-      </>
+      </TranscriptPageDropzone>
     );
   } catch (error) {
     console.error("Failed to load transcript:", error);

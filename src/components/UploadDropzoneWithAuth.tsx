@@ -3,22 +3,25 @@
 import { Loader2, Lock, Upload } from "lucide-react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { addCsrfToken, useCsrfToken } from "@/hooks/useCsrfToken";
+import { useTranscriptUpload } from "@/hooks/useTranscriptUpload";
 
 interface UploadDropzoneWithAuthProps {
   isAuthenticated: boolean;
+  csrfToken: string;
 }
 
 export default function UploadDropzoneWithAuth({
   isAuthenticated,
+  csrfToken,
 }: UploadDropzoneWithAuthProps) {
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const csrfToken = useCsrfToken();
+  const { uploading, error, setError, uploadTranscript } = useTranscriptUpload(
+    isAuthenticated,
+    csrfToken,
+  );
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
@@ -29,13 +32,13 @@ export default function UploadDropzoneWithAuth({
       const file = acceptedFiles[0];
       if (!file) return;
 
+      // Show validation errors immediately
       if (!file.name.endsWith(".jsonl")) {
         setError("Please upload a .jsonl file");
         return;
       }
 
-      // Check file size (5MB limit)
-      const maxSizeBytes = 5 * 1024 * 1024; // 5MB
+      const maxSizeBytes = 5 * 1024 * 1024;
       if (file.size > maxSizeBytes) {
         setError(
           `File size ${(file.size / 1024 / 1024).toFixed(2)}MB exceeds the 5MB limit.`,
@@ -43,65 +46,16 @@ export default function UploadDropzoneWithAuth({
         return;
       }
 
-      setUploading(true);
-      setError(null);
+      // Upload immediately (no confirmation dialog on homepage)
+      const result = await uploadTranscript(file);
 
-      try {
-        const text = await file.text();
-
-        const lines = text.trim().split("\n");
-        for (const line of lines) {
-          JSON.parse(line);
-        }
-
-        // Ensure we have a CSRF token before proceeding
-        if (!csrfToken) {
-          setError(
-            "Security token not loaded. Please refresh the page and try again.",
-          );
-          setUploading(false);
-          return;
-        }
-
-        const response = await fetch(
-          "/api/transcripts",
-          addCsrfToken(csrfToken, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              fileData: text,
-              title: file.name.replace(".jsonl", ""),
-            }),
-          }),
-        );
-
-        if (!response.ok) {
-          const errorData = await response.json();
-
-          // Handle sensitive data detection
-          if (errorData.error === "Sensitive data detected") {
-            setError(
-              errorData.message ||
-                "Your transcript contains sensitive information that should not be uploaded publicly.",
-            );
-            setUploading(false);
-            return;
-          }
-
-          throw new Error(errorData.error || "Upload failed");
-        }
-
-        const { secretToken } = await response.json();
-        // Use window.location.href for full page reload to avoid client-side navigation issues
-        window.location.href = `/t/${secretToken}`;
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Invalid JSONL file");
-        setUploading(false);
+      if (result.success && result.secretToken) {
+        window.location.href = `/t/${result.secretToken}`;
+      } else if (result.error) {
+        setError(result.error);
       }
     },
-    [isAuthenticated, csrfToken],
+    [isAuthenticated, uploadTranscript, setError],
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
