@@ -233,8 +233,6 @@ export default function TranscriptViewer({
     return count + toolUseBlocks.length;
   }, 0);
 
-  const _totalMessages = userMessageCount + assistantMessageCount;
-
   // Calculate model usage statistics
   const modelStats = useMemo(
     () => calculateModelStats(transcript),

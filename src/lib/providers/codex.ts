@@ -73,6 +73,58 @@ interface TurnContextPayload {
 }
 
 /**
+ * Parse text that may contain <user_instructions> tags
+ * Returns array of content blocks with proper splitting around tags
+ */
+function parseUserInstructions(text: string): ContentBlock[] {
+  const blocks: ContentBlock[] = [];
+
+  // Check if text contains <user_instructions> tags
+  const userInstructionsMatch = text.match(
+    /<user_instructions>([\s\S]*?)<\/user_instructions>/,
+  );
+
+  if (userInstructionsMatch) {
+    // Extract the instructions content
+    const instructionsText = userInstructionsMatch[1].trim();
+
+    // Get any text before the tag
+    const beforeTag = text.substring(0, userInstructionsMatch.index).trim();
+    if (beforeTag) {
+      blocks.push({
+        type: "text",
+        text: beforeTag,
+      });
+    }
+
+    // Add user instructions as special content block
+    blocks.push({
+      type: "user-instructions",
+      text: instructionsText,
+    });
+
+    // Get any text after the tag
+    const afterTag = text
+      .substring(userInstructionsMatch.index! + userInstructionsMatch[0].length)
+      .trim();
+    if (afterTag) {
+      blocks.push({
+        type: "text",
+        text: afterTag,
+      });
+    }
+  } else {
+    // No user_instructions tag, add as normal text
+    blocks.push({
+      type: "text",
+      text,
+    });
+  }
+
+  return blocks;
+}
+
+/**
  * Format OpenAI and other model names
  */
 function formatCodexModelName(modelId: string): string | null {
@@ -317,56 +369,10 @@ export class CodexProvider implements TranscriptProvider {
                     continue;
                   }
 
-                  // Check if text contains <user_instructions> tags
-                  const userInstructionsMatch = item.text.match(
-                    /<user_instructions>([\s\S]*?)<\/user_instructions>/,
-                  );
-
-                  if (userInstructionsMatch) {
-                    // Extract the instructions content
-                    const instructionsText = userInstructionsMatch[1].trim();
-
-                    // Get any text before the tag
-                    const beforeTag = item.text
-                      .substring(0, userInstructionsMatch.index)
-                      .trim();
-                    if (beforeTag) {
-                      currentMessage.content.push({
-                        type: "text",
-                        text: beforeTag,
-                      });
-                      hasContent = true;
-                    }
-
-                    // Add user instructions as special content block
-                    currentMessage.content.push({
-                      type: "user-instructions",
-                      text: instructionsText,
-                    });
-                    hasContent = true;
-
-                    // Get any text after the tag
-                    const afterTag = item.text
-                      .substring(
-                        userInstructionsMatch.index! +
-                          userInstructionsMatch[0].length,
-                      )
-                      .trim();
-                    if (afterTag) {
-                      currentMessage.content.push({
-                        type: "text",
-                        text: afterTag,
-                      });
-                      hasContent = true;
-                    }
-                  } else {
-                    // No user_instructions tag, add as normal text
-                    currentMessage.content.push({
-                      type: "text",
-                      text: item.text,
-                    });
-                    hasContent = true;
-                  }
+                  // Parse user instructions and add resulting blocks
+                  const blocks = parseUserInstructions(item.text);
+                  currentMessage.content.push(...blocks);
+                  hasContent = true;
                 } else if (item.type === "text" && item.text) {
                   currentMessage.content.push({
                     type: "text",
@@ -543,56 +549,10 @@ export class CodexProvider implements TranscriptProvider {
                   continue;
                 }
 
-                // Check if text contains <user_instructions> tags
-                const userInstructionsMatch = item.text.match(
-                  /<user_instructions>([\s\S]*?)<\/user_instructions>/,
-                );
-
-                if (userInstructionsMatch) {
-                  // Extract the instructions content
-                  const instructionsText = userInstructionsMatch[1].trim();
-
-                  // Get any text before the tag
-                  const beforeTag = item.text
-                    .substring(0, userInstructionsMatch.index)
-                    .trim();
-                  if (beforeTag) {
-                    currentMessage.content.push({
-                      type: "text",
-                      text: beforeTag,
-                    });
-                    hasContent = true;
-                  }
-
-                  // Add user instructions as special content block
-                  currentMessage.content.push({
-                    type: "user-instructions",
-                    text: instructionsText,
-                  });
-                  hasContent = true;
-
-                  // Get any text after the tag
-                  const afterTag = item.text
-                    .substring(
-                      userInstructionsMatch.index! +
-                        userInstructionsMatch[0].length,
-                    )
-                    .trim();
-                  if (afterTag) {
-                    currentMessage.content.push({
-                      type: "text",
-                      text: afterTag,
-                    });
-                    hasContent = true;
-                  }
-                } else {
-                  // No user_instructions tag, add as normal text
-                  currentMessage.content.push({
-                    type: "text",
-                    text: item.text,
-                  });
-                  hasContent = true;
-                }
+                // Parse user instructions and add resulting blocks
+                const blocks = parseUserInstructions(item.text);
+                currentMessage.content.push(...blocks);
+                hasContent = true;
               }
             }
           }

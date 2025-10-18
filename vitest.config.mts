@@ -1,31 +1,31 @@
-import { defineConfig } from 'vitest/config'
-import { fileURLToPath } from 'node:url'
-import path from 'node:path'
+import { defineConfig } from "vitest/config";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   test: {
     globals: true,
-    environment: 'node',
-    include: ['**/*.test.ts', '**/*.spec.ts'],
-    exclude: ['node_modules', '.next', 'e2e'],
+    environment: "node",
+    include: ["**/*.test.ts", "**/*.spec.ts"],
+    exclude: ["node_modules", ".next", "e2e"],
     coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      provider: "v8",
+      reporter: ["text", "json", "html"],
       exclude: [
-        'node_modules/',
-        '.next/',
-        'e2e/',
-        '**/*.config.{ts,js}',
-        '**/types.ts',
-        'prisma/',
+        "node_modules/",
+        ".next/",
+        "e2e/",
+        "**/*.config.{ts,js}",
+        "**/types.ts",
+        "prisma/",
       ],
     },
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      "@": path.resolve(__dirname, "./src"),
     },
   },
-})
+});
