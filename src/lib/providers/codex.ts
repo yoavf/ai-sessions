@@ -155,56 +155,95 @@ function parseCodexToolResult(output: unknown): {
 }
 
 /**
- * Format OpenAI and other model names
+ * Model formatting configuration
+ * Defines how to format different model identifiers into display names
+ */
+interface ModelFormatter {
+  /** Pattern to match against model ID (can be prefix, substring, or regex) */
+  pattern: string | RegExp;
+  /** Function to format the matched model ID */
+  format: (modelId: string) => string | null;
+}
+
+/**
+ * Model formatting rules
+ * Order matters - earlier rules are tried first
+ */
+const MODEL_FORMATTERS: ModelFormatter[] = [
+  // GPT models: gpt-4-turbo-2024-04-09 → GPT-4 Turbo
+  {
+    pattern: /^gpt-/,
+    format: (modelId: string) => {
+      const parts = modelId.split("-");
+      if (parts.length >= 2) {
+        const version = parts[1]; // "4", "3.5"
+        const variant = parts.slice(2).join("-"); // "turbo", "o", etc.
+
+        if (variant.startsWith("turbo")) {
+          return `GPT-${version.toUpperCase()} Turbo`;
+        }
+        if (variant === "o") {
+          return `GPT-${version.toUpperCase()}o`;
+        }
+        return `GPT-${version.toUpperCase()}`;
+      }
+      return null;
+    },
+  },
+  // Claude models via OpenRouter: claude-3-5-sonnet → Claude Sonnet 3.5
+  {
+    pattern: /claude/,
+    format: (modelId: string) => {
+      const claudeMatch = modelId.match(/claude-([^/]+)/);
+      if (claudeMatch) {
+        const modelPart = claudeMatch[1];
+        const parts = modelPart.split("-");
+        if (parts.length >= 3) {
+          const family = parts[parts.length - 1]; // sonnet, opus, haiku
+          const version = parts.slice(0, parts.length - 1).join(".");
+          const familyCapitalized =
+            family.charAt(0).toUpperCase() + family.slice(1);
+          return `Claude ${familyCapitalized} ${version}`;
+        }
+      }
+      return null;
+    },
+  },
+  // Gemini models: gemini-2.5-flash → Gemini 2.5 Flash
+  {
+    pattern: /gemini/,
+    format: (modelId: string) => {
+      const geminiMatch = modelId.match(/gemini-([^/]+)/);
+      if (geminiMatch) {
+        const parts = geminiMatch[1].split("-");
+        return `Gemini ${parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(" ")}`;
+      }
+      return null;
+    },
+  },
+];
+
+/**
+ * Format OpenAI and other model names using configuration-based approach
+ *
+ * @param modelId - The model identifier to format
+ * @returns Formatted model name, or original model ID if no formatter matches
  */
 function formatCodexModelName(modelId: string): string | null {
   if (!modelId) return null;
 
-  // Handle GPT models
-  if (modelId.startsWith("gpt-")) {
-    // gpt-4-turbo-2024-04-09 → GPT-4 Turbo
-    // gpt-3.5-turbo → GPT-3.5 Turbo
-    // gpt-4o → GPT-4o
-    const parts = modelId.split("-");
-    if (parts.length >= 2) {
-      const version = parts[1]; // "4", "3.5"
-      const variant = parts.slice(2).join("-"); // "turbo", "o", etc.
+  // Try each formatter in order
+  for (const formatter of MODEL_FORMATTERS) {
+    const matches =
+      formatter.pattern instanceof RegExp
+        ? formatter.pattern.test(modelId)
+        : modelId.includes(formatter.pattern);
 
-      if (variant.startsWith("turbo")) {
-        return `GPT-${version.toUpperCase()} Turbo`;
+    if (matches) {
+      const formatted = formatter.format(modelId);
+      if (formatted) {
+        return formatted;
       }
-      if (variant === "o") {
-        return `GPT-${version.toUpperCase()}o`;
-      }
-      return `GPT-${version.toUpperCase()}`;
-    }
-  }
-
-  // Handle Claude models via OpenRouter
-  if (modelId.includes("claude")) {
-    // Extract claude model name (might be nested in openrouter path)
-    const claudeMatch = modelId.match(/claude-([^/]+)/);
-    if (claudeMatch) {
-      const modelPart = claudeMatch[1];
-      // claude-3-5-sonnet → Claude Sonnet 3.5
-      const parts = modelPart.split("-");
-      if (parts.length >= 3) {
-        const family = parts[parts.length - 1]; // sonnet, opus, haiku
-        const version = parts.slice(0, parts.length - 1).join(".");
-        const familyCapitalized =
-          family.charAt(0).toUpperCase() + family.slice(1);
-        return `Claude ${familyCapitalized} ${version}`;
-      }
-    }
-  }
-
-  // Handle Gemini models
-  if (modelId.includes("gemini")) {
-    // gemini-2.5-flash → Gemini 2.5 Flash
-    const geminiMatch = modelId.match(/gemini-([^/]+)/);
-    if (geminiMatch) {
-      const parts = geminiMatch[1].split("-");
-      return `Gemini ${parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(" ")}`;
     }
   }
 
