@@ -63,11 +63,6 @@ export default function TranscriptPageDropzone({
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
-      if (!isAuthenticated) {
-        setError("Please sign in to upload transcripts");
-        return;
-      }
-
       const file = acceptedFiles[0];
       if (!file) return;
 
@@ -88,7 +83,7 @@ export default function TranscriptPageDropzone({
       setError(null);
       setPendingFile(file);
     },
-    [isAuthenticated, setError],
+    [setError],
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -98,7 +93,7 @@ export default function TranscriptPageDropzone({
       "application/json": [".jsonl"],
     },
     maxFiles: 1,
-    disabled: uploading,
+    disabled: uploading || !isAuthenticated,
     noClick: true, // Don't open file dialog on click
     noKeyboard: true, // Don't respond to keyboard
   });
