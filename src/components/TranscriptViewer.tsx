@@ -21,6 +21,7 @@ const SYSTEM_XML_TAGS = [
   "system-reminder",
   "user-prompt-submit-hook",
   "local-command-stdout",
+  "environment_context",
 ] as const;
 
 // Helper functions for message type checking
@@ -213,19 +214,31 @@ export default function TranscriptViewer({
     .replace(/(\d+) months? ago/, "$1mo ago")
     .replace(/(\d+) years? ago/, "$1y ago");
 
-  // Count messages by role
+  // Count messages by role and tool calls
   const userMessageCount = transcript.messages.filter(
     (line) => line.message?.role === "user",
   ).length;
   const assistantMessageCount = transcript.messages.filter(
     (line) => line.message?.role === "assistant",
   ).length;
-  const totalMessages = userMessageCount + assistantMessageCount;
+
+  // Count tool calls from assistant messages
+  const toolCallCount = transcript.messages.reduce((count, line) => {
+    if (line.message?.role !== "assistant") return count;
+    const content = line.message.content;
+    if (!Array.isArray(content)) return count;
+
+    // Count tool_use blocks in this message
+    const toolUseBlocks = content.filter((block) => block.type === "tool_use");
+    return count + toolUseBlocks.length;
+  }, 0);
+
+  const _totalMessages = userMessageCount + assistantMessageCount;
 
   // Calculate model usage statistics
   const modelStats = useMemo(
-    () => calculateModelStats(transcript.messages),
-    [transcript.messages],
+    () => calculateModelStats(transcript),
+    [transcript],
   );
 
   // Extract user messages for TOC (only real user messages, excluding system messages and tool results)
@@ -369,9 +382,10 @@ export default function TranscriptViewer({
                 <span className="hidden sm:inline">•</span>
                 <span
                   className="cursor-help"
-                  title={`${userMessageCount} user message${userMessageCount !== 1 ? "s" : ""}, ${assistantMessageCount} assistant message${assistantMessageCount !== 1 ? "s" : ""}`}
+                  title={`${userMessageCount} user, ${assistantMessageCount} assistant, ${toolCallCount} tool call${toolCallCount !== 1 ? "s" : ""}`}
                 >
-                  {totalMessages} message{totalMessages !== 1 ? "s" : ""}
+                  {userMessageCount} user, {assistantMessageCount} assistant,{" "}
+                  {toolCallCount} tool call{toolCallCount !== 1 ? "s" : ""}
                 </span>
                 {modelStats.length > 0 && (
                   <>

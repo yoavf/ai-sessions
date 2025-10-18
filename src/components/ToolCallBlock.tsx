@@ -6,7 +6,6 @@ import {
   ToolContent,
   ToolHeader,
   ToolInput,
-  ToolOutput,
 } from "@/components/ai-elements/tool";
 import type { ToolResult, ToolUse } from "@/types/transcript";
 import TodoListBlock from "./TodoListBlock";
@@ -83,6 +82,40 @@ function getToolPreview(
       }
       return null;
 
+    case "shell": {
+      // Codex shell tool
+      if (!input.command) return null;
+
+      // Parse command - it's usually an array like ["bash", "-lc", "actual command"]
+      let actualCommand: string;
+      if (Array.isArray(input.command)) {
+        // Skip "bash", "-lc" and get the actual command
+        const filtered = input.command.filter(
+          (arg: string) => arg !== "bash" && arg !== "-lc",
+        );
+        actualCommand = filtered.join(" ");
+      } else if (typeof input.command === "string") {
+        actualCommand = input.command;
+      } else {
+        return null;
+      }
+
+      // Get first line if multiline
+      const firstLine = actualCommand.trim().split("\n")[0];
+
+      // For commands, get first ~60 chars or until &&, ||, |, ;
+      const breakPoints = /[&|;]/;
+      const breakIndex = firstLine.search(breakPoints);
+      const displayCmd =
+        breakIndex !== -1
+          ? firstLine.substring(0, breakIndex).trim()
+          : firstLine;
+
+      return displayCmd.length > 60
+        ? `${displayCmd.substring(0, 60)}...`
+        : displayCmd;
+    }
+
     default: {
       // For unknown tools, try to find a likely preview field
       const previewFields = [
@@ -115,25 +148,47 @@ export default function ToolCallBlock({
   const [isOpen, setIsOpen] = useState(isTodoWrite);
   const preview = getToolPreview(toolUse.name, toolUse.input);
 
+  // For shell tool, show just the command without the "shell:" prefix
+  const getTitle = () => {
+    if (toolUse.name === "shell" && preview) {
+      return preview;
+    }
+    return preview ? `${toolUse.name}: ${preview}` : toolUse.name;
+  };
+
   // Special handling for TodoWrite - show visual todo list instead of JSON
   if (isTodoWrite) {
     return (
       <Tool open={isOpen} onOpenChange={setIsOpen}>
         <ToolHeader
-          title={preview ? `${toolUse.name}: ${preview}` : toolUse.name}
+          title={getTitle()}
           type="tool-call"
           state="output-available"
+          className={
+            toolUse.name === "shell" ? "[&_span]:font-mono" : undefined
+          }
         />
         <ToolContent>
           <div className="p-4 space-y-3">
             <TodoListBlock todos={toolUse.input.todos} />
           </div>
           {toolResults.map((result) => (
-            <ToolOutput
-              key={result.tool_use_id}
-              output={result.content}
-              errorText={result.is_error ? "Tool execution failed" : undefined}
-            />
+            <div key={result.tool_use_id} className="space-y-2 p-4">
+              <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide flex items-center gap-2">
+                <span>{result.is_error ? "Error" : "Result"}</span>
+                {result.metadata?.duration_seconds !== undefined &&
+                  result.metadata.duration_seconds > 0 && (
+                    <span className="text-[10px] opacity-60 font-normal normal-case">
+                      ({result.metadata.duration_seconds}s)
+                    </span>
+                  )}
+              </h4>
+              <div className="overflow-x-auto rounded-md bg-muted/50 text-foreground text-xs">
+                <pre className="whitespace-pre-wrap p-2 font-mono">
+                  {result.content}
+                </pre>
+              </div>
+            </div>
           ))}
         </ToolContent>
       </Tool>
@@ -143,18 +198,30 @@ export default function ToolCallBlock({
   return (
     <Tool open={isOpen} onOpenChange={setIsOpen}>
       <ToolHeader
-        title={preview ? `${toolUse.name}: ${preview}` : toolUse.name}
+        title={getTitle()}
         type="tool-call"
         state="output-available"
+        className={toolUse.name === "shell" ? "[&_span]:font-mono" : undefined}
       />
       <ToolContent>
         <ToolInput input={toolUse.input} />
         {toolResults.map((result) => (
-          <ToolOutput
-            key={result.tool_use_id}
-            output={result.content}
-            errorText={result.is_error ? "Tool execution failed" : undefined}
-          />
+          <div key={result.tool_use_id} className="space-y-2 p-4">
+            <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide flex items-center gap-2">
+              <span>{result.is_error ? "Error" : "Result"}</span>
+              {result.metadata?.duration_seconds !== undefined &&
+                result.metadata.duration_seconds > 0 && (
+                  <span className="text-[10px] opacity-60 font-normal normal-case">
+                    ({result.metadata.duration_seconds}s)
+                  </span>
+                )}
+            </h4>
+            <div className="overflow-x-auto rounded-md bg-muted/50 text-foreground text-xs">
+              <pre className="whitespace-pre-wrap p-2 font-mono">
+                {result.content}
+              </pre>
+            </div>
+          </div>
         ))}
       </ToolContent>
     </Tool>

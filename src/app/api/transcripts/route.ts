@@ -3,8 +3,13 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { checkCsrf } from "@/lib/csrf";
 import { formatDlpFindings, scanForSensitiveData } from "@/lib/dlp";
-import { parseJSONL } from "@/lib/parser";
+import {
+  generateDefaultTitle,
+  isUuidOrSessionId,
+  parseJSONL,
+} from "@/lib/parser";
 import { prisma } from "@/lib/prisma";
+import { detectProvider } from "@/lib/providers";
 import { checkUploadRateLimit } from "@/lib/rate-limit";
 
 export async function GET() {
@@ -114,10 +119,19 @@ export async function POST(request: Request) {
       );
     }
 
+    // Auto-detect transcript format
+    let detectedSource = "claude-code"; // Default fallback
+    try {
+      const detection = detectProvider(originalFileData);
+      detectedSource = detection.provider;
+    } catch (_err) {
+      // Ignore detection errors, will fall back to default
+    }
+
     // Validate JSONL format and extract metadata
     let messageCount = 0;
     try {
-      const parsed = parseJSONL(originalFileData);
+      const parsed = parseJSONL(originalFileData, detectedSource);
       messageCount = parsed.metadata.messageCount;
     } catch (_err) {
       return NextResponse.json(
@@ -158,15 +172,23 @@ export async function POST(request: Request) {
     // Recalculate file size for final data (may have been scrubbed)
     const finalFileSizeBytes = Buffer.byteLength(fileData, "utf8");
 
+    // Generate default title if none provided or if title is a UUID/session ID
+    const createdAt = new Date();
+    const finalTitle =
+      title && !isUuidOrSessionId(title)
+        ? title
+        : generateDefaultTitle(detectedSource, createdAt);
+
     const transcript = await prisma.transcript.create({
       data: {
         userId: session.user.id,
         secretToken,
-        title: title || "Untitled Transcript",
-        source: "claude-code", // Web uploads are from Claude Code browser extension
+        title: finalTitle,
+        source: detectedSource, // Auto-detected provider format
         fileData,
         messageCount,
         fileSizeBytes: finalFileSizeBytes,
+        createdAt, // Use same date for consistency
       },
     });
 

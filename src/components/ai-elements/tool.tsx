@@ -128,12 +128,15 @@ export const ToolOutput = ({
 
   let Output = <div>{output as ReactNode}</div>;
 
+  // After normalization in parsers, output should always be a string or ReactNode
   if (typeof output === "object" && !isValidElement(output)) {
+    // Unexpected object format - display as JSON
     Output = (
       <CodeBlock code={JSON.stringify(output, null, 2)} language="json" />
     );
   } else if (typeof output === "string") {
-    Output = <CodeBlock code={output} language="json" />;
+    // Standard format: display output as code block
+    Output = <CodeBlock code={output} language="text" />;
   }
 
   return (
