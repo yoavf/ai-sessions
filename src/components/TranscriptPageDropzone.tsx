@@ -111,7 +111,12 @@ export default function TranscriptPageDropzone({
 
         {/* Invisible overlay that only shows when dragging .jsonl files */}
         {isDragActive && (
-          <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex items-center justify-center">
+          <div
+            className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex items-center justify-center"
+            role="dialog"
+            aria-live="polite"
+            aria-label="Drop transcript here to upload"
+          >
             <div className="flex flex-col items-center gap-4 p-8 border-2 border-dashed border-primary rounded-xl bg-primary/5">
               <Upload className="w-24 h-24 text-primary animate-bounce" />
               <div className="text-2xl font-semibold text-primary">
@@ -126,7 +131,10 @@ export default function TranscriptPageDropzone({
 
         {/* Uploading overlay */}
         {uploading && (
-          <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex items-center justify-center">
+          <output
+            className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex items-center justify-center"
+            aria-live="polite"
+          >
             <div className="flex flex-col items-center gap-6 py-4">
               <Loader2 className="w-24 h-24 text-primary animate-spin" />
               <div className="w-full max-w-md space-y-3">
@@ -141,7 +149,7 @@ export default function TranscriptPageDropzone({
                 </div>
               </div>
             </div>
-          </div>
+          </output>
         )}
       </div>
 
