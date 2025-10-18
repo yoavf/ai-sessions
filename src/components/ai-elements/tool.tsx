@@ -135,8 +135,20 @@ export const ToolOutput = ({
       <CodeBlock code={JSON.stringify(output, null, 2)} language="json" />
     );
   } else if (typeof output === "string") {
-    // Standard format: display output as code block
-    Output = <CodeBlock code={output} language="text" />;
+    // Detect if string is valid JSON and display with JSON highlighting if so
+    let isJson = false;
+    try {
+      const parsed = JSON.parse(output);
+      // Only treat as JSON if the parsed value is an object or array
+      if (typeof parsed === "object" && parsed !== null) {
+        isJson = true;
+      }
+    } catch (e) {
+      // Not valid JSON, do nothing
+    }
+    Output = (
+      <CodeBlock code={output} language={isJson ? "json" : "text"} />
+    );
   }
 
   return (
