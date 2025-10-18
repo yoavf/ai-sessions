@@ -3,13 +3,14 @@ import { cookies } from "next/headers";
 
 const CSRF_TOKEN_COOKIE = "csrf-token";
 const CSRF_TOKEN_HEADER = "x-csrf-token";
+export const CSRF_TOKEN_LENGTH = 32;
 
 /**
  * Generate a CSRF token and set it in a cookie
  * Call this in server components or API routes that render forms
  */
 export async function generateCsrfToken(): Promise<string> {
-  const token = nanoid(32);
+  const token = nanoid(CSRF_TOKEN_LENGTH);
   const cookieStore = await cookies();
 
   cookieStore.set(CSRF_TOKEN_COOKIE, token, {

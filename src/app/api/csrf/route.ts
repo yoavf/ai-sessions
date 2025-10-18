@@ -1,13 +1,20 @@
 import { NextResponse } from "next/server";
-import { generateCsrfToken } from "@/lib/csrf";
+import { generateCsrfToken, getCsrfToken } from "@/lib/csrf";
 
 /**
- * GET endpoint to generate and return a CSRF token
+ * GET endpoint to return CSRF token
+ * Returns existing token from middleware if available, otherwise generates new one
  * The token is set in a cookie and also returned in the response
  */
 export async function GET() {
   try {
-    const token = await generateCsrfToken();
+    // Check if middleware already set a token
+    let token = await getCsrfToken();
+
+    // If no token exists (shouldn't happen with middleware), generate one
+    if (!token) {
+      token = await generateCsrfToken();
+    }
 
     return NextResponse.json(
       { token },
@@ -19,9 +26,9 @@ export async function GET() {
       },
     );
   } catch (error) {
-    console.error("Error generating CSRF token:", error);
+    console.error("Error getting CSRF token:", error);
     return NextResponse.json(
-      { error: "Failed to generate CSRF token" },
+      { error: "Failed to get CSRF token" },
       { status: 500 },
     );
   }

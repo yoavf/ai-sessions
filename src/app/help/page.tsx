@@ -83,8 +83,9 @@ export default async function HelpPage() {
                     the{" "}
                     <Link href="/" className="text-primary hover:underline">
                       homepage
-                    </Link>
-                    . After uploading you'll be able to edit the title.
+                    </Link>{" "}
+                    or any existing transcript page. After uploading you'll be
+                    able to edit the title.
                   </p>
                 </div>
 
