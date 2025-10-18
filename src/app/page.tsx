@@ -2,9 +2,16 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import UploadDropzoneWithAuth from "@/components/UploadDropzoneWithAuth";
 import { auth } from "@/lib/auth";
+import { getCsrfToken } from "@/lib/csrf";
 
 export default async function Home() {
   const session = await auth();
+
+  // CSRF token is guaranteed to exist because middleware ensures it
+  const csrfToken = await getCsrfToken();
+  if (!csrfToken) {
+    throw new Error("CSRF token missing - middleware may not be running");
+  }
 
   return (
     <div className="flex-1 bg-background">
@@ -21,7 +28,10 @@ export default async function Home() {
             </p>
           </div>
 
-          <UploadDropzoneWithAuth isAuthenticated={!!session} />
+          <UploadDropzoneWithAuth
+            isAuthenticated={!!session}
+            csrfToken={csrfToken}
+          />
 
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
