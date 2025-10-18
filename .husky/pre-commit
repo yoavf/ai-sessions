@@ -1,6 +1,10 @@
 # Run lint-staged for Biome formatting/linting on staged files
 npx lint-staged
 
+# Run unit tests
+echo "Running unit tests..."
+npm run test:run
+
 # Run build to ensure no type errors or build failures
 echo "Running build check..."
 npm run build
