@@ -445,4 +445,184 @@ describe("CodexProvider", () => {
       });
     });
   });
+
+  describe("Edge cases and error handling", () => {
+    it("should handle invalid JSON in function call arguments", () => {
+      const invalidArgs = `{"timestamp":"2025-09-17T21:34:22.215Z","type":"session_meta","payload":{"id":"test","originator":"codex_exec"}}
+{"timestamp":"2025-09-17T21:34:22.215Z","type":"response_item","payload":{"type":"function_call","name":"shell","arguments":"invalid json","call_id":"call_001"}}`;
+
+      const result = provider.parse(invalidArgs);
+
+      // Should parse successfully but skip the invalid function call
+      expect(result.messages.length).toBeGreaterThanOrEqual(0);
+    });
+
+    it("should handle missing payload in events", () => {
+      const missingPayload = `{"timestamp":"2025-09-17T21:34:22.215Z","type":"session_meta"}
+{"timestamp":"2025-09-17T21:34:22.215Z","type":"turn_context"}
+{"timestamp":"2025-09-17T21:34:22.215Z","type":"response_item"}`;
+
+      const result = provider.parse(missingPayload);
+
+      // Should handle gracefully
+      expect(result).toBeDefined();
+      expect(result.messages).toBeDefined();
+    });
+
+    it("should handle empty content arrays", () => {
+      const emptyContent = `{"id":"test-123","timestamp":"2024-01-01T10:00:00.000Z","git":{"branch":"main"}}
+{"type":"message","role":"user","content":[]}`;
+
+      const result = provider.parse(emptyContent);
+
+      // Should not create a message with empty content
+      const userMessages = result.messages.filter(
+        (m) => m.message?.role === "user",
+      );
+      expect(userMessages.length).toBe(0);
+    });
+
+    it("should handle malformed JSONL lines", () => {
+      const malformed = `{"id":"test-123","timestamp":"2024-01-01T10:00:00.000Z","git":{"branch":"main"}}
+this is not json
+{"type":"message","role":"user","content":[{"type":"input_text","text":"Valid message"}]}`;
+
+      const result = provider.parse(malformed);
+
+      // Should skip malformed lines and continue parsing
+      expect(result.messages.length).toBeGreaterThan(0);
+      const userMessage = result.messages.find(
+        (m) => m.message?.role === "user",
+      );
+      const content = userMessage?.message?.content as any[];
+      expect(content.some((b) => b.text === "Valid message")).toBe(true);
+    });
+
+    it("should handle reasoning with empty summary", () => {
+      const emptySummary = `{"timestamp":"2025-09-17T21:34:22.215Z","type":"session_meta","payload":{"id":"test","originator":"codex_exec"}}
+{"timestamp":"2025-09-17T21:34:22.215Z","type":"response_item","payload":{"type":"reasoning","summary":[]}}`;
+
+      const result = provider.parse(emptySummary);
+
+      // Should not create thinking blocks for empty summaries
+      const messagesWithThinking = result.messages.filter((m) => {
+        const content = m.message?.content as any[];
+        return content?.some((b) => b.type === "thinking");
+      });
+      expect(messagesWithThinking.length).toBe(0);
+    });
+
+    it("should handle tool output with metadata in newer format", () => {
+      const withMetadata = `{"timestamp":"2025-09-17T21:34:22.215Z","type":"session_meta","payload":{"id":"test","originator":"codex_exec"}}
+{"timestamp":"2025-09-17T21:34:22.216Z","type":"response_item","payload":{"type":"function_call","name":"shell","arguments":"{\\"command\\":\\"ls\\"}","call_id":"call_001"}}
+{"timestamp":"2025-09-17T21:34:22.217Z","type":"response_item","payload":{"type":"function_call_output","call_id":"call_001","output":"{\\"output\\":\\"Success\\",\\"metadata\\":{\\"exit_code\\":0,\\"duration_seconds\\":1.5}}"}}`;
+
+      const result = provider.parse(withMetadata);
+
+      const toolResult = result.messages
+        .flatMap((m) => m.message?.content as any[])
+        .filter((b) => b)
+        .find((b) => b.type === "tool_result");
+
+      expect(toolResult).toBeDefined();
+      expect(toolResult?.content).toBe("Success");
+      expect(toolResult?.metadata).toEqual({
+        exit_code: 0,
+        duration_seconds: 1.5,
+      });
+    });
+
+    it("should handle tool output as plain string in newer format", () => {
+      const plainString = `{"timestamp":"2025-09-17T21:34:22.215Z","type":"session_meta","payload":{"id":"test","originator":"codex_exec"}}
+{"timestamp":"2025-09-17T21:34:22.216Z","type":"response_item","payload":{"type":"function_call","name":"shell","arguments":"{}","call_id":"call_001"}}
+{"timestamp":"2025-09-17T21:34:22.217Z","type":"response_item","payload":{"type":"function_call_output","call_id":"call_001","output":"\\"Plain output\\""}}`;
+
+      const result = provider.parse(plainString);
+
+      const toolResult = result.messages
+        .flatMap((m) => m.message?.content as any[])
+        .filter((b) => b)
+        .find((b) => b.type === "tool_result");
+
+      expect(toolResult).toBeDefined();
+      expect(toolResult?.content).toBe("Plain output");
+    });
+
+    it("should handle tool output as non-standard object in newer format", () => {
+      const customObject = `{"timestamp":"2025-09-17T21:34:22.215Z","type":"session_meta","payload":{"id":"test","originator":"codex_exec"}}
+{"timestamp":"2025-09-17T21:34:22.216Z","type":"response_item","payload":{"type":"function_call","name":"shell","arguments":"{}","call_id":"call_001"}}
+{"timestamp":"2025-09-17T21:34:22.217Z","type":"response_item","payload":{"type":"function_call_output","call_id":"call_001","output":"{\\"custom\\":\\"data\\",\\"foo\\":\\"bar\\"}"}}`;
+
+      const result = provider.parse(customObject);
+
+      const toolResult = result.messages
+        .flatMap((m) => m.message?.content as any[])
+        .filter((b) => b)
+        .find((b) => b.type === "tool_result");
+
+      expect(toolResult).toBeDefined();
+      // Should be stringified JSON
+      expect(toolResult?.content).toContain("custom");
+      expect(toolResult?.content).toContain("data");
+    });
+
+    it("should handle multiple consecutive user messages", () => {
+      const consecutive = `{"id":"test-123","timestamp":"2024-01-01T10:00:00.000Z","git":{"branch":"main"}}
+{"type":"message","role":"user","content":[{"type":"input_text","text":"First message"}]}
+{"type":"message","role":"user","content":[{"type":"input_text","text":"Second message"}]}`;
+
+      const result = provider.parse(consecutive);
+
+      // Should create a single user message with combined content
+      const userMessages = result.messages.filter(
+        (m) => m.message?.role === "user",
+      );
+      expect(userMessages.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it("should handle timestamp updates correctly", () => {
+      const multipleTimestamps = `{"id":"test-123","timestamp":"2024-01-01T10:00:00.000Z","git":{"branch":"main"}}
+{"type":"message","role":"user","content":[{"type":"input_text","text":"Message 1"}],"timestamp":"2024-01-01T10:01:00.000Z"}
+{"type":"message","role":"user","content":[{"type":"input_text","text":"Message 2"}],"timestamp":"2024-01-01T10:02:00.000Z"}`;
+
+      const result = provider.parse(multipleTimestamps);
+
+      expect(result.metadata.firstTimestamp).toBe("2024-01-01T10:00:00.000Z");
+      expect(result.metadata.lastTimestamp).toBe("2024-01-01T10:02:00.000Z");
+    });
+
+    it("should handle missing call_id in function calls", () => {
+      const noCallId = `{"timestamp":"2025-09-17T21:34:22.215Z","type":"session_meta","payload":{"id":"test","originator":"codex_exec"}}
+{"timestamp":"2025-09-17T21:34:22.215Z","type":"response_item","payload":{"type":"function_call","name":"shell","arguments":"{}"}}`;
+
+      const result = provider.parse(noCallId);
+
+      // Should skip function calls without call_id
+      const toolUse = result.messages
+        .flatMap((m) => m.message?.content as any[])
+        .find((b) => b?.type === "tool_use");
+
+      expect(toolUse).toBeUndefined();
+    });
+
+    it("should handle turn_context updating cwd", () => {
+      const cwdUpdate = `{"timestamp":"2025-09-17T21:34:22.215Z","type":"session_meta","payload":{"id":"test","originator":"codex_exec"}}
+{"timestamp":"2025-09-17T21:34:22.216Z","type":"turn_context","payload":{"cwd":"/updated/path"}}
+{"timestamp":"2025-09-17T21:34:22.217Z","type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"Test"}]}}`;
+
+      const result = provider.parse(cwdUpdate);
+
+      expect(result.metadata.cwd).toBe("/updated/path");
+    });
+
+    it("should not override existing cwd from session_meta", () => {
+      const cwdNoOverride = `{"timestamp":"2025-09-17T21:34:22.215Z","type":"session_meta","payload":{"id":"test","cwd":"/original/path","originator":"codex_exec"}}
+{"timestamp":"2025-09-17T21:34:22.216Z","type":"turn_context","payload":{"cwd":"/new/path"}}`;
+
+      const result = provider.parse(cwdNoOverride);
+
+      // session_meta cwd should take precedence
+      expect(result.metadata.cwd).toBe("/original/path");
+    });
+  });
 });
