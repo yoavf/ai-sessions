@@ -3,6 +3,7 @@
  * Parses JSONL files exported from Codex/Pair CLI sessions
  */
 
+import { parseUserInstructions } from "@/lib/transcript-utils";
 import type {
   ContentBlock,
   ParsedTranscript,
@@ -151,58 +152,6 @@ function parseCodexToolResult(output: unknown): {
     // If not JSON, use as string
     return { content: (output as string) || "" };
   }
-}
-
-/**
- * Parse text that may contain <user_instructions> tags
- * Returns array of content blocks with proper splitting around tags
- */
-function parseUserInstructions(text: string): ContentBlock[] {
-  const blocks: ContentBlock[] = [];
-
-  // Check if text contains <user_instructions> tags
-  const userInstructionsMatch = text.match(
-    /<user_instructions>([\s\S]*?)<\/user_instructions>/,
-  );
-
-  if (userInstructionsMatch) {
-    // Extract the instructions content
-    const instructionsText = userInstructionsMatch[1].trim();
-
-    // Get any text before the tag
-    const beforeTag = text.substring(0, userInstructionsMatch.index).trim();
-    if (beforeTag) {
-      blocks.push({
-        type: "text",
-        text: beforeTag,
-      });
-    }
-
-    // Add user instructions as special content block
-    blocks.push({
-      type: "user-instructions",
-      text: instructionsText,
-    });
-
-    // Get any text after the tag
-    const afterTag = text
-      .substring(userInstructionsMatch.index! + userInstructionsMatch[0].length)
-      .trim();
-    if (afterTag) {
-      blocks.push({
-        type: "text",
-        text: afterTag,
-      });
-    }
-  } else {
-    // No user_instructions tag, add as normal text
-    blocks.push({
-      type: "text",
-      text,
-    });
-  }
-
-  return blocks;
 }
 
 /**
