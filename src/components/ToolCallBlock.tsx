@@ -15,6 +15,34 @@ interface ToolCallBlockProps {
   toolResults?: ToolResult[];
 }
 
+/**
+ * Renders a list of tool results with metadata support
+ */
+function ToolResultsList({ results }: { results: ToolResult[] }) {
+  return (
+    <>
+      {results.map((result) => (
+        <div key={result.tool_use_id} className="space-y-2 p-4">
+          <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide flex items-center gap-2">
+            <span>{result.is_error ? "Error" : "Result"}</span>
+            {result.metadata?.duration_seconds !== undefined &&
+              result.metadata.duration_seconds > 0 && (
+                <span className="text-[10px] opacity-60 font-normal normal-case">
+                  ({result.metadata.duration_seconds}s)
+                </span>
+              )}
+          </h4>
+          <div className="overflow-x-auto rounded-md bg-muted/50 text-foreground text-xs">
+            <pre className="whitespace-pre-wrap p-2 font-mono">
+              {result.content}
+            </pre>
+          </div>
+        </div>
+      ))}
+    </>
+  );
+}
+
 function getToolPreview(
   toolName: string,
   // biome-ignore lint/suspicious/noExplicitAny: Tool input types are dynamic
@@ -172,24 +200,7 @@ export default function ToolCallBlock({
           <div className="p-4 space-y-3">
             <TodoListBlock todos={toolUse.input.todos} />
           </div>
-          {toolResults.map((result) => (
-            <div key={result.tool_use_id} className="space-y-2 p-4">
-              <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide flex items-center gap-2">
-                <span>{result.is_error ? "Error" : "Result"}</span>
-                {result.metadata?.duration_seconds !== undefined &&
-                  result.metadata.duration_seconds > 0 && (
-                    <span className="text-[10px] opacity-60 font-normal normal-case">
-                      ({result.metadata.duration_seconds}s)
-                    </span>
-                  )}
-              </h4>
-              <div className="overflow-x-auto rounded-md bg-muted/50 text-foreground text-xs">
-                <pre className="whitespace-pre-wrap p-2 font-mono">
-                  {result.content}
-                </pre>
-              </div>
-            </div>
-          ))}
+          <ToolResultsList results={toolResults} />
         </ToolContent>
       </Tool>
     );
@@ -205,24 +216,7 @@ export default function ToolCallBlock({
       />
       <ToolContent>
         <ToolInput input={toolUse.input} />
-        {toolResults.map((result) => (
-          <div key={result.tool_use_id} className="space-y-2 p-4">
-            <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide flex items-center gap-2">
-              <span>{result.is_error ? "Error" : "Result"}</span>
-              {result.metadata?.duration_seconds !== undefined &&
-                result.metadata.duration_seconds > 0 && (
-                  <span className="text-[10px] opacity-60 font-normal normal-case">
-                    ({result.metadata.duration_seconds}s)
-                  </span>
-                )}
-            </h4>
-            <div className="overflow-x-auto rounded-md bg-muted/50 text-foreground text-xs">
-              <pre className="whitespace-pre-wrap p-2 font-mono">
-                {result.content}
-              </pre>
-            </div>
-          </div>
-        ))}
+        <ToolResultsList results={toolResults} />
       </ToolContent>
     </Tool>
   );
