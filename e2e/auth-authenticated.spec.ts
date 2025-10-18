@@ -24,14 +24,10 @@ test.describe("Authenticated User Experience", () => {
     ).not.toBeVisible();
 
     // 5. Verify upload dropzone is visible and accessible
-    await expect(
-      page.getByText("Drop your Claude Code transcript"),
-    ).toBeVisible();
+    await expect(page.getByText("Drop your transcript")).toBeVisible();
 
-    // 6. Verify dropzone text "Drop your Claude Code transcript" is visible
-    await expect(
-      page.getByText("Drop your Claude Code transcript"),
-    ).toBeVisible();
+    // 6. Verify dropzone text "Drop your transcript" is visible
+    await expect(page.getByText("Drop your transcript")).toBeVisible();
   });
 
   test("Authenticated Header Elements", async ({ authenticatedPage: page }) => {
@@ -64,7 +60,7 @@ test.describe("Authenticated User Experience", () => {
     await page.goto("http://localhost:3000");
 
     // 2. Verify dropzone is visible
-    const dropzone = page.getByText("Drop your Claude Code transcript");
+    const dropzone = page.getByText("Drop your transcript");
     await expect(dropzone).toBeVisible();
 
     // 3. Hover over the dropzone area

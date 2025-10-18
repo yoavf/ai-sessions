@@ -9,8 +9,13 @@ export interface ToolUse {
 export interface ToolResult {
   type: "tool_result";
   tool_use_id: string;
-  content: string;
+  content: string; // Normalized to string by parsers
   is_error?: boolean;
+  // Optional metadata (extracted during parsing)
+  metadata?: {
+    exit_code?: number;
+    duration_seconds?: number;
+  };
 }
 
 export interface TextContent {
@@ -33,13 +38,19 @@ export interface BashContent {
   text: string;
 }
 
+export interface UserInstructionsContent {
+  type: "user-instructions";
+  text: string;
+}
+
 export type ContentBlock =
   | ToolUse
   | ToolResult
   | TextContent
   | ThinkingContent
   | CommandContent
-  | BashContent;
+  | BashContent
+  | UserInstructionsContent;
 
 export interface Message {
   role: "user" | "assistant";

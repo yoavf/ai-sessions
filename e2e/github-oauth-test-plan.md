@@ -41,11 +41,11 @@ AI Sessions (ai-sessions.dev) is a Next.js 15 application that enables users to 
 - Header does NOT show "My Transcripts" link (requires authentication)
 - Header does NOT show logout icon (requires authentication)
 - Main content displays centered heading "AI Sessions"
-- Subtitle reads "Share Claude Code transcripts"
+- Subtitle reads "Share AI coding sessions"
 - Secondary subtitle reads "(Other coding agents coming soon!)"
 - Upload dropzone is visible with dashed border
 - Upload dropzone shows upload icon (cloud/upload symbol)
-- Text reads "Drop your Claude Code transcript" or "or click to browse for a .jsonl file"
+- Text reads "Drop your transcript" or "or click to browse for a .jsonl file"
 - Terms of Service and Privacy Policy links are visible at bottom of dropzone
 
 #### 1.2 Authentication Overlay Display

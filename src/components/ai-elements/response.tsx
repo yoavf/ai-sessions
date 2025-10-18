@@ -1,27 +1,31 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { type ComponentProps, memo } from "react";
 import { Streamdown } from "streamdown";
+import { cn } from "@/lib/utils";
 
 type ResponseProps = ComponentProps<typeof Streamdown>;
 
-// Escape < and > to prevent rehype-raw from parsing XML/HTML tags
-// Streamdown uses rehype-raw which tries to parse HTML, so we need to escape angle brackets
-function escapeHtml(text: string): string {
-  return text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+// Escape XML/HTML tags that could cause React errors, but preserve markdown syntax
+// We escape tags like <environment_context>, <cwd>, etc. but NOT code/list markdown
+function escapeXmlTags(text: string): string {
+  // Match XML tags: < followed by letter/underscore, then non-> chars, then >
+  // This catches <environment_context>, <cwd>, <approval_policy>, etc.
+  // But NOT markdown like **bold**, `code`, or comparison operators
+  return text.replace(/<([a-zA-Z_][a-zA-Z0-9_:\-.]*)([^>]*)>/g, "&lt;$1$2&gt;");
 }
 
 export const Response = memo(
   ({ className, components, children, ...props }: ResponseProps) => {
-    // Escape HTML in string children to prevent XML tags from being parsed
-    const safeChildren = typeof children === 'string' ? escapeHtml(children) : children;
+    // Escape XML tags in string children to prevent rehype-raw parsing errors
+    const safeChildren =
+      typeof children === "string" ? escapeXmlTags(children) : children;
 
     return (
       <Streamdown
         className={cn(
           "size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
-          className
+          className,
         )}
         components={{
           // Disable h1-h6 headings - render as regular paragraphs to prevent markdown interference
@@ -39,7 +43,7 @@ export const Response = memo(
       </Streamdown>
     );
   },
-  (prevProps, nextProps) => prevProps.children === nextProps.children
+  (prevProps, nextProps) => prevProps.children === nextProps.children,
 );
 
 Response.displayName = "Response";

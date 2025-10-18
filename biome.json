@@ -13,8 +13,7 @@
       "!.next",
       "!dist",
       "!build",
-      "!src/components/ui",
-      "!src/components/ai-elements"
+      "!src/components/ui"
     ]
   },
   "formatter": {
@@ -23,6 +22,7 @@
     "indentWidth": 2
   },
   "linter": {
+    "includes": ["!src/components/ai-elements"],
     "enabled": true,
     "rules": {
       "recommended": true,

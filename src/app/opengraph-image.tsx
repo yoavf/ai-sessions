@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
 
-export const alt = "AI Sessions - Share Claude Code transcripts";
+export const alt = "AI Sessions - Share AI coding sessions";
 export const size = {
   width: 1200,
   height: 630,
@@ -56,7 +56,7 @@ export default async function Image() {
             maxWidth: "800px",
           }}
         >
-          Share Claude Code transcripts
+          Share AI coding sessions
         </p>
       </div>
     </div>,

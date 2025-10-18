@@ -18,6 +18,7 @@ interface Transcript {
   createdAt: string;
   messageCount: number;
   fileSize: number;
+  source: string;
 }
 
 function formatBytes(bytes: number): string {
@@ -37,6 +38,15 @@ function formatDate(dateString: string): string {
     hour: "numeric",
     minute: "2-digit",
   }).format(date);
+}
+
+function formatSource(source: string): string {
+  const sourceMap: Record<string, string> = {
+    "claude-code": "Claude Code",
+    codex: "Codex",
+    cli: "CLI",
+  };
+  return sourceMap[source] || source;
 }
 
 // Security: Auto-clear CLI token from client-side state after this timeout
@@ -290,7 +300,7 @@ export default function MyTranscriptsPage() {
                 <div>
                   <h1 className="text-3xl font-bold">My Transcripts</h1>
                   <p className="text-muted-foreground mt-2">
-                    Manage your uploaded Claude Code sessions
+                    Manage your uploaded AI coding sessions
                   </p>
                 </div>
                 <Button asChild>
@@ -332,6 +342,10 @@ export default function MyTranscriptsPage() {
                             </Link>
                             <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                               <span>{formatDate(transcript.createdAt)}</span>
+                              <span>•</span>
+                              <span className="text-primary font-medium">
+                                {formatSource(transcript.source)}
+                              </span>
                               <span>•</span>
                               <span>{transcript.messageCount} messages</span>
                               <span>•</span>

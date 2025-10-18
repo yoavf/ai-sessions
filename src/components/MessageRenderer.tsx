@@ -38,7 +38,7 @@ export default function MessageRenderer({
     );
   }
 
-  // Group slash command blocks and bash blocks together
+  // Group slash command blocks, bash blocks, and tool_use with tool_result together
   const groupedContent: (
     | ContentBlock
     | {
@@ -48,13 +48,40 @@ export default function MessageRenderer({
         commandArgs?: string;
       }
     | { type: "bash-block"; input?: string; stdout?: string; stderr?: string }
+    | { type: "tool_use"; toolUse: ContentBlock; toolResults: ToolResult[] }
   )[] = [];
   let i = 0;
 
   while (i < content.length) {
     const block = content[i];
 
-    if (block.type === "command-name") {
+    if (block.type === "tool_use") {
+      // Look ahead for tool_result blocks that match this tool_use
+      const toolUse = block;
+      const toolResults: ToolResult[] = [];
+      let j = i + 1;
+
+      // Collect only matching tool_results that immediately follow
+      // Stop at the first non-matching tool_result or non-tool_result block
+      while (j < content.length && content[j].type === "tool_result") {
+        const result = content[j] as ToolResult;
+        if (result.tool_use_id === toolUse.id) {
+          toolResults.push(result);
+          j++;
+        } else {
+          // Stop when we encounter a tool_result for a different tool_use_id
+          // This prevents skipping/losing tool_results that belong to other tool_use blocks
+          break;
+        }
+      }
+
+      groupedContent.push({
+        type: "tool_use",
+        toolUse,
+        toolResults,
+      });
+      i = j;
+    } else if (block.type === "command-name") {
       // Look ahead for command-message and command-args
       const commandName = block.text;
       let commandMessage: string | undefined;
@@ -137,6 +164,9 @@ export default function MessageRenderer({
         stderr,
       });
       i = j;
+    } else if (block.type === "tool_result") {
+      // Skip standalone tool_result blocks - they're already grouped with tool_use above
+      i++;
     } else {
       groupedContent.push(block);
       i++;
@@ -169,7 +199,8 @@ function ContentBlockRenderer({
         commandMessage?: string;
         commandArgs?: string;
       }
-    | { type: "bash-block"; input?: string; stdout?: string; stderr?: string };
+    | { type: "bash-block"; input?: string; stdout?: string; stderr?: string }
+    | { type: "tool_use"; toolUse: ContentBlock; toolResults: ToolResult[] };
   childMessages?: TranscriptLine[];
 }) {
   switch (block.type) {
@@ -206,7 +237,18 @@ function ContentBlockRenderer({
       );
 
     case "tool_use": {
-      // Find tool results for this specific tool use
+      // Check if this is a grouped tool_use (with toolResults already attached)
+      if ("toolResults" in block && Array.isArray(block.toolResults)) {
+        // Codex format - tool results are in the same message
+        return (
+          <ToolCallBlock
+            toolUse={block.toolUse as any}
+            toolResults={block.toolResults}
+          />
+        );
+      }
+
+      // Claude Code format - find tool results in child messages
       const toolResults = childMessages
         .filter(
           (child) => child.message && Array.isArray(child.message.content),
@@ -215,28 +257,16 @@ function ContentBlockRenderer({
           (child.message?.content as ContentBlock[]).filter(
             (contentBlock): contentBlock is ToolResult =>
               contentBlock.type === "tool_result" &&
-              contentBlock.tool_use_id === block.id,
+              contentBlock.tool_use_id === (block as any).id,
           ),
         );
-      return <ToolCallBlock toolUse={block} toolResults={toolResults} />;
+      return <ToolCallBlock toolUse={block as any} toolResults={toolResults} />;
     }
 
-    case "tool_result":
-      return (
-        <div className="bg-muted/50 border rounded-lg p-4">
-          <div className="text-xs font-medium text-muted-foreground mb-2">
-            Tool Result {block.is_error && "❌ Error"}
-          </div>
-          <CodeBlock
-            code={
-              typeof block.content === "string"
-                ? block.content
-                : JSON.stringify(block.content, null, 2)
-            }
-            language="text"
-          />
-        </div>
-      );
+    case "tool_result": {
+      // This should not happen if grouping worked correctly, but handle it anyway
+      return null;
+    }
 
     case "slash-command":
       return (
@@ -254,6 +284,31 @@ function ContentBlockRenderer({
           stdout={block.stdout}
           stderr={block.stderr}
         />
+      );
+
+    case "user-instructions":
+      return (
+        <Reasoning defaultOpen={false}>
+          <ReasoningTrigger>
+            <div className="flex items-center gap-2">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              <span>User Instructions</span>
+            </div>
+          </ReasoningTrigger>
+          <ReasoningContent>{block.text}</ReasoningContent>
+        </Reasoning>
       );
 
     default:

@@ -2,6 +2,8 @@
 
 A web platform for sharing and viewing AI coding session transcripts with beautiful syntax highlighting, collapsible tool calls, and seamless navigation for long conversations.
 
+**Supports:** Claude Code, Codex, and more coming soon!
+
 ## Features
 
 - 🔐 **Secure Sharing** - Generate secret URLs for your transcripts
@@ -143,12 +145,17 @@ Or use Vercel's console to run the command.
 
 ### Finding Your Transcripts
 
-Claude Code saves session transcripts at:
+**Claude Code** saves session transcripts at:
 ```
 ~/.claude/projects/<project-name>/<session-id>.jsonl
 ```
 
-Each project directory contains JSONL files with the complete conversation history.
+**Codex** saves session transcripts at:
+```
+~/.codex/sessions/<year>/<month>/<day>/<session-id>.jsonl
+```
+
+Each directory contains JSONL files with the complete conversation history.
 
 ### Uploading a Transcript
 
