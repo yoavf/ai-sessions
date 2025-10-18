@@ -126,9 +126,12 @@ export default function TranscriptPageDropzone({
 
         {/* Uploading overlay */}
         {uploading && (
-          <output
+          // biome-ignore lint/a11y/useSemanticElements: <output> is for calculation results, not loading states
+          <div
             className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex items-center justify-center"
+            role="status"
             aria-live="polite"
+            aria-label="Uploading transcript"
           >
             <div className="flex flex-col items-center gap-6 py-4">
               <Loader2 className="w-24 h-24 text-primary animate-spin" />
@@ -144,7 +147,7 @@ export default function TranscriptPageDropzone({
                 </div>
               </div>
             </div>
-          </output>
+          </div>
         )}
       </div>
 

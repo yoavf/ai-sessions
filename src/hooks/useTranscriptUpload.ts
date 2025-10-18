@@ -112,9 +112,9 @@ export function useTranscriptUpload(
           };
         }
 
-        // Generate safe title
-        const rawTitle = file.name.replace(/\.jsonl$/i, "") || "Untitled";
-        const title = rawTitle.substring(0, 200);
+        // Generate safe title (handle edge case of file named exactly ".jsonl")
+        const rawTitle = file.name.replace(/\.jsonl$/i, "");
+        const title = rawTitle.substring(0, 200) || "Untitled";
 
         // Upload to API
         const response = await fetch(
