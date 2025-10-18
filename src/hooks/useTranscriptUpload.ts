@@ -93,7 +93,7 @@ export function useTranscriptUpload(
               setUploading(false);
               return {
                 success: false,
-                error: `Invalid JSON at line ${i + 1}: ${lineError instanceof Error ? lineError.message : "Parse error"}`,
+                error: `Invalid JSON at line ${i + 1}: ${lineError instanceof Error ? lineError.message : "Parse error"}. Content: ${line.substring(0, 50)}...`,
               };
             }
           }
