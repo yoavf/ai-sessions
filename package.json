@@ -28,7 +28,13 @@
     "lint": "biome check",
     "format": "biome format --write",
     "prepare": "husky",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "test:e2e": "dotenv -e .env.test -- playwright test",
+    "test:e2e:ui": "dotenv -e .env.test -- playwright test --ui",
+    "test:e2e:headed": "dotenv -e .env.test -- playwright test --headed",
+    "test:e2e:debug": "dotenv -e .env.test -- playwright test --debug",
+    "test:e2e:docker:up": "docker compose -f docker-compose.test.yml up -d",
+    "test:e2e:docker:down": "docker compose -f docker-compose.test.yml down -v"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.0",
@@ -79,12 +85,14 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.6",
+    "@playwright/test": "^1.56.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/pg": "^8.15.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/react-syntax-highlighter": "^15.5.13",
+    "dotenv-cli": "^10.0.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.4",
     "prisma": "^6.17.1",
