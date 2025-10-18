@@ -264,6 +264,281 @@ function formatCodexModelName(modelId: string): string | null {
 }
 
 /**
+ * Context for building messages during parsing
+ */
+interface MessageContext {
+  role?: "user" | "assistant";
+  content: ContentBlock[];
+  timestamp: string;
+  hasContent: boolean;
+}
+
+/**
+ * Session context tracking during parsing
+ */
+interface SessionContext {
+  sessionId: string;
+  firstTimestamp: string;
+  lastTimestamp: string;
+  cwd: string;
+  gitBranch: string;
+  currentModel: string;
+}
+
+/**
+ * Process message content blocks (handles user instructions and environment skipping)
+ */
+function processMessageContent(
+  contentArray: Array<{ type: string; text?: string }>,
+  messageCtx: MessageContext,
+) {
+  for (const item of contentArray) {
+    if (
+      (item.type === "input_text" ||
+        item.type === "output_text" ||
+        item.type === "text") &&
+      item.text
+    ) {
+      // Skip environment_context entirely
+      if (item.text.trim().startsWith("<environment_context>")) {
+        continue;
+      }
+
+      // Parse user instructions and add resulting blocks
+      const blocks = parseUserInstructions(item.text);
+      messageCtx.content.push(...blocks);
+      messageCtx.hasContent = true;
+    }
+  }
+}
+
+/**
+ * Process function call and create tool_use block
+ */
+function processFunctionCall(
+  name: string,
+  callId: string,
+  args: string | undefined,
+  messageCtx: MessageContext,
+) {
+  try {
+    const parsedArgs = args ? JSON.parse(args) : {};
+    messageCtx.content.push({
+      type: "tool_use",
+      id: callId,
+      name,
+      input: parsedArgs,
+    });
+    messageCtx.hasContent = true;
+  } catch (err) {
+    console.error(`Failed to parse function call arguments for ${name}:`, err);
+    // Skip invalid function calls
+  }
+}
+
+/**
+ * Process function call output and create tool_result block
+ */
+function processFunctionCallOutput(
+  callId: string,
+  output: unknown,
+  messageCtx: MessageContext,
+) {
+  const { content, metadata } = parseCodexToolResult(output);
+  messageCtx.content.push({
+    type: "tool_result",
+    tool_use_id: callId,
+    content,
+    metadata,
+  });
+  messageCtx.hasContent = true;
+}
+
+/**
+ * Process reasoning/thinking block
+ */
+function processReasoning(
+  summary: Array<{ type: string; text?: string }> | undefined,
+  messageCtx: MessageContext,
+) {
+  if (!summary || !Array.isArray(summary) || summary.length === 0) {
+    return;
+  }
+
+  const summaryText = summary
+    .filter((item) => item.type === "summary_text" && item.text)
+    .map((item) => item.text)
+    .join("\n");
+
+  if (summaryText) {
+    messageCtx.content.push({
+      type: "thinking",
+      thinking: summaryText,
+    });
+    messageCtx.hasContent = true;
+  }
+}
+
+/**
+ * Handle session_meta event (newer format)
+ */
+function handleSessionMeta(
+  payload: SessionMetaPayload,
+  sessionCtx: SessionContext,
+) {
+  sessionCtx.sessionId = payload.id || "";
+  sessionCtx.cwd = payload.cwd || "";
+  sessionCtx.gitBranch = payload.git?.branch || "";
+}
+
+/**
+ * Handle turn_context event (newer format)
+ */
+function handleTurnContext(
+  payload: TurnContextPayload,
+  sessionCtx: SessionContext,
+) {
+  if (payload.model) {
+    sessionCtx.currentModel = payload.model;
+  }
+  if (payload.cwd && !sessionCtx.cwd) {
+    sessionCtx.cwd = payload.cwd;
+  }
+}
+
+/**
+ * Handle response_item event (newer format)
+ */
+function handleResponseItem(
+  payload: ResponseItemPayload,
+  timestamp: string,
+  messageCtx: MessageContext,
+  _sessionCtx: SessionContext,
+  flushMessage: () => void,
+) {
+  if (payload.type === "message") {
+    // Flush previous message if starting a new one with different role
+    if (messageCtx.role && messageCtx.role !== payload.role) {
+      flushMessage();
+    }
+
+    // Set or update role
+    if (!messageCtx.role) {
+      messageCtx.role = payload.role;
+      messageCtx.timestamp = timestamp;
+    }
+
+    // Add text content
+    if (payload.content && Array.isArray(payload.content)) {
+      processMessageContent(payload.content, messageCtx);
+    }
+
+    // For Codex, user messages are typically followed by assistant responses
+    // So if we see a user message, we should flush and start a new message
+    if (
+      payload.role === "user" &&
+      messageCtx.role === "user" &&
+      messageCtx.hasContent
+    ) {
+      // Only flush if we have significant content
+      if (messageCtx.content.length > 1) {
+        const lastBlock = messageCtx.content[messageCtx.content.length - 2];
+        const currentBlock = messageCtx.content[messageCtx.content.length - 1];
+
+        // If we have text followed by more text from a new message, flush
+        if (lastBlock.type === "text" && currentBlock.type === "text") {
+          // Remove the last block temporarily
+          const newMessageContent = messageCtx.content.pop()!;
+          flushMessage();
+          // Start new message with the removed block
+          messageCtx.role = payload.role;
+          messageCtx.content = [newMessageContent];
+          messageCtx.timestamp = timestamp;
+          messageCtx.hasContent = true;
+        }
+      }
+    }
+  } else if (payload.type === "function_call") {
+    // Function calls are always from assistant - flush if we were building a user message
+    if (messageCtx.role === "user") {
+      flushMessage();
+    }
+
+    // Ensure we're in assistant context
+    if (!messageCtx.role) {
+      messageCtx.role = "assistant";
+      messageCtx.timestamp = timestamp;
+    }
+
+    // Add tool use block
+    if (payload.name && payload.call_id) {
+      processFunctionCall(
+        payload.name,
+        payload.call_id,
+        payload.arguments,
+        messageCtx,
+      );
+    }
+  } else if (payload.type === "function_call_output") {
+    // Tool results are part of assistant messages (they follow tool_use)
+    // Don't flush here - these should stay with the tool_use
+    if (payload.call_id) {
+      processFunctionCallOutput(payload.call_id, payload.output, messageCtx);
+    }
+  } else if (payload.type === "reasoning") {
+    // Reasoning is always from assistant - flush if we were building a user message
+    if (messageCtx.role === "user") {
+      flushMessage();
+    }
+
+    // Ensure we're in assistant context
+    if (!messageCtx.role) {
+      messageCtx.role = "assistant";
+      messageCtx.timestamp = timestamp;
+    }
+
+    // Add reasoning block
+    processReasoning(payload.summary, messageCtx);
+  }
+}
+
+/**
+ * Handle older/direct format entries
+ */
+function handleDirectFormat(
+  entry: CodexDirectEntry,
+  messageCtx: MessageContext,
+  sessionCtx: SessionContext,
+  flushMessage: () => void,
+) {
+  if (entry.type === "message" && entry.role) {
+    // Flush previous message if role changes
+    if (messageCtx.role && messageCtx.role !== entry.role) {
+      flushMessage();
+    }
+
+    if (!messageCtx.role) {
+      messageCtx.role = entry.role;
+      messageCtx.timestamp = entry.timestamp || sessionCtx.lastTimestamp;
+    }
+
+    // Add content
+    if (entry.content && Array.isArray(entry.content)) {
+      processMessageContent(entry.content, messageCtx);
+    }
+  } else if (entry.type === "function_call" && entry.name && entry.call_id) {
+    // Tool use in direct format
+    processFunctionCall(entry.name, entry.call_id, entry.arguments, messageCtx);
+  } else if (entry.type === "function_call_output" && entry.call_id) {
+    // Tool result in direct format
+    processFunctionCallOutput(entry.call_id, entry.output, messageCtx);
+  } else if (entry.type === "reasoning") {
+    // Reasoning in direct format
+    processReasoning(entry.summary, messageCtx);
+  }
+}
+
+/**
  * Codex provider implementation
  */
 export class CodexProvider implements TranscriptProvider {
@@ -339,46 +614,49 @@ export class CodexProvider implements TranscriptProvider {
   parse(content: string): ParsedTranscript {
     const lines = content.trim().split("\n");
     const messages: TranscriptLine[] = [];
-    let sessionId = "";
-    let firstTimestamp = "";
-    let lastTimestamp = "";
-    let cwd = "";
-    let gitBranch = "";
-    let currentModel = "";
 
-    // Temporary storage for building messages
-    const currentMessage: {
-      role?: "user" | "assistant";
-      content: ContentBlock[];
-    } = {
-      content: [],
+    // Session context
+    const sessionCtx: SessionContext = {
+      sessionId: "",
+      firstTimestamp: "",
+      lastTimestamp: "",
+      cwd: "",
+      gitBranch: "",
+      currentModel: "",
     };
-    let messageTimestamp = "";
-    let hasContent = false;
+
+    // Message building context
+    const messageCtx: MessageContext = {
+      content: [],
+      timestamp: "",
+      hasContent: false,
+    };
 
     const flushMessage = () => {
-      if (hasContent && currentMessage.role) {
+      if (messageCtx.hasContent && messageCtx.role) {
         const transcriptLine: TranscriptLine = {
-          type: currentMessage.role,
+          type: messageCtx.role,
           message: {
-            role: currentMessage.role,
-            content: currentMessage.content,
+            role: messageCtx.role,
+            content: messageCtx.content,
             model:
-              currentMessage.role === "assistant" ? currentModel : undefined,
+              messageCtx.role === "assistant"
+                ? sessionCtx.currentModel
+                : undefined,
           },
           uuid: crypto.randomUUID(),
-          timestamp: messageTimestamp,
+          timestamp: messageCtx.timestamp,
           parentUuid: null,
-          cwd,
-          gitBranch: gitBranch || undefined,
-          sessionId,
+          cwd: sessionCtx.cwd,
+          gitBranch: sessionCtx.gitBranch || undefined,
+          sessionId: sessionCtx.sessionId,
         };
         messages.push(transcriptLine);
 
         // Reset for next message
-        currentMessage.content = [];
-        currentMessage.role = undefined;
-        hasContent = false;
+        messageCtx.content = [];
+        messageCtx.role = undefined;
+        messageCtx.hasContent = false;
       }
     };
 
@@ -393,20 +671,20 @@ export class CodexProvider implements TranscriptProvider {
 
         // Handle session metadata (first line in older format)
         if (entry.id && entry.timestamp && entry.git && !entry.type) {
-          sessionId = entry.id;
-          if (!firstTimestamp) {
-            firstTimestamp = entry.timestamp;
+          sessionCtx.sessionId = entry.id;
+          if (!sessionCtx.firstTimestamp) {
+            sessionCtx.firstTimestamp = entry.timestamp;
           }
-          gitBranch = entry.git.branch || "";
+          sessionCtx.gitBranch = entry.git.branch || "";
           continue;
         }
 
         // Update timestamps
         if (entry.timestamp) {
-          if (!firstTimestamp) {
-            firstTimestamp = entry.timestamp;
+          if (!sessionCtx.firstTimestamp) {
+            sessionCtx.firstTimestamp = entry.timestamp;
           }
-          lastTimestamp = entry.timestamp;
+          sessionCtx.lastTimestamp = entry.timestamp;
         }
 
         // Handle newer event-based format
@@ -415,20 +693,13 @@ export class CodexProvider implements TranscriptProvider {
           entry.payload &&
           isSessionMetaPayload(entry.payload)
         ) {
-          sessionId = entry.payload.id || "";
-          cwd = entry.payload.cwd || "";
-          gitBranch = entry.payload.git?.branch || "";
+          handleSessionMeta(entry.payload, sessionCtx);
           continue;
         }
 
         if (entry.type === "turn_context" && entry.payload) {
           const payload = entry.payload as TurnContextPayload;
-          if (payload.model) {
-            currentModel = payload.model;
-          }
-          if (payload.cwd && !cwd) {
-            cwd = payload.cwd;
-          }
+          handleTurnContext(payload, sessionCtx);
           continue;
         }
 
@@ -437,234 +708,18 @@ export class CodexProvider implements TranscriptProvider {
           entry.payload &&
           isResponseItemPayload(entry.payload)
         ) {
-          const payload = entry.payload;
-
-          if (payload.type === "message") {
-            // Flush previous message if starting a new one with different role
-            if (currentMessage.role && currentMessage.role !== payload.role) {
-              flushMessage();
-            }
-
-            // Set or update role
-            if (!currentMessage.role) {
-              currentMessage.role = payload.role;
-              messageTimestamp = entry.timestamp || lastTimestamp;
-            }
-
-            // Add text content
-            if (payload.content && Array.isArray(payload.content)) {
-              for (const item of payload.content) {
-                if (item.type === "input_text" && item.text) {
-                  // Skip environment_context entirely
-                  if (item.text.trim().startsWith("<environment_context>")) {
-                    continue;
-                  }
-
-                  // Parse user instructions and add resulting blocks
-                  const blocks = parseUserInstructions(item.text);
-                  currentMessage.content.push(...blocks);
-                  hasContent = true;
-                } else if (item.type === "text" && item.text) {
-                  currentMessage.content.push({
-                    type: "text",
-                    text: item.text,
-                  });
-                  hasContent = true;
-                }
-              }
-            }
-
-            // For Codex, user messages are typically followed by assistant responses
-            // So if we see a user message, we should flush and start a new message
-            if (
-              payload.role === "user" &&
-              currentMessage.role === "user" &&
-              hasContent
-            ) {
-              // Only flush if we have significant content
-              if (currentMessage.content.length > 1) {
-                const lastBlock =
-                  currentMessage.content[currentMessage.content.length - 2];
-                const currentBlock =
-                  currentMessage.content[currentMessage.content.length - 1];
-
-                // If we have text followed by more text from a new message, flush
-                if (lastBlock.type === "text" && currentBlock.type === "text") {
-                  // Remove the last block temporarily
-                  const newMessageContent = currentMessage.content.pop()!;
-                  flushMessage();
-                  // Start new message with the removed block
-                  currentMessage.role = payload.role;
-                  currentMessage.content = [newMessageContent];
-                  messageTimestamp = entry.timestamp || lastTimestamp;
-                  hasContent = true;
-                }
-              }
-            }
-          } else if (payload.type === "function_call") {
-            // Function calls are always from assistant - flush if we were building a user message
-            if (currentMessage.role === "user") {
-              flushMessage();
-            }
-
-            // Ensure we're in assistant context
-            if (!currentMessage.role) {
-              currentMessage.role = "assistant";
-              messageTimestamp = entry.timestamp || lastTimestamp;
-            }
-
-            // Add tool use block
-            if (payload.name && payload.call_id) {
-              try {
-                const args = payload.arguments
-                  ? JSON.parse(payload.arguments)
-                  : {};
-                currentMessage.content.push({
-                  type: "tool_use",
-                  id: payload.call_id,
-                  name: payload.name,
-                  input: args,
-                });
-                hasContent = true;
-              } catch (err) {
-                console.error(
-                  `Failed to parse function call arguments for ${payload.name}:`,
-                  err,
-                );
-                // Skip invalid function calls
-              }
-            }
-          } else if (payload.type === "function_call_output") {
-            // Tool results are part of assistant messages (they follow tool_use)
-            // Don't flush here - these should stay with the tool_use
-
-            // Add tool result block - normalize Codex format to string
-            if (payload.call_id) {
-              const { content, metadata } = parseCodexToolResult(
-                payload.output,
-              );
-              currentMessage.content.push({
-                type: "tool_result",
-                tool_use_id: payload.call_id,
-                content,
-                metadata,
-              });
-              hasContent = true;
-            }
-          } else if (payload.type === "reasoning") {
-            // Reasoning is always from assistant - flush if we were building a user message
-            if (currentMessage.role === "user") {
-              flushMessage();
-            }
-
-            // Ensure we're in assistant context
-            if (!currentMessage.role) {
-              currentMessage.role = "assistant";
-              messageTimestamp = entry.timestamp || lastTimestamp;
-            }
-
-            // Add reasoning block (use summary text, skip encrypted content)
-            if (payload.summary && Array.isArray(payload.summary)) {
-              const summaryText = payload.summary
-                .filter((item) => item.type === "summary_text" && item.text)
-                .map((item) => item.text)
-                .join("\n");
-
-              if (summaryText) {
-                currentMessage.content.push({
-                  type: "thinking",
-                  thinking: summaryText,
-                });
-                hasContent = true;
-              }
-            }
-          }
+          handleResponseItem(
+            entry.payload,
+            entry.timestamp || sessionCtx.lastTimestamp,
+            messageCtx,
+            sessionCtx,
+            flushMessage,
+          );
+          continue;
         }
 
         // Handle older/direct format (messages, function calls, etc. at top level)
-        if (entry.type === "message" && entry.role) {
-          // Flush previous message if role changes
-          if (currentMessage.role && currentMessage.role !== entry.role) {
-            flushMessage();
-          }
-
-          if (!currentMessage.role) {
-            currentMessage.role = entry.role;
-            messageTimestamp = entry.timestamp || lastTimestamp;
-          }
-
-          // Add content
-          if (entry.content && Array.isArray(entry.content)) {
-            for (const item of entry.content) {
-              if (
-                (item.type === "input_text" || item.type === "output_text") &&
-                item.text
-              ) {
-                // Skip environment_context entirely (older format)
-                if (item.text.trim().startsWith("<environment_context>")) {
-                  continue;
-                }
-
-                // Parse user instructions and add resulting blocks
-                const blocks = parseUserInstructions(item.text);
-                currentMessage.content.push(...blocks);
-                hasContent = true;
-              }
-            }
-          }
-        } else if (
-          entry.type === "function_call" &&
-          entry.name &&
-          entry.call_id
-        ) {
-          // Tool use in direct format
-          try {
-            const args = entry.arguments ? JSON.parse(entry.arguments) : {};
-            currentMessage.content.push({
-              type: "tool_use",
-              id: entry.call_id,
-              name: entry.name,
-              input: args,
-            });
-            hasContent = true;
-          } catch (err) {
-            console.error(
-              `Failed to parse function call arguments for ${entry.name}:`,
-              err,
-            );
-            // Skip invalid function calls
-          }
-        } else if (entry.type === "function_call_output" && entry.call_id) {
-          // Tool result in direct format - normalize Codex format to string
-          const { content, metadata } = parseCodexToolResult(entry.output);
-          currentMessage.content.push({
-            type: "tool_result",
-            tool_use_id: entry.call_id,
-            content,
-            metadata,
-          });
-          hasContent = true;
-        } else if (entry.type === "reasoning") {
-          // Reasoning in direct format (show summary if available, skip encrypted)
-          if (
-            entry.summary &&
-            Array.isArray(entry.summary) &&
-            entry.summary.length > 0
-          ) {
-            const summaryText = entry.summary
-              .filter((item) => item.type === "summary_text" && item.text)
-              .map((item) => item.text)
-              .join("\n");
-
-            if (summaryText) {
-              currentMessage.content.push({
-                type: "thinking",
-                thinking: summaryText,
-              });
-              hasContent = true;
-            }
-          }
-        }
+        handleDirectFormat(entry, messageCtx, sessionCtx, flushMessage);
       } catch (err) {
         console.error("Failed to parse Codex event:", err);
         // Skip invalid lines
@@ -676,12 +731,12 @@ export class CodexProvider implements TranscriptProvider {
 
     return {
       messages,
-      sessionId,
+      sessionId: sessionCtx.sessionId,
       metadata: {
-        firstTimestamp,
-        lastTimestamp,
+        firstTimestamp: sessionCtx.firstTimestamp,
+        lastTimestamp: sessionCtx.lastTimestamp,
         messageCount: messages.length,
-        cwd,
+        cwd: sessionCtx.cwd,
       },
     };
   }
