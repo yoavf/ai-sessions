@@ -407,9 +407,9 @@ export default function TranscriptViewer({
                     <span className="hidden sm:inline">•</span>
                     <span
                       className="cursor-help"
-                      title={modelStats
+                      title={`${modelStats.length === 1 ? "Model" : "Models"}: ${modelStats
                         .map((s) => `${s.model}: ${s.count} messages`)
-                        .join(", ")}
+                        .join(", ")}`}
                     >
                       {modelStats.length === 1 ? "Model" : "Models"}:{" "}
                       {modelStats
