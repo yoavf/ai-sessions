@@ -121,17 +121,43 @@ function parseToolCalls(toolCalls: GeminiToolCall[]): ContentBlock[] {
       const contentParts: string[] = [];
 
       for (const result of toolCall.result) {
-        // Handle functionResponse items (usually just status messages)
-        if ("functionResponse" in result && result.functionResponse) {
-          const output = result.functionResponse.response.output || "";
-          if (output) {
-            contentParts.push(output);
-          }
-        }
+        try {
+          // Handle functionResponse items (usually just status messages)
+          if ("functionResponse" in result && result.functionResponse) {
+            const response = result.functionResponse?.response;
+            if (!response) {
+              console.warn("Tool result missing response field", {
+                toolCallId: toolCall.id,
+                toolName: toolCall.name,
+              });
+              continue;
+            }
 
-        // Handle text items (actual content, like file contents from read_many_files)
-        if ("text" in result && typeof result.text === "string") {
-          contentParts.push(result.text);
+            const output = response.output;
+            if (output && typeof output === "string") {
+              contentParts.push(output);
+            } else if (output) {
+              console.warn("Tool result output is not a string", {
+                toolCallId: toolCall.id,
+                outputType: typeof output,
+              });
+            }
+          }
+          // Handle text items (actual content, like file contents from read_many_files)
+          else if ("text" in result && typeof result.text === "string") {
+            contentParts.push(result.text);
+          } else {
+            console.warn("Unrecognized tool result format", {
+              toolCallId: toolCall.id,
+              resultKeys: Object.keys(result),
+            });
+          }
+        } catch (err) {
+          console.error("Failed to extract tool result content", {
+            error: err instanceof Error ? err.message : String(err),
+            toolCallId: toolCall.id,
+            toolName: toolCall.name,
+          });
         }
       }
 
@@ -141,6 +167,11 @@ function parseToolCalls(toolCalls: GeminiToolCall[]): ContentBlock[] {
           type: "tool_result",
           tool_use_id: toolCall.id,
           content: contentParts.join("\n"),
+        });
+      } else {
+        console.debug("Tool call produced no content parts", {
+          toolCallId: toolCall.id,
+          resultCount: toolCall.result.length,
         });
       }
     }
