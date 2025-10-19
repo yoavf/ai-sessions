@@ -36,6 +36,8 @@ export function getAvailableProviders(): string[] {
  * Returns the first provider that reports it can handle the content
  */
 export function detectProvider(content: string): DetectionResult {
+  const detectionErrors: Array<{ provider: string; error: string }> = [];
+
   // Try each provider's detect method
   for (const provider of providers) {
     try {
@@ -46,14 +48,22 @@ export function detectProvider(content: string): DetectionResult {
         };
       }
     } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
       console.error(`Provider ${provider.name} detection failed:`, error);
+      detectionErrors.push({ provider: provider.name, error: errorMsg });
     }
+  }
+
+  // Log if all providers failed
+  if (detectionErrors.length === providers.length) {
+    console.error("All providers failed detection", { detectionErrors });
   }
 
   // Fallback to claude-code with low confidence
   return {
     provider: "claude-code",
     confidence: "low",
+    detectionErrors: detectionErrors.length > 0 ? detectionErrors : undefined,
   };
 }
 
