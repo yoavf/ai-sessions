@@ -71,7 +71,7 @@ test("seed transcript page", async ({ page }) => {
         userId: testUser.id,
         title: "Python Hello World Tutorial",
         fileData: comprehensiveTranscriptJSONL,
-        messageCount: 20,
+        messageCount: comprehensiveTranscriptJSONL.split("\n").length,
         fileSizeBytes: Buffer.byteLength(comprehensiveTranscriptJSONL, "utf8"),
         source: "claude-code",
       },

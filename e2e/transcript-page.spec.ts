@@ -663,16 +663,16 @@ test.describe("Transcript Page - Security", () => {
         },
       });
 
-      // Load page
-      await page.goto(`http://localhost:3000/t/${transcript.secretToken}`);
-      await page.waitForLoadState("load");
-
-      // Listen for any dialog (alert, confirm, prompt)
+      // Listen for any dialog (alert, confirm, prompt) BEFORE navigation
       let dialogAppeared = false;
       page.on("dialog", async (dialog) => {
         dialogAppeared = true;
         await dialog.dismiss();
       });
+
+      // Load page
+      await page.goto(`http://localhost:3000/t/${transcript.secretToken}`);
+      await page.waitForLoadState("load");
 
       // Wait a moment to see if any script tries to execute
       await page.waitForTimeout(1000);
