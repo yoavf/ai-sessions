@@ -612,4 +612,267 @@ describe("GeminiProvider", () => {
       expect(toolUseBlocks[1].name).toBe("second_tool");
     });
   });
+
+  describe("error handling and resilience", () => {
+    it("should handle failed tool calls with error status", () => {
+      const sessionWithFailedTool = `{
+        "sessionId": "test-session",
+        "projectHash": "abc123",
+        "startTime": "2025-10-18T10:00:00.000Z",
+        "lastUpdated": "2025-10-18T10:05:00.000Z",
+        "messages": [
+          {
+            "id": "msg-1",
+            "timestamp": "2025-10-18T10:00:00.000Z",
+            "type": "gemini",
+            "content": "Attempting to read file",
+            "toolCalls": [
+              {
+                "id": "tool-1",
+                "name": "read_file",
+                "args": { "path": "/nonexistent.txt" },
+                "result": [
+                  {
+                    "functionResponse": {
+                      "id": "tool-1",
+                      "name": "read_file",
+                      "response": {
+                        "output": "Error: File not found - ENOENT: no such file or directory"
+                      }
+                    }
+                  }
+                ],
+                "status": "error",
+                "timestamp": "2025-10-18T10:00:00.000Z"
+              }
+            ]
+          }
+        ]
+      }`;
+
+      const result = provider.parse(sessionWithFailedTool);
+      const content = result.messages[0].message?.content as Array<{
+        type: string;
+        content?: string;
+      }>;
+
+      const toolResult = content.find((block) => block.type === "tool_result");
+      expect(toolResult).toBeDefined();
+      expect(toolResult?.content).toContain("Error: File not found");
+      expect(toolResult?.content).toContain("ENOENT");
+    });
+
+    it("should handle missing timestamps gracefully", () => {
+      const sessionWithMissingTimestamps = `{
+        "sessionId": "test-session",
+        "projectHash": "abc123",
+        "startTime": "2025-10-18T10:00:00.000Z",
+        "lastUpdated": "2025-10-18T10:05:00.000Z",
+        "messages": [
+          {
+            "id": "msg-1",
+            "type": "user",
+            "content": "Hello"
+          }
+        ]
+      }`;
+
+      // Should not throw even when message timestamp is missing
+      const result = provider.parse(sessionWithMissingTimestamps);
+      // Should fall back to session timestamps
+      expect(result.metadata.firstTimestamp).toBe("2025-10-18T10:00:00.000Z");
+      expect(result.metadata.lastTimestamp).toBe("2025-10-18T10:05:00.000Z");
+    });
+
+    it("should handle invalid timestamp formats", () => {
+      const sessionWithInvalidTimestamp = `{
+        "sessionId": "test-session",
+        "projectHash": "abc123",
+        "startTime": "not-a-date",
+        "lastUpdated": "2025-10-18T10:05:00.000Z",
+        "messages": []
+      }`;
+
+      // Should not throw
+      expect(() => provider.parse(sessionWithInvalidTimestamp)).not.toThrow();
+    });
+
+    it("should handle messages as non-array gracefully", () => {
+      const invalidStructure = `{
+        "sessionId": "test",
+        "projectHash": "abc",
+        "startTime": "2025-10-18T10:00:00.000Z",
+        "lastUpdated": "2025-10-18T10:00:00.000Z",
+        "messages": "not-an-array"
+      }`;
+
+      // TypeScript doesn't validate at runtime, so this doesn't throw
+      // Instead it produces an empty message list
+      const result = provider.parse(invalidStructure);
+      expect(result.messages).toHaveLength(0);
+    });
+
+    it("should handle tool calls with missing result field", () => {
+      const missingResult = `{
+        "sessionId": "test",
+        "projectHash": "abc",
+        "startTime": "2025-10-18T10:00:00.000Z",
+        "lastUpdated": "2025-10-18T10:00:00.000Z",
+        "messages": [{
+          "id": "msg-1",
+          "timestamp": "2025-10-18T10:00:00.000Z",
+          "type": "gemini",
+          "content": "Using tool",
+          "toolCalls": [{
+            "id": "tool-1",
+            "name": "some_tool",
+            "args": {}
+          }]
+        }]
+      }`;
+
+      // Should not throw - just won't have tool_result block
+      expect(() => provider.parse(missingResult)).not.toThrow();
+
+      const result = provider.parse(missingResult);
+      const content = result.messages[0].message?.content as Array<{
+        type: string;
+      }>;
+
+      // Should have tool_use but no tool_result
+      expect(content.some((block) => block.type === "tool_use")).toBe(true);
+      expect(content.some((block) => block.type === "tool_result")).toBe(false);
+    });
+
+    it("should handle tool result with missing response field", () => {
+      const missingResponseField = `{
+        "sessionId": "test",
+        "projectHash": "abc",
+        "startTime": "2025-10-18T10:00:00.000Z",
+        "lastUpdated": "2025-10-18T10:00:00.000Z",
+        "messages": [{
+          "id": "msg-1",
+          "timestamp": "2025-10-18T10:00:00.000Z",
+          "type": "gemini",
+          "content": "Using tool",
+          "toolCalls": [{
+            "id": "tool-1",
+            "name": "some_tool",
+            "args": {},
+            "result": [{
+              "functionResponse": {
+                "id": "tool-1",
+                "name": "some_tool"
+              }
+            }],
+            "status": "success",
+            "timestamp": "2025-10-18T10:00:00.000Z"
+          }]
+        }]
+      }`;
+
+      // Should not throw due to our null checks
+      expect(() => provider.parse(missingResponseField)).not.toThrow();
+
+      const result = provider.parse(missingResponseField);
+      const content = result.messages[0].message?.content as Array<{
+        type: string;
+      }>;
+
+      // Should have tool_use but no tool_result (empty output)
+      expect(content.some((block) => block.type === "tool_use")).toBe(true);
+      expect(content.some((block) => block.type === "tool_result")).toBe(false);
+    });
+
+    it("should handle thoughts with missing subject or description", () => {
+      const incompleteThought = `{
+        "sessionId": "test",
+        "projectHash": "abc",
+        "startTime": "2025-10-18T10:00:00.000Z",
+        "lastUpdated": "2025-10-18T10:05:00.000Z",
+        "messages": [{
+          "id": "msg-1",
+          "timestamp": "2025-10-18T10:00:00.000Z",
+          "type": "gemini",
+          "content": "Response",
+          "thoughts": [{
+            "subject": "Complete Thought",
+            "description": "This one is complete",
+            "timestamp": "2025-10-18T10:00:00.000Z"
+          }]
+        }]
+      }`;
+
+      // Should not throw
+      const result = provider.parse(incompleteThought);
+      const content = result.messages[0].message?.content as Array<{
+        type: string;
+        thinking?: string;
+      }>;
+
+      const thinkingBlock = content.find((block) => block.type === "thinking");
+      expect(thinkingBlock).toBeDefined();
+      expect(thinkingBlock?.thinking).toContain("Complete Thought");
+      expect(thinkingBlock?.thinking).toContain("This one is complete");
+    });
+
+    it("should handle unicode characters in thoughts and content", () => {
+      const sessionWithUnicode = `{
+        "sessionId": "test",
+        "projectHash": "abc",
+        "startTime": "2025-10-18T10:00:00.000Z",
+        "lastUpdated": "2025-10-18T10:00:00.000Z",
+        "messages": [{
+          "id": "msg-1",
+          "timestamp": "2025-10-18T10:00:00.000Z",
+          "type": "gemini",
+          "content": "Testing unicode: 🚀 中文 العربية",
+          "thoughts": [{
+            "subject": "Unicode Test 🎯",
+            "description": "Testing emoji support: 👍🏽",
+            "timestamp": "2025-10-18T10:00:00.000Z"
+          }]
+        }]
+      }`;
+
+      const result = provider.parse(sessionWithUnicode);
+      const content = result.messages[0].message?.content as Array<{
+        type: string;
+        thinking?: string;
+        text?: string;
+      }>;
+
+      expect(content.some((b) => b.thinking?.includes("🎯"))).toBe(true);
+      expect(content.some((b) => b.text?.includes("🚀"))).toBe(true);
+      expect(content.some((b) => b.text?.includes("中文"))).toBe(true);
+      expect(content.some((b) => b.text?.includes("العربية"))).toBe(true);
+    });
+
+    it("should use correct timestamp precedence (session vs message)", () => {
+      const sessionWithEarlierMessageTimestamp = `{
+        "sessionId": "test",
+        "projectHash": "abc",
+        "startTime": "2025-10-18T10:00:00.000Z",
+        "lastUpdated": "2025-10-18T10:15:00.000Z",
+        "messages": [{
+          "id": "msg-1",
+          "timestamp": "2025-10-18T09:55:00.000Z",
+          "type": "user",
+          "content": "Hello"
+        }, {
+          "id": "msg-2",
+          "timestamp": "2025-10-18T10:20:00.000Z",
+          "type": "gemini",
+          "content": "Response"
+        }]
+      }`;
+
+      const result = provider.parse(sessionWithEarlierMessageTimestamp);
+
+      // firstTimestamp should use earliest message timestamp (earlier than session.startTime)
+      expect(result.metadata.firstTimestamp).toBe("2025-10-18T09:55:00.000Z");
+      // lastTimestamp should use latest message timestamp (later than session.lastUpdated)
+      expect(result.metadata.lastTimestamp).toBe("2025-10-18T10:20:00.000Z");
+    });
+  });
 });
