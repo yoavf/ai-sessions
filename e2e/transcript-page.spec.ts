@@ -110,11 +110,8 @@ test.describe("Transcript Page - Page Loading and Basic Rendering", () => {
     const { transcript, user } = await createTestTranscript();
 
     try {
-      // Longer delay to ensure database transaction is fully committed
-      await page.waitForTimeout(500);
-
       await page.goto(`http://localhost:3000/t/${transcript.secretToken}`);
-      await page.waitForLoadState("load");
+      await page.waitForLoadState("domcontentloaded");
 
       // Verify site header is visible
       await expect(page.getByRole("banner")).toBeVisible();
@@ -148,8 +145,11 @@ test.describe("Transcript Page - Page Loading and Basic Rendering", () => {
     // URL should remain unchanged
     expect(page.url()).toContain("/t/invalid-token-12345");
 
-    // No transcript content should be displayed
-    await expect(page.getByText("User")).not.toBeVisible();
+    // No transcript metadata (user info) should be displayed
+    // Check for the specific GitHub username link that appears in transcript pages
+    await expect(
+      page.getByRole("link", { name: /github.com/ }),
+    ).not.toBeVisible();
   });
 
   test("1.3 Handle Malformed Token", async ({ page }) => {
@@ -648,9 +648,9 @@ test.describe("Transcript Page - Security", () => {
         },
       });
 
-      // Create transcript with XSS payload
-      const xssPayload = `{"role":"user","content":[{"type":"text","text":"Test message with <script>alert('xss')</script> payload"}]}
-{"role":"assistant","content":[{"type":"text","text":"Response with <img src=x onerror=alert('xss2')> payload"}]}`;
+      // Create transcript with XSS payload (using Claude Code format)
+      const xssPayload = `{"type":"user","message":{"role":"user","content":[{"type":"text","text":"Test message with <script>alert('xss')</script> payload"}]},"uuid":"xss-001","timestamp":"2024-01-01T10:00:00.000Z","parentUuid":null,"sessionId":"xss-session","cwd":"/test"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Response with <img src=x onerror=alert('xss2')> payload"}],"model":"claude-sonnet-4-5-20250929"},"uuid":"xss-002","timestamp":"2024-01-01T10:00:01.000Z","parentUuid":"xss-001","sessionId":"xss-session"}`;
 
       const transcript = await prisma.transcript.create({
         data: {
@@ -680,9 +680,9 @@ test.describe("Transcript Page - Security", () => {
       // Verify no script execution occurred
       expect(dialogAppeared).toBe(false);
 
-      // Verify content is displayed as text (escaped)
-      await expect(page.getByText(/script/i)).toBeVisible();
-      await expect(page.getByText(/alert/i)).toBeVisible();
+      // Verify content is displayed as text (escaped) - use first() to handle TOC duplicates
+      await expect(page.getByText(/script/i).first()).toBeVisible();
+      await expect(page.getByText(/alert/i).first()).toBeVisible();
 
       await cleanupTestData(userId);
     } finally {
