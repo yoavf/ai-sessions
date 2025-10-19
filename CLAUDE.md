@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AI Sessions (ai-sessions.dev) is a Next.js web application for sharing and viewing Claude Code session transcripts. Users authenticate via GitHub OAuth, upload JSONL transcript files, and receive shareable secret URLs. Transcripts are viewable without authentication using the secret token.
+AI Sessions (ai-sessions.dev) is a Next.js web application for sharing and viewing AI coding session transcripts from Claude Code, Codex, and Gemini CLI. Users authenticate via GitHub OAuth, upload JSON or JSONL transcript files, and receive shareable secret URLs. Transcripts are viewable without authentication using the secret token.
 
 ## Common Commands
 
@@ -49,8 +49,8 @@ This project does not currently have a test suite configured.
    - User visits homepage and sees upload dropzone
    - If not authenticated, dropzone shows sign-in overlay
    - User authenticates via GitHub OAuth (`src/lib/auth.ts`)
-   - Uploads JSONL file via `UploadDropzoneWithAuth` component on homepage
-   - API route validates and parses JSONL (`src/lib/parser.ts`)
+   - Uploads JSON or JSONL file via `UploadDropzoneWithAuth` component on homepage
+   - API route validates and parses JSON/JSONL (`src/lib/parser.ts`)
    - **Google Cloud DLP attempts to detect sensitive data** (`src/lib/dlp.ts`):
      - Attempts to detect API keys, passwords, tokens, PII, credit cards, SSNs, etc.
      - Blocks upload if sensitive data found with detailed error message

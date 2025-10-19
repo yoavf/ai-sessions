@@ -24,7 +24,7 @@ export default async function Home() {
               Share AI coding sessions
             </p>
             <p className="text-sm text-muted-foreground/70">
-              Supports Claude Code, Codex, and more coming soon
+              Supports Claude Code, Codex, and Gemini CLI
             </p>
           </div>
 
