@@ -47,4 +47,9 @@ export interface TranscriptProvider {
 export interface DetectionResult {
   provider: string;
   confidence: "high" | "medium" | "low";
+  /**
+   * Errors encountered during detection (if any)
+   * Useful for debugging provider detection issues
+   */
+  detectionErrors?: Array<{ provider: string; error: string }>;
 }

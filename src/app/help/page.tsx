@@ -79,8 +79,8 @@ export default async function HelpPage() {
                     How do I upload a transcript?
                   </h3>
                   <p className="text-muted-foreground text-sm">
-                    Sign in with your GitHub account and drag a .jsonl file onto
-                    the{" "}
+                    Sign in with your GitHub account and drag a JSON or JSONL
+                    file onto the{" "}
                     <Link href="/" className="text-primary hover:underline">
                       homepage
                     </Link>{" "}
@@ -102,8 +102,14 @@ export default async function HelpPage() {
                   <p className="text-muted-foreground text-sm mb-2">
                     <strong>Codex</strong> saves transcripts to:
                   </p>
-                  <code className="block bg-muted p-3 rounded font-mono text-xs border">
+                  <code className="block bg-muted p-3 rounded font-mono text-xs border mb-3">
                     ~/.codex/sessions/&lt;year&gt;/&lt;month&gt;/&lt;day&gt;/&lt;session-id&gt;.jsonl
+                  </code>
+                  <p className="text-muted-foreground text-sm mb-2">
+                    <strong>Gemini CLI</strong> saves transcripts to:
+                  </p>
+                  <code className="block bg-muted p-3 rounded font-mono text-xs border">
+                    ~/.gemini/tmp/&lt;project-hash&gt;/chats/session-&lt;timestamp&gt;.json
                   </code>
                 </div>
               </CardContent>

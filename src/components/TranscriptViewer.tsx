@@ -94,6 +94,7 @@ function isBracketSystemMessage(content: unknown): {
 interface TranscriptViewerProps {
   transcript: ParsedTranscript;
   title: string;
+  source: string;
   createdAt: string;
   userImage?: string;
   githubUsername?: string;
@@ -102,9 +103,21 @@ interface TranscriptViewerProps {
   secretToken: string;
 }
 
+// Format source display names
+function formatSource(source: string): string {
+  const sourceMap: Record<string, string> = {
+    "claude-code": "Claude Code",
+    "gemini-cli": "Gemini CLI",
+    codex: "Codex",
+    cli: "CLI",
+  };
+  return sourceMap[source] || source;
+}
+
 export default function TranscriptViewer({
   transcript,
   title: initialTitle,
+  source,
   createdAt,
   userImage,
   githubUsername,
@@ -378,6 +391,10 @@ export default function TranscriptViewer({
                 )}
                 <span>{timeAgo}</span>
                 <span className="hidden sm:inline">•</span>
+                <span className="text-primary font-medium">
+                  {formatSource(source)}
+                </span>
+                <span className="hidden sm:inline">•</span>
                 <span
                   className="cursor-help"
                   title={`${userMessageCount} user, ${assistantMessageCount} assistant, ${toolCallCount} tool call${toolCallCount !== 1 ? "s" : ""}`}
@@ -390,11 +407,11 @@ export default function TranscriptViewer({
                     <span className="hidden sm:inline">•</span>
                     <span
                       className="cursor-help"
-                      title={modelStats
+                      title={`${modelStats.length === 1 ? "Model" : "Models"}: ${modelStats
                         .map((s) => `${s.model}: ${s.count} messages`)
-                        .join(", ")}
+                        .join(", ")}`}
                     >
-                      Models:{" "}
+                      {modelStats.length === 1 ? "Model" : "Models"}:{" "}
                       {modelStats
                         .map((s) => `${s.model} (${s.percentage}%)`)
                         .join(", ")}

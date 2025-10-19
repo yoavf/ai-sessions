@@ -2,7 +2,7 @@
 
 A web platform for sharing and viewing AI coding session transcripts with beautiful syntax highlighting, collapsible tool calls, and seamless navigation for long conversations.
 
-**Supports:** Claude Code, Codex, and more coming soon!
+**Supports:** Claude Code, Codex, and Gemini CLI
 
 ## Features
 
@@ -155,13 +155,18 @@ Or use Vercel's console to run the command.
 ~/.codex/sessions/<year>/<month>/<day>/<session-id>.jsonl
 ```
 
-Each directory contains JSONL files with the complete conversation history.
+**Gemini CLI** saves session transcripts at:
+```
+~/.gemini/tmp/<project-hash>/chats/session-<timestamp>.json
+```
+
+Each directory contains JSON/JSONL files with the complete conversation history.
 
 ### Uploading a Transcript
 
 1. Sign in with GitHub
 2. Click "Upload Transcript"
-3. Drag and drop your JSONL file
+3. Drag and drop your JSON or JSONL transcript file
 4. Get a shareable secret URL
 5. Share the URL with anyone (no login required to view)
 

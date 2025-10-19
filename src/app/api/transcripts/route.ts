@@ -126,8 +126,21 @@ export async function POST(request: Request) {
     try {
       const detection = detectProvider(originalFileData);
       detectedSource = detection.provider;
-    } catch (_err) {
-      // Ignore detection errors, will fall back to default
+
+      // Log low-confidence detections
+      if (detection.confidence === "low") {
+        console.warn("Low confidence provider detection", {
+          provider: detection.provider,
+          fileSize: fileSizeBytes,
+          preview: originalFileData.substring(0, 200),
+        });
+      }
+    } catch (err) {
+      console.error("Provider detection failed, falling back to claude-code", {
+        error: err instanceof Error ? err.message : String(err),
+        fileSize: fileSizeBytes,
+        contentPreview: originalFileData.substring(0, 200),
+      });
     }
 
     // Validate JSONL format and extract metadata
@@ -135,9 +148,27 @@ export async function POST(request: Request) {
     try {
       const parsed = parseJSONL(originalFileData, detectedSource);
       messageCount = parsed.metadata.messageCount;
-    } catch (_err) {
+    } catch (err) {
+      console.error("Transcript parsing failed", {
+        error: err instanceof Error ? err.message : String(err),
+        provider: detectedSource,
+        fileSize: fileSizeBytes,
+        contentPreview: originalFileData.substring(0, 200),
+      });
+
+      // Provide specific error message from parser
+      const errorMessage =
+        err instanceof Error ? err.message : "Unknown parsing error";
+      const formatType =
+        detectedSource === "gemini-cli"
+          ? "Gemini CLI JSON"
+          : "transcript JSONL";
+
       return NextResponse.json(
-        { error: "Invalid JSONL format" },
+        {
+          error: "Invalid transcript format",
+          message: `Failed to parse transcript: ${errorMessage}. Please ensure you're uploading a valid ${formatType} file.`,
+        },
         { status: 400 },
       );
     }

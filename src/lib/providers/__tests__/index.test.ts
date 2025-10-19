@@ -8,6 +8,7 @@ import {
 } from "../index";
 import { claudeCodeSample } from "./fixtures/claude-code-sample";
 import { codexOlderFormat } from "./fixtures/codex-sample";
+import { geminiSample } from "./fixtures/gemini-sample";
 
 describe("Provider Registry", () => {
   describe("getProviderByName", () => {
@@ -129,6 +130,112 @@ describe("Provider Registry", () => {
 
       const stats = calculateModelStats(emptyTranscript);
       expect(stats).toEqual([]);
+    });
+  });
+
+  describe("Gemini Provider Integration", () => {
+    describe("getProviderByName", () => {
+      it("should return Gemini provider", () => {
+        const provider = getProviderByName("gemini-cli");
+        expect(provider).toBeDefined();
+        expect(provider?.name).toBe("gemini-cli");
+        expect(provider?.displayName).toBe("Gemini CLI");
+      });
+    });
+
+    describe("detectProvider", () => {
+      it("should detect Gemini format via detectProvider", () => {
+        const result = detectProvider(geminiSample);
+        expect(result.provider).toBe("gemini-cli");
+        expect(result.confidence).toBe("high");
+      });
+
+      it("should not misdetect Gemini as Claude Code", () => {
+        const claudeProvider = getProviderByName("claude-code");
+        const geminiProvider = getProviderByName("gemini-cli");
+
+        expect(claudeProvider?.detect(geminiSample)).toBe(false);
+        expect(geminiProvider?.detect(geminiSample)).toBe(true);
+      });
+
+      it("should not misdetect Gemini as Codex", () => {
+        const codexProvider = getProviderByName("codex");
+        const geminiProvider = getProviderByName("gemini-cli");
+
+        expect(codexProvider?.detect(geminiSample)).toBe(false);
+        expect(geminiProvider?.detect(geminiSample)).toBe(true);
+      });
+
+      it("should not misdetect Claude Code as Gemini", () => {
+        const geminiProvider = getProviderByName("gemini-cli");
+
+        expect(geminiProvider?.detect(claudeCodeSample)).toBe(false);
+      });
+
+      it("should not misdetect Codex as Gemini", () => {
+        const geminiProvider = getProviderByName("gemini-cli");
+
+        expect(geminiProvider?.detect(codexOlderFormat)).toBe(false);
+      });
+    });
+
+    describe("parseTranscript", () => {
+      it("should parse Gemini transcript via parseTranscript", () => {
+        const result = parseTranscript(geminiSample);
+
+        expect(result.sessionId).toBe("f86f5318-f47b-4433-85f8-ec9d9a417f8e");
+        expect(result.messages.length).toBeGreaterThan(0);
+      });
+
+      it("should parse Gemini transcript with provider hint", () => {
+        const result = parseTranscript(geminiSample, "gemini-cli");
+
+        expect(result.sessionId).toBe("f86f5318-f47b-4433-85f8-ec9d9a417f8e");
+        expect(result.messages.length).toBeGreaterThan(0);
+      });
+
+      it("should extract correct metadata from Gemini transcript", () => {
+        const result = parseTranscript(geminiSample);
+
+        expect(result.metadata.messageCount).toBeGreaterThan(0);
+        expect(result.metadata.firstTimestamp).toBeDefined();
+        expect(result.metadata.lastTimestamp).toBeDefined();
+      });
+    });
+
+    describe("calculateModelStats", () => {
+      it("should calculate model statistics for Gemini transcripts", () => {
+        const transcript = parseTranscript(geminiSample);
+        const stats = calculateModelStats(transcript, "gemini-cli");
+
+        expect(stats.length).toBeGreaterThan(0);
+        expect(stats.some((s) => s.model.includes("Gemini"))).toBe(true);
+      });
+
+      it("should format Gemini model names correctly", () => {
+        const transcript = parseTranscript(geminiSample);
+        const stats = calculateModelStats(transcript, "gemini-cli");
+
+        // Should have formatted Gemini model names like "Gemini 2.5 Pro"
+        const hasFormattedNames = stats.some((s) =>
+          /Gemini \d+\.\d+ \w+/.test(s.model),
+        );
+
+        expect(hasFormattedNames).toBe(true);
+      });
+
+      it("should calculate percentages correctly for Gemini models", () => {
+        const transcript = parseTranscript(geminiSample);
+        const stats = calculateModelStats(transcript, "gemini-cli");
+
+        // Sum of percentages should be approximately 100
+        const totalPercentage = stats.reduce(
+          (sum, stat) => sum + stat.percentage,
+          0,
+        );
+        expect(totalPercentage).toBeGreaterThanOrEqual(99);
+        expect(totalPercentage).toBeLessThanOrEqual(100);
+      });
     });
   });
 });

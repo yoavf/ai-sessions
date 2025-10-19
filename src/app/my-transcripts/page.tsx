@@ -43,6 +43,7 @@ function formatDate(dateString: string): string {
 function formatSource(source: string): string {
   const sourceMap: Record<string, string> = {
     "claude-code": "Claude Code",
+    "gemini-cli": "Gemini CLI",
     codex: "Codex",
     cli: "CLI",
   };
