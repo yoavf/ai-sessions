@@ -52,10 +52,10 @@ export default async function Image({ params }: Props) {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            backgroundColor: "#0a0a0a",
+            backgroundColor: "#0d1424",
           }}
         >
-          <h1 style={{ fontSize: "48px", color: "#999" }}>
+          <h1 style={{ fontSize: "48px", color: "#9bb0d9" }}>
             Transcript Not Found
           </h1>
         </div>,
@@ -88,9 +88,9 @@ export default async function Image({ params }: Props) {
           width: "100%",
           display: "flex",
           flexDirection: "column",
-          backgroundColor: "#0a0a0a",
+          backgroundColor: "#0d1424",
           backgroundImage:
-            "radial-gradient(circle at 25px 25px, #333 2%, transparent 0%), radial-gradient(circle at 75px 75px, #333 2%, transparent 0%)",
+            "radial-gradient(circle at 25px 25px, #1a2744 2%, transparent 0%), radial-gradient(circle at 75px 75px, #1a2744 2%, transparent 0%)",
           backgroundSize: "100px 100px",
           padding: "60px 80px",
           position: "relative",
@@ -121,10 +121,10 @@ export default async function Image({ params }: Props) {
                 display: "flex",
                 alignItems: "center",
                 padding: "8px 20px",
-                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                backgroundColor: "rgba(124, 157, 232, 0.2)",
                 borderRadius: "6px",
                 fontSize: "18px",
-                color: "#999",
+                color: "#9bb0d9",
               }}
             >
               {source}
@@ -174,7 +174,7 @@ export default async function Image({ params }: Props) {
                 display: "flex",
                 alignItems: "center",
                 fontSize: "28px",
-                color: "#999",
+                color: "#9bb0d9",
               }}
             >
               <span style={{ marginRight: "12px" }}>👤</span>
@@ -185,7 +185,7 @@ export default async function Image({ params }: Props) {
                 display: "flex",
                 alignItems: "center",
                 fontSize: "28px",
-                color: "#999",
+                color: "#9bb0d9",
               }}
             >
               <span style={{ marginRight: "12px" }}>💬</span>
@@ -197,7 +197,7 @@ export default async function Image({ params }: Props) {
                   display: "flex",
                   alignItems: "center",
                   fontSize: "28px",
-                  color: "#999",
+                  color: "#9bb0d9",
                 }}
               >
                 <span style={{ marginRight: "12px" }}>📅</span>
@@ -221,10 +221,10 @@ export default async function Image({ params }: Props) {
               display: "flex",
               alignItems: "center",
               padding: "12px 24px",
-              backgroundColor: "rgba(255, 255, 255, 0.1)",
+              backgroundColor: "rgba(124, 157, 232, 0.2)",
               borderRadius: "8px",
               fontSize: "20px",
-              color: "#999",
+              color: "#9bb0d9",
             }}
           >
             aisessions.dev

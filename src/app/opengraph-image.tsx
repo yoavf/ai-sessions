@@ -19,9 +19,9 @@ export default async function Image() {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "#0a0a0a",
+        backgroundColor: "#0d1424",
         backgroundImage:
-          "radial-gradient(circle at 25px 25px, #333 2%, transparent 0%), radial-gradient(circle at 75px 75px, #333 2%, transparent 0%)",
+          "radial-gradient(circle at 25px 25px, #1a2744 2%, transparent 0%), radial-gradient(circle at 75px 75px, #1a2744 2%, transparent 0%)",
         backgroundSize: "100px 100px",
       }}
     >
@@ -38,7 +38,7 @@ export default async function Image() {
           style={{
             fontSize: "72px",
             fontWeight: "bold",
-            background: "linear-gradient(to right, #fff, #999)",
+            background: "linear-gradient(to right, #fff, #7c9de8)",
             backgroundClip: "text",
             WebkitBackgroundClip: "text",
             color: "transparent",
@@ -51,7 +51,7 @@ export default async function Image() {
         <p
           style={{
             fontSize: "36px",
-            color: "#999",
+            color: "#9bb0d9",
             textAlign: "center",
             maxWidth: "800px",
           }}
