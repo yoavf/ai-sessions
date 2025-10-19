@@ -148,9 +148,27 @@ export async function POST(request: Request) {
     try {
       const parsed = parseJSONL(originalFileData, detectedSource);
       messageCount = parsed.metadata.messageCount;
-    } catch (_err) {
+    } catch (err) {
+      console.error("Transcript parsing failed", {
+        error: err instanceof Error ? err.message : String(err),
+        provider: detectedSource,
+        fileSize: fileSizeBytes,
+        contentPreview: originalFileData.substring(0, 200),
+      });
+
+      // Provide specific error message from parser
+      const errorMessage =
+        err instanceof Error ? err.message : "Unknown parsing error";
+      const formatType =
+        detectedSource === "gemini-cli"
+          ? "Gemini CLI JSON"
+          : "transcript JSONL";
+
       return NextResponse.json(
-        { error: "Invalid JSONL format" },
+        {
+          error: "Invalid transcript format",
+          message: `Failed to parse transcript: ${errorMessage}. Please ensure you're uploading a valid ${formatType} file.`,
+        },
         { status: 400 },
       );
     }
