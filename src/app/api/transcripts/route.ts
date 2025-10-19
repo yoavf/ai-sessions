@@ -126,8 +126,21 @@ export async function POST(request: Request) {
     try {
       const detection = detectProvider(originalFileData);
       detectedSource = detection.provider;
-    } catch (_err) {
-      // Ignore detection errors, will fall back to default
+
+      // Log low-confidence detections
+      if (detection.confidence === "low") {
+        console.warn("Low confidence provider detection", {
+          provider: detection.provider,
+          fileSize: fileSizeBytes,
+          preview: originalFileData.substring(0, 200),
+        });
+      }
+    } catch (err) {
+      console.error("Provider detection failed, falling back to claude-code", {
+        error: err instanceof Error ? err.message : String(err),
+        fileSize: fileSizeBytes,
+        contentPreview: originalFileData.substring(0, 200),
+      });
     }
 
     // Validate JSONL format and extract metadata
