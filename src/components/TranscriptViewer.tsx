@@ -311,8 +311,8 @@ export default function TranscriptViewer({
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="border-b bg-background shadow-sm">
-        <div className="container mx-auto px-4 py-4">
+      <div className="border-b bg-gradient-to-r from-card/50 to-background shadow-md backdrop-blur-sm sticky top-0 z-40">
+        <div className="container mx-auto px-4 py-5">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex-1 min-w-0">
               {isEditingTitle ? (
@@ -368,55 +368,49 @@ export default function TranscriptViewer({
                   {title}
                 </h1>
               )}
-              <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-2 text-xs sm:text-sm text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-2 mt-3 text-xs sm:text-sm">
                 {githubUsername && (
                   <>
                     <a
                       href={`https://github.com/${githubUsername}`}
                       target="_blank"
                       rel="nofollow noopener noreferrer"
-                      className="flex items-center gap-2 hover:text-foreground transition-colors"
+                      className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-secondary/50 hover:bg-secondary transition-all duration-200 hover:scale-105"
                     >
                       {userImage && (
                         <img
                           src={userImage}
                           alt={githubUsername}
-                          className="w-5 h-5 rounded-full"
+                          className="w-4 h-4 rounded-full ring-2 ring-background"
                         />
                       )}
-                      <span className="hover:underline">{githubUsername}</span>
+                      <span className="text-foreground font-medium">{githubUsername}</span>
                     </a>
-                    <span className="hidden sm:inline">•</span>
                   </>
                 )}
-                <span>{timeAgo}</span>
-                <span className="hidden sm:inline">•</span>
-                <span className="text-primary font-medium">
+                <span className="px-2.5 py-1 rounded-full bg-muted text-muted-foreground">
+                  {timeAgo}
+                </span>
+                <span className="px-2.5 py-1 rounded-full bg-primary/10 text-primary font-medium">
                   {formatSource(source)}
                 </span>
-                <span className="hidden sm:inline">•</span>
                 <span
-                  className="cursor-help"
+                  className="px-2.5 py-1 rounded-full bg-accent/50 text-accent-foreground cursor-help hover:bg-accent transition-colors"
                   title={`${userMessageCount} user, ${assistantMessageCount} assistant, ${toolCallCount} tool call${toolCallCount !== 1 ? "s" : ""}`}
                 >
-                  {userMessageCount} user, {assistantMessageCount} assistant,{" "}
-                  {toolCallCount} tool call{toolCallCount !== 1 ? "s" : ""}
+                  {userMessageCount + assistantMessageCount} messages
                 </span>
                 {modelStats.length > 0 && (
-                  <>
-                    <span className="hidden sm:inline">•</span>
-                    <span
-                      className="cursor-help"
-                      title={`${modelStats.length === 1 ? "Model" : "Models"}: ${modelStats
-                        .map((s) => `${s.model}: ${s.count} messages`)
-                        .join(", ")}`}
-                    >
-                      {modelStats.length === 1 ? "Model" : "Models"}:{" "}
-                      {modelStats
-                        .map((s) => `${s.model} (${s.percentage}%)`)
-                        .join(", ")}
-                    </span>
-                  </>
+                  <span
+                    className="px-2.5 py-1 rounded-full bg-muted text-muted-foreground cursor-help hover:bg-muted/70 transition-colors"
+                    title={`${modelStats.length === 1 ? "Model" : "Models"}: ${modelStats
+                      .map((s) => `${s.model}: ${s.count} messages`)
+                      .join(", ")}`}
+                  >
+                    {modelStats
+                      .map((s) => `${s.model} (${s.percentage}%)`)
+                      .join(", ")}
+                  </span>
                 )}
               </div>
             </div>
@@ -424,11 +418,11 @@ export default function TranscriptViewer({
               <Button
                 onClick={handleShareClick}
                 variant={copied ? "default" : "default"}
-                className={copied ? "bg-green-600 hover:bg-green-700" : ""}
+                className={`transition-all duration-300 shadow-sm hover:shadow-md ${copied ? "bg-green-600 hover:bg-green-700 scale-105" : ""}`}
                 size="sm"
               >
                 {copied ? (
-                  <Check className="w-4 h-4" />
+                  <Check className="w-4 h-4 animate-fade-in-scale" />
                 ) : (
                   <Share2 className="w-4 h-4" />
                 )}
@@ -442,6 +436,7 @@ export default function TranscriptViewer({
                   disabled={isDeleting}
                   variant="destructive"
                   size="sm"
+                  className="shadow-sm hover:shadow-md transition-all duration-300"
                 >
                   <Trash2 className="w-4 h-4" />
                   <span className="hidden sm:inline">
