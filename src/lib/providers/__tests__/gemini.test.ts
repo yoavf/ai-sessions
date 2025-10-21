@@ -233,6 +233,65 @@ describe("GeminiProvider", () => {
       );
     });
 
+    it("should unescape newlines in thinking blocks", () => {
+      // Test session with escaped newlines in thinking blocks
+      const sessionWithEscapedNewlines = `{
+        "sessionId": "test-escaped",
+        "projectHash": "abc123",
+        "startTime": "2025-10-18T10:00:00.000Z",
+        "lastUpdated": "2025-10-18T10:05:00.000Z",
+        "messages": [
+          {
+            "id": "msg-1",
+            "timestamp": "2025-10-18T10:00:00.000Z",
+            "type": "user",
+            "content": "Hello"
+          },
+          {
+            "id": "msg-2",
+            "timestamp": "2025-10-18T10:00:05.000Z",
+            "type": "gemini",
+            "content": "Response text",
+            "thoughts": [
+              {
+                "subject": "Beginning the Build",
+                "description": "\\\\n\\\\nI'm starting the project.\\\\nFirst step: scaffold files.\\\\n\\\\nThen: set up structure.",
+                "timestamp": "2025-10-18T10:00:04.000Z"
+              }
+            ],
+            "model": "gemini-2.5-pro"
+          }
+        ]
+      }`;
+
+      const result = provider.parse(sessionWithEscapedNewlines);
+      const messageWithThoughts = result.messages[1];
+      const content = messageWithThoughts.message?.content as Array<{
+        type: string;
+        thinking?: string;
+      }>;
+
+      const thinkingBlock = content.find((block) => block.type === "thinking");
+      expect(thinkingBlock).toBeDefined();
+
+      // Should NOT contain escaped newlines
+      expect(thinkingBlock?.thinking).not.toContain("\\n");
+
+      // Should contain actual newlines
+      expect(thinkingBlock?.thinking).toContain("\n\n");
+      expect(thinkingBlock?.thinking?.split("\n").length).toBeGreaterThan(1);
+
+      // Verify the content is properly formatted
+      const lines = thinkingBlock?.thinking?.split("\n") || [];
+      expect(lines[0]).toBe("Beginning the Build");
+      expect(lines[1]).toBe("");
+      expect(lines[2]).toBe("");
+      // The description starts with \n\n, so after replacement we get 2 empty lines
+      expect(lines[3]).toBe("");
+      expect(lines[4]).toBe("I'm starting the project.");
+      expect(lines[5]).toBe("First step: scaffold files.");
+    });
+
     it("should parse tool results with text items correctly", () => {
       const result = provider.parse(geminiSample);
 
