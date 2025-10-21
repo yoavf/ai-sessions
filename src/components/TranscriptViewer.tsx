@@ -1,7 +1,7 @@
 "use client";
 
 import { format, formatDistanceToNow } from "date-fns";
-import { Check, Pencil, Share2, Trash2 } from "lucide-react";
+import { Bot, Check, Hammer, Pencil, Share2, Trash2, User } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Message, MessageContent } from "@/components/ai-elements/message";
 import { Button } from "@/components/ui/button";
@@ -396,11 +396,21 @@ export default function TranscriptViewer({
                 </span>
                 <span className="hidden sm:inline">•</span>
                 <span
-                  className="cursor-help"
-                  title={`${userMessageCount} user, ${assistantMessageCount} assistant, ${toolCallCount} tool call${toolCallCount !== 1 ? "s" : ""}`}
+                  className="cursor-help flex items-center gap-2"
+                  title={`${userMessageCount} user message${userMessageCount !== 1 ? "s" : ""}, ${assistantMessageCount} assistant message${assistantMessageCount !== 1 ? "s" : ""}, ${toolCallCount} tool call${toolCallCount !== 1 ? "s" : ""}`}
                 >
-                  {userMessageCount} user, {assistantMessageCount} assistant,{" "}
-                  {toolCallCount} tool call{toolCallCount !== 1 ? "s" : ""}
+                  <span className="flex items-center gap-1">
+                    <User className="w-4 h-4" />
+                    {userMessageCount}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Bot className="w-4 h-4" />
+                    {assistantMessageCount}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Hammer className="w-4 h-4" />
+                    {toolCallCount}
+                  </span>
                 </span>
                 {modelStats.length > 0 && (
                   <>
