@@ -1,11 +1,16 @@
 "use client";
 
 import { format, formatDistanceToNow } from "date-fns";
-import { Check, Pencil, Share2, Trash2 } from "lucide-react";
+import { Bot, Check, Hammer, Pencil, Share2, Trash2, User } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Message, MessageContent } from "@/components/ai-elements/message";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { addCsrfToken, useCsrfToken } from "@/hooks/useCsrfToken";
 import { calculateModelStats } from "@/lib/parser";
 import type { ParsedTranscript } from "@/types/transcript";
@@ -395,12 +400,40 @@ export default function TranscriptViewer({
                   {formatSource(source)}
                 </span>
                 <span className="hidden sm:inline">•</span>
-                <span
-                  className="cursor-help"
-                  title={`${userMessageCount} user, ${assistantMessageCount} assistant, ${toolCallCount} tool call${toolCallCount !== 1 ? "s" : ""}`}
-                >
-                  {userMessageCount} user, {assistantMessageCount} assistant,{" "}
-                  {toolCallCount} tool call{toolCallCount !== 1 ? "s" : ""}
+                <span className="flex items-center gap-2">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="flex items-center gap-1 cursor-help">
+                        <User className="w-4 h-4" />
+                        <span>{userMessageCount}</span>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {userMessageCount} user message{userMessageCount !== 1 ? "s" : ""}
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="flex items-center gap-1 cursor-help">
+                        <Bot className="w-4 h-4" />
+                        <span>{assistantMessageCount}</span>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {assistantMessageCount} assistant message{assistantMessageCount !== 1 ? "s" : ""}
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="flex items-center gap-1 cursor-help">
+                        <Hammer className="w-4 h-4" />
+                        <span>{toolCallCount}</span>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {toolCallCount} tool call{toolCallCount !== 1 ? "s" : ""}
+                    </TooltipContent>
+                  </Tooltip>
                 </span>
                 {modelStats.length > 0 && (
                   <>
