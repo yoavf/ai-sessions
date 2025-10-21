@@ -8,6 +8,8 @@ import {
   ToolInput,
 } from "@/components/ai-elements/tool";
 import type { ToolResult, ToolUse } from "@/types/transcript";
+import DiffView from "./DiffView";
+import PatchDiffView from "./PatchDiffView";
 import TodoListBlock from "./TodoListBlock";
 
 interface ToolCallBlockProps {
@@ -54,6 +56,7 @@ function getToolPreview(
 
     case "Write":
     case "Edit":
+    case "replace": // Gemini's edit tool
       return input.file_path || null;
 
     case "Glob":
@@ -173,7 +176,22 @@ export default function ToolCallBlock({
     toolUse.name === "TodoWrite" &&
     toolUse.input.todos &&
     Array.isArray(toolUse.input.todos);
-  const [isOpen, setIsOpen] = useState(isTodoWrite);
+
+  // Edit tools should be expanded by default to show the diff
+  // Support both Claude Code's "Edit" and Gemini's "replace" tools
+  const isEdit =
+    (toolUse.name === "Edit" || toolUse.name === "replace") &&
+    toolUse.input.file_path &&
+    toolUse.input.old_string &&
+    toolUse.input.new_string;
+
+  // Codex apply_patch tool
+  const isApplyPatch =
+    toolUse.name === "apply_patch" &&
+    toolUse.input.input &&
+    typeof toolUse.input.input === "string";
+
+  const [isOpen, setIsOpen] = useState(isTodoWrite || isEdit || isApplyPatch);
   const preview = getToolPreview(toolUse.name, toolUse.input);
 
   // For shell tool, show just the command without the "shell:" prefix
@@ -200,6 +218,44 @@ export default function ToolCallBlock({
           <div className="p-4 space-y-3">
             <TodoListBlock todos={toolUse.input.todos} />
           </div>
+          <ToolResultsList results={toolResults} />
+        </ToolContent>
+      </Tool>
+    );
+  }
+
+  // Special handling for Edit - show side-by-side diff instead of JSON
+  if (isEdit) {
+    return (
+      <Tool open={isOpen} onOpenChange={setIsOpen}>
+        <ToolHeader
+          title={getTitle()}
+          type="tool-call"
+          state="output-available"
+        />
+        <ToolContent>
+          <DiffView
+            filePath={toolUse.input.file_path}
+            oldString={toolUse.input.old_string}
+            newString={toolUse.input.new_string}
+          />
+          <ToolResultsList results={toolResults} />
+        </ToolContent>
+      </Tool>
+    );
+  }
+
+  // Special handling for Codex apply_patch - parse and show diff
+  if (isApplyPatch) {
+    return (
+      <Tool open={isOpen} onOpenChange={setIsOpen}>
+        <ToolHeader
+          title={getTitle()}
+          type="tool-call"
+          state="output-available"
+        />
+        <ToolContent>
+          <PatchDiffView patchContent={toolUse.input.input} />
           <ToolResultsList results={toolResults} />
         </ToolContent>
       </Tool>
