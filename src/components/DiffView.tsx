@@ -187,7 +187,7 @@ export default function DiffView({
                           <span className="text-muted-foreground/30"> </span>
                         )}
                       </div>
-                      <pre className="flex-1 px-2 py-1 overflow-x-auto whitespace-pre">
+                      <pre className="flex-1 px-2 py-1 whitespace-pre-wrap break-all">
                         {line.content}
                       </pre>
                     </div>
@@ -225,7 +225,7 @@ export default function DiffView({
                           <span className="text-muted-foreground/30"> </span>
                         )}
                       </div>
-                      <pre className="flex-1 px-2 py-1 overflow-x-auto whitespace-pre">
+                      <pre className="flex-1 px-2 py-1 whitespace-pre-wrap break-all">
                         {line.content}
                       </pre>
                     </div>
@@ -264,7 +264,7 @@ export default function DiffView({
                     <span className="text-muted-foreground/30"> </span>
                   )}
                 </div>
-                <pre className="flex-1 px-2 py-1 overflow-x-auto whitespace-pre">
+                <pre className="flex-1 px-2 py-1 whitespace-pre-wrap break-all">
                   {line.content}
                 </pre>
               </div>
