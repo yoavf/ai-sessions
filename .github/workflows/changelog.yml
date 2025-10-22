@@ -31,7 +31,10 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
-          commit-message: "chore: update changelog"
+          commit-message: |
+            chore: update changelog
+
+            changelog: ignore
           title: "chore: update changelog"
           body: |
             Automated changelog update from recent commits.
