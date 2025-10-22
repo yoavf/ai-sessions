@@ -186,7 +186,10 @@ function parseToolCalls(toolCalls: GeminiToolCall[]): ContentBlock[] {
 function parseThoughts(thoughts: GeminiThought[]): ContentBlock[] {
   return thoughts.map((thought) => ({
     type: "thinking" as const,
-    thinking: `${thought.subject}\n\n${thought.description}`,
+    // Replace literal \n sequences with actual newlines
+    thinking: `${thought.subject}\n\n${thought.description}`
+      .replace(/\\n/g, "\n")
+      .replace(/\\t/g, "\t"),
   }));
 }
 

@@ -72,6 +72,12 @@ export function getToolPreview(
       }
       return null;
 
+    case "update_plan":
+      if (input.plan && Array.isArray(input.plan)) {
+        return `${input.plan.length} step${input.plan.length !== 1 ? "s" : ""}`;
+      }
+      return null;
+
     case "shell": {
       // Codex shell tool
       if (!input.command) return null;
