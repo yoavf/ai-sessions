@@ -12,7 +12,7 @@ header = """
 body = """
 {%- set current_date = "" -%}
 {% for commit in commits | reverse %}
-    {%- set commit_date = commit.timestamp | date(format="%Y-%m-%d") -%}
+    {%- set commit_date = commit.committer.timestamp | date(format="%Y-%m-%d") -%}
     {%- if commit_date != current_date %}
         {%- if current_date != "" %}
 
