@@ -113,6 +113,12 @@ function getToolPreview(
       }
       return null;
 
+    case "update_plan":
+      if (input.plan && Array.isArray(input.plan)) {
+        return `${input.plan.length} step${input.plan.length !== 1 ? "s" : ""}`;
+      }
+      return null;
+
     case "shell": {
       // Codex shell tool
       if (!input.command) return null;
@@ -167,15 +173,42 @@ function getToolPreview(
   }
 }
 
+/**
+ * Normalize todo list data from different providers into a common format
+ */
+function normalizeTodoList(
+  toolName: string,
+  // biome-ignore lint/suspicious/noExplicitAny: Tool input types are dynamic
+  input: Record<string, any>,
+): Array<{
+  content: string;
+  status: "pending" | "in_progress" | "completed";
+  activeForm: string;
+}> | null {
+  // Claude Code format: TodoWrite with todos array
+  if (toolName === "TodoWrite" && input.todos && Array.isArray(input.todos)) {
+    return input.todos;
+  }
+
+  // Codex format: update_plan with plan array
+  if (toolName === "update_plan" && input.plan && Array.isArray(input.plan)) {
+    return input.plan.map((item: { step: string; status: string }) => ({
+      content: item.step,
+      status: item.status as "pending" | "in_progress" | "completed",
+      activeForm: item.step, // Codex doesn't have activeForm, use step as fallback
+    }));
+  }
+
+  return null;
+}
+
 export default function ToolCallBlock({
   toolUse,
   toolResults = [],
 }: ToolCallBlockProps) {
-  // TodoWrite should be expanded by default to show the todo list
-  const isTodoWrite =
-    toolUse.name === "TodoWrite" &&
-    toolUse.input.todos &&
-    Array.isArray(toolUse.input.todos);
+  // Normalize todo list data from both TodoWrite and update_plan
+  const todoList = normalizeTodoList(toolUse.name, toolUse.input);
+  const isTodoList = todoList !== null;
 
   // Edit tools should be expanded by default to show the diff
   // Support both Claude Code's "Edit" and Gemini's "replace" tools
@@ -198,7 +231,7 @@ export default function ToolCallBlock({
     typeof toolUse.input.input === "string";
 
   const [isOpen, setIsOpen] = useState(
-    isTodoWrite || isEdit || isWrite || isApplyPatch,
+    isTodoList || isEdit || isWrite || isApplyPatch,
   );
   const preview = getToolPreview(toolUse.name, toolUse.input);
 
@@ -210,8 +243,8 @@ export default function ToolCallBlock({
     return preview ? `${toolUse.name}: ${preview}` : toolUse.name;
   };
 
-  // Special handling for TodoWrite - show visual todo list instead of JSON
-  if (isTodoWrite) {
+  // Special handling for todo lists - show visual todo list instead of JSON
+  if (isTodoList) {
     return (
       <Tool open={isOpen} onOpenChange={setIsOpen}>
         <ToolHeader
@@ -224,7 +257,7 @@ export default function ToolCallBlock({
         />
         <ToolContent>
           <div className="p-4 space-y-3">
-            <TodoListBlock todos={toolUse.input.todos} />
+            <TodoListBlock todos={todoList} />
           </div>
           <ToolResultsList results={toolResults} />
         </ToolContent>

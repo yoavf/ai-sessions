@@ -93,6 +93,12 @@ function getToolPreview(
       }
       return null;
 
+    case "update_plan":
+      if (input.plan && Array.isArray(input.plan)) {
+        return `${input.plan.length} step${input.plan.length !== 1 ? "s" : ""}`;
+      }
+      return null;
+
     default:
       return null;
   }
@@ -207,7 +213,13 @@ describe("ToolCallBlock - getToolPreview", () => {
   describe("TodoWrite tool", () => {
     it("should show count for single todo", () => {
       const preview = getToolPreview("TodoWrite", {
-        todos: [{ content: "Task 1", status: "pending", activeForm: "Task 1" }],
+        todos: [
+          {
+            content: "Task 1",
+            status: "pending" as const,
+            activeForm: "Task 1",
+          },
+        ],
       });
       expect(preview).toBe("1 todo");
     });
@@ -215,8 +227,16 @@ describe("ToolCallBlock - getToolPreview", () => {
     it("should show count for multiple todos", () => {
       const preview = getToolPreview("TodoWrite", {
         todos: [
-          { content: "Task 1", status: "pending", activeForm: "Task 1" },
-          { content: "Task 2", status: "pending", activeForm: "Task 2" },
+          {
+            content: "Task 1",
+            status: "pending" as const,
+            activeForm: "Task 1",
+          },
+          {
+            content: "Task 2",
+            status: "pending" as const,
+            activeForm: "Task 2",
+          },
         ],
       });
       expect(preview).toBe("2 todos");
@@ -231,6 +251,38 @@ describe("ToolCallBlock - getToolPreview", () => {
 
     it("should return null for missing todos", () => {
       const preview = getToolPreview("TodoWrite", {});
+      expect(preview).toBeNull();
+    });
+  });
+
+  describe("update_plan tool (Codex)", () => {
+    it("should show count for single step", () => {
+      const preview = getToolPreview("update_plan", {
+        plan: [{ step: "Design the app structure", status: "in_progress" }],
+      });
+      expect(preview).toBe("1 step");
+    });
+
+    it("should show count for multiple steps", () => {
+      const preview = getToolPreview("update_plan", {
+        plan: [
+          { step: "Design the app structure", status: "in_progress" },
+          { step: "Implement the timer logic", status: "pending" },
+          { step: "Test the workflow", status: "pending" },
+        ],
+      });
+      expect(preview).toBe("3 steps");
+    });
+
+    it("should return null for empty plan", () => {
+      const preview = getToolPreview("update_plan", {
+        plan: [],
+      });
+      expect(preview).toBe("0 steps");
+    });
+
+    it("should return null for missing plan", () => {
+      const preview = getToolPreview("update_plan", {});
       expect(preview).toBeNull();
     });
   });
@@ -360,7 +412,7 @@ describe("ToolCallBlock - getToolPreview", () => {
     });
 
     it("should NOT recognize Edit tool with missing properties", () => {
-      const toolUse = {
+      const toolUse: { name: string; input: Record<string, any> } = {
         name: "Edit",
         input: {
           file_path: "test.txt",
@@ -378,7 +430,7 @@ describe("ToolCallBlock - getToolPreview", () => {
     });
 
     it("should NOT recognize Write tool with missing content", () => {
-      const toolUse = {
+      const toolUse: { name: string; input: Record<string, any> } = {
         name: "Write",
         input: {
           file_path: "test.txt",
