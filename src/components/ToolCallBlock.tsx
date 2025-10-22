@@ -185,13 +185,21 @@ export default function ToolCallBlock({
     toolUse.input.old_string &&
     toolUse.input.new_string;
 
+  // Write tool should show diff view (treating it as a new file)
+  const isWrite =
+    toolUse.name === "Write" &&
+    toolUse.input.file_path &&
+    toolUse.input.content;
+
   // Codex apply_patch tool
   const isApplyPatch =
     toolUse.name === "apply_patch" &&
     toolUse.input.input &&
     typeof toolUse.input.input === "string";
 
-  const [isOpen, setIsOpen] = useState(isTodoWrite || isEdit || isApplyPatch);
+  const [isOpen, setIsOpen] = useState(
+    isTodoWrite || isEdit || isWrite || isApplyPatch,
+  );
   const preview = getToolPreview(toolUse.name, toolUse.input);
 
   // For shell tool, show just the command without the "shell:" prefix
@@ -224,8 +232,12 @@ export default function ToolCallBlock({
     );
   }
 
-  // Special handling for Edit - show side-by-side diff instead of JSON
-  if (isEdit) {
+  // Special handling for Edit and Write - show diff view instead of JSON
+  if (isEdit || isWrite) {
+    const filePath = toolUse.input.file_path;
+    const oldString = isEdit ? toolUse.input.old_string : "";
+    const newString = isEdit ? toolUse.input.new_string : toolUse.input.content;
+
     return (
       <Tool open={isOpen} onOpenChange={setIsOpen}>
         <ToolHeader
@@ -235,9 +247,9 @@ export default function ToolCallBlock({
         />
         <ToolContent>
           <DiffView
-            filePath={toolUse.input.file_path}
-            oldString={toolUse.input.old_string}
-            newString={toolUse.input.new_string}
+            filePath={filePath}
+            oldString={oldString}
+            newString={newString}
           />
           <ToolResultsList results={toolResults} />
         </ToolContent>

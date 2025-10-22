@@ -1,16 +1,10 @@
 import { describe, expect, it } from "vitest";
+import type { DiffLine } from "@/components/DiffView";
 
 /**
  * Tests for DiffView component's diff algorithm
  * These tests verify that the diff computation correctly identifies added, removed, and unchanged lines
  */
-
-interface DiffLine {
-  type: "added" | "removed" | "unchanged";
-  content: string;
-  oldLineNumber?: number;
-  newLineNumber?: number;
-}
 
 // Extract the computeDiff logic for testing
 function computeDiff(oldStr: string, newStr: string): DiffLine[] {

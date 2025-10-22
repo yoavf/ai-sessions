@@ -11,12 +11,43 @@ interface DiffViewProps {
 
 type DiffMode = "split" | "unified";
 
-interface DiffLine {
+export interface DiffLine {
   type: "added" | "removed" | "unchanged";
   content: string;
   oldLineNumber?: number;
   newLineNumber?: number;
 }
+
+/**
+ * Map of file extensions to language identifiers for syntax highlighting
+ */
+const LANGUAGE_MAP: Record<string, string> = {
+  ts: "typescript",
+  tsx: "typescript",
+  js: "javascript",
+  jsx: "javascript",
+  py: "python",
+  rb: "ruby",
+  go: "go",
+  rs: "rust",
+  java: "java",
+  cpp: "cpp",
+  c: "c",
+  cs: "csharp",
+  php: "php",
+  md: "markdown",
+  json: "json",
+  yaml: "yaml",
+  yml: "yaml",
+  toml: "toml",
+  css: "css",
+  scss: "scss",
+  html: "html",
+  xml: "xml",
+  sql: "sql",
+  sh: "bash",
+  bash: "bash",
+};
 
 /**
  * Displays a diff view for Edit tool calls with toggle between split and unified views
@@ -26,39 +57,14 @@ export default function DiffView({
   oldString,
   newString,
 }: DiffViewProps) {
-  const [mode, setMode] = useState<DiffMode>("split");
+  // Default to unified view for new files (when oldString is empty)
+  const isNewFile = oldString === "";
+  const [mode, setMode] = useState<DiffMode>(isNewFile ? "unified" : "split");
 
   // Detect language from file extension
   const getLanguage = (path: string): string => {
     const ext = path.split(".").pop()?.toLowerCase();
-    const langMap: Record<string, string> = {
-      ts: "typescript",
-      tsx: "typescript",
-      js: "javascript",
-      jsx: "javascript",
-      py: "python",
-      rb: "ruby",
-      go: "go",
-      rs: "rust",
-      java: "java",
-      cpp: "cpp",
-      c: "c",
-      cs: "csharp",
-      php: "php",
-      md: "markdown",
-      json: "json",
-      yaml: "yaml",
-      yml: "yaml",
-      toml: "toml",
-      css: "css",
-      scss: "scss",
-      html: "html",
-      xml: "xml",
-      sql: "sql",
-      sh: "bash",
-      bash: "bash",
-    };
-    return langMap[ext || ""] || "text";
+    return LANGUAGE_MAP[ext || ""] || "text";
   };
 
   // Simple diff algorithm - finds added and removed lines
