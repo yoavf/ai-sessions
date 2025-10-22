@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { checkCsrf } from "@/lib/csrf";
 import { formatDlpFindings, scanForSensitiveData } from "@/lib/dlp";
 import {
+  calculateTranscriptMetadata,
   generateDefaultTitle,
   isUuidOrSessionId,
   parseJSONL,
@@ -11,6 +12,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { detectProvider } from "@/lib/providers";
 import { checkUploadRateLimit } from "@/lib/rate-limit";
+import type { TranscriptMetadata } from "@/types/transcript";
 
 export async function GET() {
   try {
@@ -143,13 +145,15 @@ export async function POST(request: Request) {
       });
     }
 
-    // Validate JSONL format and extract metadata
+    // Validate JSONL format and calculate metadata
     let messageCount = 0;
-    let cwd: string | undefined;
+    let transcriptMetadata: TranscriptMetadata = {};
     try {
       const parsed = parseJSONL(originalFileData, detectedSource);
       messageCount = parsed.metadata.messageCount;
-      cwd = parsed.cwd; // Extract cwd for storage
+
+      // Calculate and store all metadata (message counts, tool counts, model stats, etc.)
+      transcriptMetadata = calculateTranscriptMetadata(parsed, detectedSource);
     } catch (err) {
       console.error("Transcript parsing failed", {
         error: err instanceof Error ? err.message : String(err),
@@ -223,7 +227,9 @@ export async function POST(request: Request) {
         fileData,
         messageCount,
         fileSizeBytes: finalFileSizeBytes,
-        metadata: { cwd }, // Store computed metadata
+        // Store pre-calculated metadata (counts, model stats, etc.)
+        // Ensure JSON serialization to match Prisma's InputJsonValue type
+        metadata: JSON.parse(JSON.stringify(transcriptMetadata)),
         createdAt, // Use same date for consistency
       },
     });

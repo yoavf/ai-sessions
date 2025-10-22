@@ -71,6 +71,29 @@ export interface TranscriptLine {
   toolUseResult?: string | Record<string, any>;
 }
 
+/**
+ * Model statistics - shows which AI models were used and how often
+ */
+export interface ModelStats {
+  model: string;
+  count: number;
+  percentage: number;
+}
+
+/**
+ * Pre-calculated statistics stored in database metadata column
+ * These are calculated once on upload to avoid recomputing on every view
+ */
+export interface TranscriptMetadata {
+  cwd?: string; // Project working directory for converting absolute paths to relative
+  userMessageCount?: number; // Count of user messages
+  assistantMessageCount?: number; // Count of assistant messages
+  toolCallCount?: number; // Count of tool_use blocks across all assistant messages
+  modelStats?: ModelStats[]; // Model usage statistics
+  // Index signature for Prisma JSON compatibility
+  [key: string]: unknown;
+}
+
 export interface ParsedTranscript {
   messages: TranscriptLine[];
   sessionId: string;

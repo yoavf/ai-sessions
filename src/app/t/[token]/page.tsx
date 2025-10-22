@@ -11,6 +11,7 @@ import {
   parseJSONL,
 } from "@/lib/parser";
 import { prisma } from "@/lib/prisma";
+import type { TranscriptMetadata } from "@/types/transcript";
 
 interface PageProps {
   params: Promise<{ token: string }>;
@@ -29,6 +30,7 @@ export async function generateMetadata({
         source: true,
         createdAt: true,
         fileData: true,
+        metadata: true, // Fetch cached metadata
         user: {
           select: {
             githubUsername: true,
@@ -44,7 +46,9 @@ export async function generateMetadata({
       };
     }
 
-    const parsed = parseJSONL(transcript.fileData);
+    // Use cached metadata
+    const cachedMetadata =
+      (transcript.metadata as TranscriptMetadata | null) || {};
 
     // Determine if we have a custom title or need to generate one
     const hasCustomTitle =
@@ -54,14 +58,19 @@ export async function generateMetadata({
       : generateDefaultTitle(transcript.source, transcript.createdAt);
 
     const username = transcript.user?.githubUsername || "Anonymous";
-    const messageCount = parsed.metadata.messageCount;
     const date = new Date(transcript.createdAt).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
     });
 
-    const description = `AI coding session by ${username} • ${messageCount} messages • ${date}`;
+    // Build description - only include message count if available
+    const descriptionParts = [`AI coding session by ${username}`];
+    if (cachedMetadata.userMessageCount !== undefined) {
+      descriptionParts.push(`${cachedMetadata.userMessageCount} messages`);
+    }
+    descriptionParts.push(date);
+    const description = descriptionParts.join(" • ");
 
     return {
       title: `${title} - AI Sessions`,
@@ -136,9 +145,9 @@ export default async function TranscriptPage({ params }: PageProps) {
     const parsed = parseJSONL(transcript.fileData);
     const isOwner = session?.user?.id === transcript.userId;
 
-    // Use cached cwd from database to avoid recomputing on every page load
-    const dbMetadata = transcript.metadata as { cwd?: string } | null;
-    if (dbMetadata?.cwd) {
+    // Use cached metadata from database (includes cwd, message counts, tool counts, model stats)
+    const dbMetadata = (transcript.metadata as TranscriptMetadata | null) || {};
+    if (dbMetadata.cwd) {
       parsed.cwd = dbMetadata.cwd;
     }
 
@@ -162,6 +171,7 @@ export default async function TranscriptPage({ params }: PageProps) {
           isOwner={isOwner}
           transcriptId={transcript.id}
           secretToken={token}
+          cachedMetadata={dbMetadata}
         />
       </TranscriptPageDropzone>
     );

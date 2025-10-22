@@ -1,4 +1,4 @@
-import type { ParsedTranscript } from "@/types/transcript";
+import type { ParsedTranscript, TranscriptMetadata } from "@/types/transcript";
 import {
   calculateModelStats as calculateModelStatsFromProvider,
   parseTranscript as parseTranscriptWithProvider,
@@ -78,4 +78,46 @@ export function parseJSONL(
   sourceHint?: string,
 ): ParsedTranscript {
   return parseTranscriptWithProvider(content, sourceHint);
+}
+
+/**
+ * Calculate all metadata statistics for a transcript
+ * This should be called on upload and the results stored in the database
+ * @param transcript Parsed transcript
+ * @param source Source provider name (for model formatting)
+ * @returns Metadata object ready to be stored in database
+ */
+export function calculateTranscriptMetadata(
+  transcript: ParsedTranscript,
+  source?: string,
+): TranscriptMetadata {
+  // Count messages by role
+  const userMessageCount = transcript.messages.filter(
+    (line) => line.message?.role === "user",
+  ).length;
+  const assistantMessageCount = transcript.messages.filter(
+    (line) => line.message?.role === "assistant",
+  ).length;
+
+  // Count tool calls from assistant messages
+  const toolCallCount = transcript.messages.reduce((count, line) => {
+    if (line.message?.role !== "assistant") return count;
+    const content = line.message.content;
+    if (!Array.isArray(content)) return count;
+
+    // Count tool_use blocks in this message
+    const toolUseBlocks = content.filter((block) => block.type === "tool_use");
+    return count + toolUseBlocks.length;
+  }, 0);
+
+  // Calculate model usage statistics
+  const modelStats = calculateModelStatsFromProvider(transcript, source);
+
+  return {
+    cwd: transcript.cwd,
+    userMessageCount,
+    assistantMessageCount,
+    toolCallCount,
+    modelStats,
+  };
 }

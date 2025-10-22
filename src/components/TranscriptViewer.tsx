@@ -12,8 +12,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { addCsrfToken, useCsrfToken } from "@/hooks/useCsrfToken";
-import { calculateModelStats } from "@/lib/parser";
-import type { ParsedTranscript } from "@/types/transcript";
+import type { ParsedTranscript, TranscriptMetadata } from "@/types/transcript";
 import FloatingTOC from "./FloatingTOC";
 import MessageRenderer from "./MessageRenderer";
 
@@ -106,6 +105,7 @@ interface TranscriptViewerProps {
   isOwner: boolean;
   transcriptId: string;
   secretToken: string;
+  cachedMetadata?: TranscriptMetadata;
 }
 
 // Format source display names
@@ -128,6 +128,7 @@ export default function TranscriptViewer({
   githubUsername,
   isOwner,
   secretToken,
+  cachedMetadata = {},
 }: TranscriptViewerProps) {
   const [title, setTitle] = useState(initialTitle);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -232,30 +233,12 @@ export default function TranscriptViewer({
     .replace(/(\d+) months? ago/, "$1mo ago")
     .replace(/(\d+) years? ago/, "$1y ago");
 
-  // Count messages by role and tool calls
-  const userMessageCount = transcript.messages.filter(
-    (line) => line.message?.role === "user",
-  ).length;
-  const assistantMessageCount = transcript.messages.filter(
-    (line) => line.message?.role === "assistant",
-  ).length;
-
-  // Count tool calls from assistant messages
-  const toolCallCount = transcript.messages.reduce((count, line) => {
-    if (line.message?.role !== "assistant") return count;
-    const content = line.message.content;
-    if (!Array.isArray(content)) return count;
-
-    // Count tool_use blocks in this message
-    const toolUseBlocks = content.filter((block) => block.type === "tool_use");
-    return count + toolUseBlocks.length;
-  }, 0);
-
-  // Calculate model usage statistics
-  const modelStats = useMemo(
-    () => calculateModelStats(transcript),
-    [transcript],
-  );
+  // Use pre-calculated metadata from database
+  // If metadata is missing, we just don't show those stats
+  const userMessageCount = cachedMetadata.userMessageCount;
+  const assistantMessageCount = cachedMetadata.assistantMessageCount;
+  const toolCallCount = cachedMetadata.toolCallCount;
+  const modelStats = cachedMetadata.modelStats || [];
 
   // Extract user messages for TOC (only real user messages, excluding system messages and tool results)
   const tocItems = useMemo(() => {
@@ -399,47 +382,66 @@ export default function TranscriptViewer({
                 <span className="text-muted-foreground">
                   {formatSource(source)}
                 </span>
-                <span className="hidden sm:inline">•</span>
-                <span className="flex items-center gap-2">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="flex items-center gap-1 cursor-help">
-                        <User className="w-4 h-4" aria-label="User messages" />
-                        <span>{userMessageCount}</span>
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {userMessageCount} user message
-                      {userMessageCount !== 1 ? "s" : ""}
-                    </TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="flex items-center gap-1 cursor-help">
-                        <Bot
-                          className="w-4 h-4"
-                          aria-label="Assistant messages"
-                        />
-                        <span>{assistantMessageCount}</span>
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {assistantMessageCount} assistant message
-                      {assistantMessageCount !== 1 ? "s" : ""}
-                    </TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="flex items-center gap-1 cursor-help">
-                        <Hammer className="w-4 h-4" aria-label="Tool calls" />
-                        <span>{toolCallCount}</span>
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {toolCallCount} tool call{toolCallCount !== 1 ? "s" : ""}
-                    </TooltipContent>
-                  </Tooltip>
-                </span>
+                {(userMessageCount !== undefined ||
+                  assistantMessageCount !== undefined ||
+                  toolCallCount !== undefined) && (
+                  <>
+                    <span className="hidden sm:inline">•</span>
+                    <span className="flex items-center gap-2">
+                      {userMessageCount !== undefined && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="flex items-center gap-1 cursor-help">
+                              <User
+                                className="w-4 h-4"
+                                aria-label="User messages"
+                              />
+                              <span>{userMessageCount}</span>
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {userMessageCount} user message
+                            {userMessageCount !== 1 ? "s" : ""}
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      {assistantMessageCount !== undefined && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="flex items-center gap-1 cursor-help">
+                              <Bot
+                                className="w-4 h-4"
+                                aria-label="Assistant messages"
+                              />
+                              <span>{assistantMessageCount}</span>
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {assistantMessageCount} assistant message
+                            {assistantMessageCount !== 1 ? "s" : ""}
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      {toolCallCount !== undefined && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="flex items-center gap-1 cursor-help">
+                              <Hammer
+                                className="w-4 h-4"
+                                aria-label="Tool calls"
+                              />
+                              <span>{toolCallCount}</span>
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {toolCallCount} tool call
+                            {toolCallCount !== 1 ? "s" : ""}
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                    </span>
+                  </>
+                )}
                 {modelStats.length > 0 && (
                   <>
                     <span className="hidden sm:inline">•</span>
