@@ -1,109 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { getToolPreview } from "../getToolPreview";
 
 /**
  * Tests for ToolCallBlock preview generation
  * These tests verify that tool previews are correctly generated for different tool types
  */
-
-// Extract the getToolPreview logic for testing
-function getToolPreview(
-  toolName: string,
-  input: Record<string, any>,
-): string | null {
-  switch (toolName) {
-    case "Read":
-      return input.file_path || null;
-
-    case "Write":
-    case "Edit":
-      return input.file_path || null;
-
-    case "Glob":
-      return input.pattern || null;
-
-    case "Grep":
-      return input.pattern ? `"${input.pattern}"` : null;
-
-    case "Bash": {
-      if (!input.command) return null;
-      const cmd = input.command as string;
-      const trimmed = cmd.trim();
-
-      if (trimmed.startsWith("npx ")) {
-        const match = trimmed.match(/^npx\s+([^\s]+)/);
-        return match ? `npx ${match[1]}` : "npx";
-      }
-
-      if (trimmed.startsWith("npm ")) {
-        const match = trimmed.match(/^npm\s+(run\s+)?([^\s]+)/);
-        return match
-          ? match[1]
-            ? `npm run ${match[2]}`
-            : `npm ${match[2]}`
-          : "npm";
-      }
-
-      const breakPoints = /[&|;]/;
-      const breakIndex = cmd.search(breakPoints);
-      const displayCmd =
-        breakIndex !== -1 ? cmd.substring(0, breakIndex).trim() : cmd;
-
-      return displayCmd.length > 50
-        ? `${displayCmd.substring(0, 50)}...`
-        : displayCmd;
-    }
-
-    case "shell": {
-      if (!input.command) return null;
-
-      let actualCommand: string;
-      if (Array.isArray(input.command)) {
-        const filtered = input.command.filter(
-          (arg: string) => arg !== "bash" && arg !== "-lc",
-        );
-        actualCommand = filtered.join(" ");
-      } else if (typeof input.command === "string") {
-        actualCommand = input.command;
-      } else {
-        return null;
-      }
-
-      const firstLine = actualCommand.trim().split("\n")[0];
-      const breakPoints = /[&|;]/;
-      const breakIndex = firstLine.search(breakPoints);
-      const displayCmd =
-        breakIndex !== -1
-          ? firstLine.substring(0, breakIndex).trim()
-          : firstLine;
-
-      return displayCmd.length > 60
-        ? `${displayCmd.substring(0, 60)}...`
-        : displayCmd;
-    }
-
-    case "WebFetch":
-      return input.url || null;
-
-    case "Task":
-      return input.description || null;
-
-    case "TodoWrite":
-      if (input.todos && Array.isArray(input.todos)) {
-        return `${input.todos.length} todo${input.todos.length !== 1 ? "s" : ""}`;
-      }
-      return null;
-
-    case "update_plan":
-      if (input.plan && Array.isArray(input.plan)) {
-        return `${input.plan.length} step${input.plan.length !== 1 ? "s" : ""}`;
-      }
-      return null;
-
-    default:
-      return null;
-  }
-}
-
 describe("ToolCallBlock - getToolPreview", () => {
   describe("shell tool", () => {
     it("should extract command from array format", () => {
@@ -302,8 +203,22 @@ describe("ToolCallBlock - getToolPreview", () => {
       expect(preview).toBe("/path/to/output.txt");
     });
 
+    it("should show file path for write_file (Gemini)", () => {
+      const preview = getToolPreview("write_file", {
+        file_path: "/path/to/output.txt",
+      });
+      expect(preview).toBe("/path/to/output.txt");
+    });
+
     it("should show file path for Edit", () => {
       const preview = getToolPreview("Edit", {
+        file_path: "/path/to/edit.txt",
+      });
+      expect(preview).toBe("/path/to/edit.txt");
+    });
+
+    it("should show file path for replace (Gemini)", () => {
+      const preview = getToolPreview("replace", {
         file_path: "/path/to/edit.txt",
       });
       expect(preview).toBe("/path/to/edit.txt");
@@ -409,6 +324,46 @@ describe("ToolCallBlock - getToolPreview", () => {
         toolUse.input.content !== undefined;
 
       expect(isWrite).toBe(true);
+    });
+
+    it("should recognize write_file tool (Gemini)", () => {
+      // Gemini's write_file tool
+      const toolUse = {
+        name: "write_file",
+        input: {
+          file_path: "/path/to/file.txt",
+          content: "file content",
+        },
+      };
+
+      // Should be detected as isWrite
+      const isWrite =
+        (toolUse.name === "Write" || toolUse.name === "write_file") &&
+        toolUse.input.file_path !== undefined &&
+        toolUse.input.content !== undefined;
+
+      expect(isWrite).toBe(true);
+    });
+
+    it("should recognize replace tool (Gemini)", () => {
+      // Gemini's replace tool (equivalent to Edit)
+      const toolUse = {
+        name: "replace",
+        input: {
+          file_path: "/path/to/file.txt",
+          old_string: "old content",
+          new_string: "new content",
+        },
+      };
+
+      // Should be detected as isEdit
+      const isEdit =
+        (toolUse.name === "Edit" || toolUse.name === "replace") &&
+        toolUse.input.file_path !== undefined &&
+        toolUse.input.old_string !== undefined &&
+        toolUse.input.new_string !== undefined;
+
+      expect(isEdit).toBe(true);
     });
 
     it("should NOT recognize Edit tool with missing properties", () => {
