@@ -117,6 +117,7 @@ export default async function TranscriptPage({ params }: PageProps) {
         title: true,
         source: true,
         fileData: true,
+        metadata: true, // Fetch cached metadata (includes cwd)
         createdAt: true,
         userId: true,
         user: {
@@ -134,6 +135,12 @@ export default async function TranscriptPage({ params }: PageProps) {
 
     const parsed = parseJSONL(transcript.fileData);
     const isOwner = session?.user?.id === transcript.userId;
+
+    // Use cached cwd from database to avoid recomputing on every page load
+    const dbMetadata = transcript.metadata as { cwd?: string } | null;
+    if (dbMetadata?.cwd) {
+      parsed.cwd = dbMetadata.cwd;
+    }
 
     // Determine if we have a custom title or need to generate one
     const hasCustomTitle =

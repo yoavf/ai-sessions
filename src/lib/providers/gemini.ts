@@ -3,6 +3,7 @@
  * Parses JSON files exported from Gemini CLI sessions
  */
 
+import { inferGeminiProjectPath } from "@/lib/path-utils";
 import type {
   ContentBlock,
   ParsedTranscript,
@@ -15,7 +16,7 @@ import type { TranscriptProvider } from "./types";
  */
 interface GeminiSession {
   sessionId: string;
-  projectHash: string;
+  projectHash?: string; // SHA256 hash of project directory path
   startTime: string;
   lastUpdated: string;
   messages: GeminiMessage[];
@@ -314,15 +315,38 @@ export class GeminiProvider implements TranscriptProvider {
       }
     }
 
+    // Infer project working directory from projectHash and file paths
+    let cwd: string | undefined;
+    if (session.projectHash) {
+      // Extract all file paths from tool calls
+      const filePaths: string[] = [];
+      for (const geminiMessage of session.messages) {
+        if (geminiMessage.toolCalls) {
+          for (const toolCall of geminiMessage.toolCalls) {
+            // Look for common path argument names
+            const pathKeys = ["file_path", "path", "filePath", "directory"];
+            for (const key of pathKeys) {
+              const value = toolCall.args?.[key];
+              if (typeof value === "string") {
+                filePaths.push(value);
+              }
+            }
+          }
+        }
+      }
+
+      // Infer cwd by walking up directories and matching hash
+      cwd = inferGeminiProjectPath(session.projectHash, filePaths);
+    }
+
     return {
       messages,
       sessionId: session.sessionId,
+      cwd,
       metadata: {
         firstTimestamp: firstTimestamp || session.startTime,
         lastTimestamp: lastTimestamp || session.lastUpdated,
         messageCount: messages.length,
-        // Gemini doesn't provide cwd in the session file
-        cwd: undefined,
       },
     };
   }

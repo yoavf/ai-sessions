@@ -593,6 +593,7 @@ export default function TranscriptViewer({
                         message={line.message}
                         isUser={isUser}
                         childMessages={childMessages}
+                        cwd={transcript.cwd}
                       />
                     </MessageContent>
                   </Message>

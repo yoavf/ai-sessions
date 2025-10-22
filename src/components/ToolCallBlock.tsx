@@ -16,6 +16,7 @@ import TodoListBlock from "./TodoListBlock";
 interface ToolCallBlockProps {
   toolUse: ToolUse;
   toolResults?: ToolResult[];
+  cwd?: string;
 }
 
 /**
@@ -77,6 +78,7 @@ function normalizeTodoList(
 export default function ToolCallBlock({
   toolUse,
   toolResults = [],
+  cwd,
 }: ToolCallBlockProps) {
   // Normalize todo list data from both TodoWrite and update_plan
   const todoList = normalizeTodoList(toolUse.name, toolUse.input);
@@ -106,7 +108,7 @@ export default function ToolCallBlock({
   const [isOpen, setIsOpen] = useState(
     isTodoList || isEdit || isWrite || isApplyPatch,
   );
-  const preview = getToolPreview(toolUse.name, toolUse.input);
+  const preview = getToolPreview(toolUse.name, toolUse.input, cwd);
 
   // For shell tool, show just the command without the "shell:" prefix
   const getTitle = () => {
@@ -156,6 +158,7 @@ export default function ToolCallBlock({
             filePath={filePath}
             oldString={oldString}
             newString={newString}
+            cwd={cwd}
           />
           <ToolResultsList results={toolResults} />
         </ToolContent>
@@ -173,7 +176,7 @@ export default function ToolCallBlock({
           state="output-available"
         />
         <ToolContent>
-          <PatchDiffView patchContent={toolUse.input.input} />
+          <PatchDiffView patchContent={toolUse.input.input} cwd={cwd} />
           <ToolResultsList results={toolResults} />
         </ToolContent>
       </Tool>
@@ -189,7 +192,7 @@ export default function ToolCallBlock({
         className={toolUse.name === "shell" ? "[&_span]:font-mono" : undefined}
       />
       <ToolContent>
-        <ToolInput input={toolUse.input} />
+        <ToolInput input={toolUse.input} cwd={cwd} />
         <ToolResultsList results={toolResults} />
       </ToolContent>
     </Tool>

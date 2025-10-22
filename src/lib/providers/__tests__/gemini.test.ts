@@ -205,7 +205,7 @@ describe("GeminiProvider", () => {
     it("should handle empty or missing cwd", () => {
       const result = provider.parse(geminiSample);
 
-      expect(result.metadata.cwd).toBeUndefined();
+      expect(result.cwd).toBeUndefined();
     });
 
     it("should throw error for invalid JSON", () => {

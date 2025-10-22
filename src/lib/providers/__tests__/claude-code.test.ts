@@ -47,7 +47,7 @@ describe("ClaudeCodeProvider", () => {
 
       expect(result.sessionId).toBe("test-session-123");
       expect(result.metadata.messageCount).toBe(4); // Excludes file-history-snapshot
-      expect(result.metadata.cwd).toBe("/test/path");
+      expect(result.cwd).toBe("/test/path");
       expect(result.messages).toHaveLength(4);
     });
 

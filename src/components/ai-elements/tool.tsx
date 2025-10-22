@@ -17,6 +17,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { makeRelativePath } from "@/lib/path-utils";
 import { cn } from "@/lib/utils";
 import { CodeBlock } from "./code-block";
 
@@ -98,18 +99,40 @@ export const ToolContent = ({ className, ...props }: ToolContentProps) => (
 
 export type ToolInputProps = ComponentProps<"div"> & {
   input: ToolUIPart["input"];
+  cwd?: string;
 };
 
-export const ToolInput = ({ className, input, ...props }: ToolInputProps) => (
-  <div className={cn("space-y-2 overflow-hidden p-4", className)} {...props}>
-    <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
-      Parameters
-    </h4>
-    <div className="rounded-md bg-muted/50">
-      <CodeBlock code={JSON.stringify(input, null, 2)} language="json" />
+export const ToolInput = ({
+  className,
+  input,
+  cwd,
+  ...props
+}: ToolInputProps) => {
+  // Convert file_path to relative if present
+  // biome-ignore lint/suspicious/noExplicitAny: Input can be any JSON structure
+  const processedInput: any =
+    input &&
+    typeof input === "object" &&
+    !Array.isArray(input) &&
+    "file_path" in input &&
+    typeof input.file_path === "string"
+      ? { ...input, file_path: makeRelativePath(input.file_path, cwd) }
+      : input;
+
+  return (
+    <div className={cn("space-y-2 overflow-hidden p-4", className)} {...props}>
+      <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
+        Parameters
+      </h4>
+      <div className="rounded-md bg-muted/50">
+        <CodeBlock
+          code={JSON.stringify(processedInput, null, 2)}
+          language="json"
+        />
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export type ToolOutputProps = ComponentProps<"div"> & {
   output: ToolUIPart["output"];

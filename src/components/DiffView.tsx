@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import { CodeBlock } from "@/components/ai-elements/code-block";
+import { makeRelativePath } from "@/lib/path-utils";
 
 interface DiffViewProps {
   filePath: string;
   oldString: string;
   newString: string;
+  cwd?: string;
 }
 
 type DiffMode = "split" | "unified";
@@ -56,6 +58,7 @@ export default function DiffView({
   filePath,
   oldString,
   newString,
+  cwd,
 }: DiffViewProps) {
   // Default to unified view for new files (when oldString is empty)
   const isNewFile = oldString === "";
@@ -145,11 +148,12 @@ export default function DiffView({
 
   const language = getLanguage(filePath);
   const diffLines = computeDiff(oldString, newString);
+  const displayPath = makeRelativePath(filePath, cwd);
 
   return (
     <div className="space-y-3 p-4">
       <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
-        Edit {filePath}
+        Edit {displayPath}
       </h4>
 
       {mode === "split" ? (

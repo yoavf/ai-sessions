@@ -225,3 +225,4 @@ Comprehensive security headers configured for all routes:
 - always make migrations when making db changes!
 - never commit with --no-verify - it will just fail on ci
 - Refer to real world examples of transcripts in /examples - do not make assumptions on session file structures
+- Use conventional commits conventions

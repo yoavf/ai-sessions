@@ -1,3 +1,5 @@
+import { makeRelativePath } from "@/lib/path-utils";
+
 /**
  * Get a preview string for a tool call to display in the UI
  * This function extracts the most relevant information from tool inputs
@@ -7,16 +9,17 @@ export function getToolPreview(
   toolName: string,
   // biome-ignore lint/suspicious/noExplicitAny: Tool input types are dynamic
   input: Record<string, any>,
+  cwd?: string,
 ): string | null {
   switch (toolName) {
     case "Read":
-      return input.file_path || null;
+      return input.file_path ? makeRelativePath(input.file_path, cwd) : null;
 
     case "Write":
     case "write_file": // Gemini's write tool
     case "Edit":
     case "replace": // Gemini's edit tool
-      return input.file_path || null;
+      return input.file_path ? makeRelativePath(input.file_path, cwd) : null;
 
     case "Glob":
       return input.pattern || null;
@@ -124,6 +127,10 @@ export function getToolPreview(
       ];
       for (const field of previewFields) {
         if (input[field] && typeof input[field] === "string") {
+          // Convert paths to relative for path-like fields
+          if (field === "path" || field === "file_path") {
+            return makeRelativePath(input[field], cwd);
+          }
           return input[field];
         }
       }

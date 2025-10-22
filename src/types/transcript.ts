@@ -74,10 +74,10 @@ export interface TranscriptLine {
 export interface ParsedTranscript {
   messages: TranscriptLine[];
   sessionId: string;
+  cwd?: string; // Project working directory for converting absolute paths to relative
   metadata: {
     firstTimestamp: string;
     lastTimestamp: string;
     messageCount: number;
-    cwd?: string;
   };
 }

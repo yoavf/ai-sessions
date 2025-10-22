@@ -740,11 +740,11 @@ export class CodexProvider implements TranscriptProvider {
     return {
       messages,
       sessionId: sessionCtx.sessionId,
+      cwd: sessionCtx.cwd,
       metadata: {
         firstTimestamp: sessionCtx.firstTimestamp,
         lastTimestamp: sessionCtx.lastTimestamp,
         messageCount: messages.length,
-        cwd: sessionCtx.cwd,
       },
     };
   }
