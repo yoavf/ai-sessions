@@ -229,12 +229,22 @@ test.describe("Transcript Page - Metadata Display", () => {
       await page.goto(`http://localhost:3000/t/${transcript.secretToken}`);
       await page.waitForLoadState("load");
 
-      // Check for message count statistics
-      const statsText = await page.locator("text=/user.*assistant/").first();
-      await expect(statsText).toBeVisible();
+      // Check for message count icons with aria-labels
+      // Should have User icon with proper accessibility label
+      await expect(page.locator('[aria-label="User messages"]')).toBeVisible();
 
-      const text = await statsText.textContent();
-      expect(text).toMatch(/\d+\s*(user|assistant)/i);
+      // Should have Bot icon with proper accessibility label
+      await expect(
+        page.locator('[aria-label="Assistant messages"]'),
+      ).toBeVisible();
+
+      // Should have Hammer icon with proper accessibility label
+      await expect(page.locator('[aria-label="Tool calls"]')).toBeVisible();
+
+      // Check that numbers are displayed (at least 3 numeric values should be visible)
+      const numberElements = page.locator("span").filter({ hasText: /^\d+$/ });
+      const count = await numberElements.count();
+      expect(count).toBeGreaterThanOrEqual(3); // User count, assistant count, tool count
     } finally {
       await cleanupTestData(user.id);
     }
