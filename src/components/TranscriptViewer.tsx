@@ -404,29 +404,34 @@ export default function TranscriptViewer({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <span className="flex items-center gap-1 cursor-help">
-                        <User className="w-4 h-4" />
+                        <User className="w-4 h-4" aria-label="User messages" />
                         <span>{userMessageCount}</span>
                       </span>
                     </TooltipTrigger>
                     <TooltipContent>
-                      {userMessageCount} user message{userMessageCount !== 1 ? "s" : ""}
+                      {userMessageCount} user message
+                      {userMessageCount !== 1 ? "s" : ""}
                     </TooltipContent>
                   </Tooltip>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <span className="flex items-center gap-1 cursor-help">
-                        <Bot className="w-4 h-4" />
+                        <Bot
+                          className="w-4 h-4"
+                          aria-label="Assistant messages"
+                        />
                         <span>{assistantMessageCount}</span>
                       </span>
                     </TooltipTrigger>
                     <TooltipContent>
-                      {assistantMessageCount} assistant message{assistantMessageCount !== 1 ? "s" : ""}
+                      {assistantMessageCount} assistant message
+                      {assistantMessageCount !== 1 ? "s" : ""}
                     </TooltipContent>
                   </Tooltip>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <span className="flex items-center gap-1 cursor-help">
-                        <Hammer className="w-4 h-4" />
+                        <Hammer className="w-4 h-4" aria-label="Tool calls" />
                         <span>{toolCallCount}</span>
                       </span>
                     </TooltipTrigger>
