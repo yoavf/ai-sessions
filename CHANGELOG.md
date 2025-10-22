@@ -2,8 +2,11 @@
 
 ## 2025-10-22
 
+- **Fix**: Remove per-line horizontal scrollbars in diff views by wrapping long lines ([#28](https://github.com/yoavf/ai-sessions/pull/28))
+- **Features**: Display relative paths in transcripts based on project cwd ([#26](https://github.com/yoavf/ai-sessions/pull/26))
+- **Features**: Automated changelog ([#29](https://github.com/yoavf/ai-sessions/pull/29))
 - **Bug Fixes**: Gemini write_file support ([#25](https://github.com/yoavf/ai-sessions/pull/25))
-- **Bug Fixes**: Unescape literal newlines in Gemini thinking blocks ([#18](https://github.com/yoavf/ai-sessions/pull/18))
+- **Security**: Unescape literal newlines in Gemini thinking blocks ([#18](https://github.com/yoavf/ai-sessions/pull/18))
 - **Features**: Standardize todo list rendering for Codex and Claude Code ([#24](https://github.com/yoavf/ai-sessions/pull/24))
 - **Features**: Diff view ([#21](https://github.com/yoavf/ai-sessions/pull/21))
 - **Features**: Replace message count text with icons and tooltips ([#23](https://github.com/yoavf/ai-sessions/pull/23))
@@ -15,28 +18,26 @@
 
 ## 2025-10-19
 
-- **Features**: Gemini CLI support ([#10](https://github.com/yoavf/ai-sessions/pull/10))
-- **Testing**: Transcript page e2e tests ([#11](https://github.com/yoavf/ai-sessions/pull/11))
+- **Features**: Gemini cli support ([#10](https://github.com/yoavf/ai-sessions/pull/10))
 
 ## 2025-10-18
 
-- **Testing**: Add my-transcripts e2e tests ([#9](https://github.com/yoavf/ai-sessions/pull/9))
-- **Features**: Add Codex support ([#8](https://github.com/yoavf/ai-sessions/pull/8))
-- **Testing**: Auth e2e tests ([#7](https://github.com/yoavf/ai-sessions/pull/7))
-- **Features**: Add dropzone functionality to transcript pages ([#4](https://github.com/yoavf/ai-sessions/pull/4))
+- **add**: Auth e2e tests ([#7](https://github.com/yoavf/ai-sessions/pull/7))
 
-## 2025-10-17
+## 2025-10-16
 
 - **Bug Fixes**: Add missing migration
 - **Bug Fixes**: 404 in privacy policy, missing pages titles
 - **Features**: Add model stats
-
-## 2025-10-16
-
-- **Features**: OpenGraph support
-- **Miscellaneous**: Design fixes
-- **Bug Fixes**: Fix migration
+- **Features**: Opengraph
+- **dlp**: Scrub more data
+- **Fix**: Add Prisma select clause for type safety
+- **Refactor**: Deduplicate TranscriptViewer logic
 - **Security**: Auto-clear CLI token from client state after 2 minutes
 - **Security**: Mitigate timing attacks in token revocation check
-- **Refactoring**: Deduplicate TranscriptViewer logic
-- **Bug Fixes**: Add Prisma select clause for type safety
+- **Security**: Add JSON parsing error handling in CLI upload
+- **Security**: Fix token revocation error handling and verification
+- **Security**: Fix rate limit error handling (fail closed on Redis errors)
+- **Security**: Fix database error handling in JWT verification (fail closed)
+- **Security**: Add CSRF protection to CLI token generation endpoint
+- **Features**: Cli upload support
