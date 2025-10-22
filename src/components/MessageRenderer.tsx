@@ -21,12 +21,14 @@ interface MessageRendererProps {
   message: Message;
   isUser: boolean;
   childMessages?: TranscriptLine[];
+  cwd?: string;
 }
 
 export default function MessageRenderer({
   message,
   isUser,
   childMessages = [],
+  cwd,
 }: MessageRendererProps) {
   const content = message.content;
 
@@ -181,6 +183,7 @@ export default function MessageRenderer({
           key={idx}
           block={block}
           childMessages={childMessages}
+          cwd={cwd}
         />
       ))}
     </div>
@@ -190,6 +193,7 @@ export default function MessageRenderer({
 function ContentBlockRenderer({
   block,
   childMessages = [],
+  cwd,
 }: {
   block:
     | ContentBlock
@@ -202,6 +206,7 @@ function ContentBlockRenderer({
     | { type: "bash-block"; input?: string; stdout?: string; stderr?: string }
     | { type: "tool_use"; toolUse: ContentBlock; toolResults: ToolResult[] };
   childMessages?: TranscriptLine[];
+  cwd?: string;
 }) {
   switch (block.type) {
     case "text": {
@@ -244,6 +249,7 @@ function ContentBlockRenderer({
           <ToolCallBlock
             toolUse={block.toolUse as any}
             toolResults={block.toolResults}
+            cwd={cwd}
           />
         );
       }
@@ -260,7 +266,13 @@ function ContentBlockRenderer({
               contentBlock.tool_use_id === (block as any).id,
           ),
         );
-      return <ToolCallBlock toolUse={block as any} toolResults={toolResults} />;
+      return (
+        <ToolCallBlock
+          toolUse={block as any}
+          toolResults={toolResults}
+          cwd={cwd}
+        />
+      );
     }
 
     case "tool_result": {

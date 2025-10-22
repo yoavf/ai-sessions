@@ -317,11 +317,11 @@ export class GeminiProvider implements TranscriptProvider {
     return {
       messages,
       sessionId: session.sessionId,
+      cwd: undefined, // Gemini doesn't provide cwd in the session file
       metadata: {
         firstTimestamp: firstTimestamp || session.startTime,
         lastTimestamp: lastTimestamp || session.lastUpdated,
         messageCount: messages.length,
-        // Gemini doesn't provide cwd in the session file
         cwd: undefined,
       },
     };

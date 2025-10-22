@@ -7,6 +7,7 @@ import {
   ToolHeader,
   ToolInput,
 } from "@/components/ai-elements/tool";
+import { makeRelativePath } from "@/lib/path-utils";
 import type { ToolResult, ToolUse } from "@/types/transcript";
 import DiffView from "./DiffView";
 import PatchDiffView from "./PatchDiffView";
@@ -15,6 +16,7 @@ import TodoListBlock from "./TodoListBlock";
 interface ToolCallBlockProps {
   toolUse: ToolUse;
   toolResults?: ToolResult[];
+  cwd?: string;
 }
 
 /**
@@ -49,15 +51,16 @@ function getToolPreview(
   toolName: string,
   // biome-ignore lint/suspicious/noExplicitAny: Tool input types are dynamic
   input: Record<string, any>,
+  cwd?: string,
 ): string | null {
   switch (toolName) {
     case "Read":
-      return input.file_path || null;
+      return input.file_path ? makeRelativePath(input.file_path, cwd) : null;
 
     case "Write":
     case "Edit":
     case "replace": // Gemini's edit tool
-      return input.file_path || null;
+      return input.file_path ? makeRelativePath(input.file_path, cwd) : null;
 
     case "Glob":
       return input.pattern || null;
@@ -165,6 +168,10 @@ function getToolPreview(
       ];
       for (const field of previewFields) {
         if (input[field] && typeof input[field] === "string") {
+          // Convert paths to relative for path-like fields
+          if (field === "path" || field === "file_path") {
+            return makeRelativePath(input[field], cwd);
+          }
           return input[field];
         }
       }
@@ -205,6 +212,7 @@ function normalizeTodoList(
 export default function ToolCallBlock({
   toolUse,
   toolResults = [],
+  cwd,
 }: ToolCallBlockProps) {
   // Normalize todo list data from both TodoWrite and update_plan
   const todoList = normalizeTodoList(toolUse.name, toolUse.input);
@@ -233,7 +241,7 @@ export default function ToolCallBlock({
   const [isOpen, setIsOpen] = useState(
     isTodoList || isEdit || isWrite || isApplyPatch,
   );
-  const preview = getToolPreview(toolUse.name, toolUse.input);
+  const preview = getToolPreview(toolUse.name, toolUse.input, cwd);
 
   // For shell tool, show just the command without the "shell:" prefix
   const getTitle = () => {
@@ -283,6 +291,7 @@ export default function ToolCallBlock({
             filePath={filePath}
             oldString={oldString}
             newString={newString}
+            cwd={cwd}
           />
           <ToolResultsList results={toolResults} />
         </ToolContent>
@@ -300,7 +309,7 @@ export default function ToolCallBlock({
           state="output-available"
         />
         <ToolContent>
-          <PatchDiffView patchContent={toolUse.input.input} />
+          <PatchDiffView patchContent={toolUse.input.input} cwd={cwd} />
           <ToolResultsList results={toolResults} />
         </ToolContent>
       </Tool>
@@ -316,7 +325,7 @@ export default function ToolCallBlock({
         className={toolUse.name === "shell" ? "[&_span]:font-mono" : undefined}
       />
       <ToolContent>
-        <ToolInput input={toolUse.input} />
+        <ToolInput input={toolUse.input} cwd={cwd} />
         <ToolResultsList results={toolResults} />
       </ToolContent>
     </Tool>

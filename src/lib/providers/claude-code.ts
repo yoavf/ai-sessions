@@ -251,6 +251,7 @@ export class ClaudeCodeProvider implements TranscriptProvider {
     return {
       messages,
       sessionId,
+      cwd,
       metadata: {
         firstTimestamp,
         lastTimestamp,

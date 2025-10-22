@@ -5,12 +5,16 @@ import DiffView from "./DiffView";
 
 interface PatchDiffViewProps {
   patchContent: string;
+  cwd?: string;
 }
 
 /**
  * Parses Codex apply_patch format and renders using DiffView
  */
-export default function PatchDiffView({ patchContent }: PatchDiffViewProps) {
+export default function PatchDiffView({
+  patchContent,
+  cwd,
+}: PatchDiffViewProps) {
   const parsedFiles = parsePatch(patchContent);
 
   if (parsedFiles.length === 0) {
@@ -29,6 +33,7 @@ export default function PatchDiffView({ patchContent }: PatchDiffViewProps) {
           filePath={file.filePath}
           oldString={file.oldString}
           newString={file.newString}
+          cwd={cwd}
         />
       ))}
     </>
