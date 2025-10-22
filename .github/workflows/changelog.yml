@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   changelog:
@@ -27,15 +28,15 @@ jobs:
         env:
           OUTPUT: CHANGELOG.md
 
-      - name: Commit changelog if changed
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "chore: update changelog"
+          title: "chore: update changelog"
+          body: |
+            Automated changelog update from recent commits.
 
-          if git diff --quiet CHANGELOG.md; then
-            echo "No changes to changelog"
-          else
-            git add CHANGELOG.md
-            git commit -m "chore: update changelog [skip ci]"
-            git push
-          fi
+            This PR was automatically created by the changelog workflow.
+          branch: automated-changelog-update
+          delete-branch: true
+          labels: automated
