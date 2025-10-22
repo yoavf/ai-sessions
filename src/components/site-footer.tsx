@@ -27,6 +27,13 @@ export function SiteFooter() {
               <span className="sm:hidden">Privacy</span>
             </Link>
             <span>•</span>
+            <Link
+              href="/changelog"
+              className="hover:text-foreground transition-colors"
+            >
+              Changelog
+            </Link>
+            <span>•</span>
             <ThemeToggle />
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-3">

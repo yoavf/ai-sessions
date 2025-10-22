@@ -1,7 +1,5 @@
 # Changelog
 
-All notable changes to AI Sessions are documented here, organized by date.
-
 ## 2025-10-22
 
 - **Bug Fixes**: Gemini write_file support ([#25](https://github.com/yoavf/ai-sessions/pull/25))

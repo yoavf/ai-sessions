@@ -1,6 +1,6 @@
-import type { Metadata } from "next";
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import type { Metadata } from "next";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { SiteHeader } from "@/components/site-header";
@@ -25,29 +25,37 @@ export default async function ChangelogPage() {
     changelogContent = "# Changelog\n\nNo changelog available yet.";
   }
 
+  // Remove the first line (# Changelog) from content since we'll show it as page title
+  const contentWithoutTitle = changelogContent.replace(/^# Changelog\n+/, "");
+
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader session={session} />
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold">Changelog</h1>
+          </div>
+
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="p-6">
               <article className="prose prose-sm dark:prose-invert max-w-none">
                 <Markdown
                   remarkPlugins={[remarkGfm]}
                   components={{
-                    h1: ({ children, ...props }) => (
-                      <h1 className="text-3xl font-bold mb-4" {...props}>
-                        {children}
-                      </h1>
-                    ),
                     h2: ({ children, ...props }) => (
-                      <h2 className="text-2xl font-semibold mt-8 mb-4 border-b pb-2" {...props}>
+                      <h2
+                        className="text-2xl font-semibold mt-0 first:mt-0 mb-4 border-b pb-2"
+                        {...props}
+                      >
                         {children}
                       </h2>
                     ),
                     h3: ({ children, ...props }) => (
-                      <h3 className="text-xl font-semibold mt-6 mb-3" {...props}>
+                      <h3
+                        className="text-xl font-semibold mt-6 mb-3"
+                        {...props}
+                      >
                         {children}
                       </h3>
                     ),
@@ -77,13 +85,16 @@ export default async function ChangelogPage() {
                       </a>
                     ),
                     strong: ({ children, ...props }) => (
-                      <strong className="font-semibold text-foreground" {...props}>
+                      <strong
+                        className="font-semibold text-foreground"
+                        {...props}
+                      >
                         {children}
                       </strong>
                     ),
                   }}
                 >
-                  {changelogContent}
+                  {contentWithoutTitle}
                 </Markdown>
               </article>
             </CardContent>

@@ -6,8 +6,6 @@
 header = """
 # Changelog
 
-All notable changes to AI Sessions are documented here, organized by date.
-
 """
 # template for the changelog body
 # Custom grouping by date instead of version tags
