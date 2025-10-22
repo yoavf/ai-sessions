@@ -213,7 +213,7 @@ describe("ToolCallBlock - getToolPreview", () => {
   describe("TodoWrite tool", () => {
     it("should show count for single todo", () => {
       const preview = getToolPreview("TodoWrite", {
-        todos: [{ content: "Task 1", status: "pending", activeForm: "Task 1" }],
+        todos: [{ content: "Task 1", status: "pending" as const, activeForm: "Task 1" }],
       });
       expect(preview).toBe("1 todo");
     });
@@ -221,8 +221,8 @@ describe("ToolCallBlock - getToolPreview", () => {
     it("should show count for multiple todos", () => {
       const preview = getToolPreview("TodoWrite", {
         todos: [
-          { content: "Task 1", status: "pending", activeForm: "Task 1" },
-          { content: "Task 2", status: "pending", activeForm: "Task 2" },
+          { content: "Task 1", status: "pending" as const, activeForm: "Task 1" },
+          { content: "Task 2", status: "pending" as const, activeForm: "Task 2" },
         ],
       });
       expect(preview).toBe("2 todos");

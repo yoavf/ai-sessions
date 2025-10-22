@@ -178,7 +178,7 @@ function normalizeTodoList(
   // biome-ignore lint/suspicious/noExplicitAny: Tool input types are dynamic
   input: Record<string, any>,
 ):
-  | Array<{ content: string; status: string; activeForm: string }>
+  | Array<{ content: string; status: "pending" | "in_progress" | "completed"; activeForm: string }>
   | null {
   // Claude Code format: TodoWrite with todos array
   if (toolName === "TodoWrite" && input.todos && Array.isArray(input.todos)) {
@@ -189,7 +189,7 @@ function normalizeTodoList(
   if (toolName === "update_plan" && input.plan && Array.isArray(input.plan)) {
     return input.plan.map((item: { step: string; status: string }) => ({
       content: item.step,
-      status: item.status,
+      status: item.status as "pending" | "in_progress" | "completed",
       activeForm: item.step, // Codex doesn't have activeForm, use step as fallback
     }));
   }
