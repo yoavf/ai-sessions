@@ -58,7 +58,13 @@ interface SessionMetaPayload {
 }
 
 interface ResponseItemPayload {
-  type: "message" | "function_call" | "function_call_output" | "reasoning";
+  type:
+    | "message"
+    | "function_call"
+    | "function_call_output"
+    | "reasoning"
+    | "custom_tool_call"
+    | "custom_tool_call_output";
   role?: "user" | "assistant";
   content?: Array<{ type: string; text?: string }>;
   name?: string;
@@ -66,6 +72,9 @@ interface ResponseItemPayload {
   call_id?: string;
   output?: string;
   summary?: Array<{ type: string; text?: string }>;
+  // Custom tool call fields (used by apply_patch, etc.)
+  input?: string;
+  status?: string;
 }
 
 interface TurnContextPayload {
@@ -451,9 +460,36 @@ function handleResponseItem(
         messageCtx,
       );
     }
+  } else if (payload.type === "custom_tool_call") {
+    // Custom tool calls (like apply_patch) - same handling as function_call
+    if (messageCtx.role === "user") {
+      flushMessage();
+    }
+
+    // Ensure we're in assistant context
+    if (!messageCtx.role) {
+      messageCtx.role = "assistant";
+      messageCtx.timestamp = timestamp;
+    }
+
+    // Add tool use block - custom tools use 'input' field instead of 'arguments'
+    if (payload.name && payload.call_id) {
+      const input = payload.input ? { input: payload.input } : {};
+      processFunctionCall(
+        payload.name,
+        payload.call_id,
+        JSON.stringify(input),
+        messageCtx,
+      );
+    }
   } else if (payload.type === "function_call_output") {
     // Tool results are part of assistant messages (they follow tool_use)
     // Don't flush here - these should stay with the tool_use
+    if (payload.call_id) {
+      processFunctionCallOutput(payload.call_id, payload.output, messageCtx);
+    }
+  } else if (payload.type === "custom_tool_call_output") {
+    // Custom tool call outputs - same handling as function_call_output
     if (payload.call_id) {
       processFunctionCallOutput(payload.call_id, payload.output, messageCtx);
     }

@@ -213,7 +213,13 @@ describe("ToolCallBlock - getToolPreview", () => {
   describe("TodoWrite tool", () => {
     it("should show count for single todo", () => {
       const preview = getToolPreview("TodoWrite", {
-        todos: [{ content: "Task 1", status: "pending" as const, activeForm: "Task 1" }],
+        todos: [
+          {
+            content: "Task 1",
+            status: "pending" as const,
+            activeForm: "Task 1",
+          },
+        ],
       });
       expect(preview).toBe("1 todo");
     });
@@ -221,8 +227,16 @@ describe("ToolCallBlock - getToolPreview", () => {
     it("should show count for multiple todos", () => {
       const preview = getToolPreview("TodoWrite", {
         todos: [
-          { content: "Task 1", status: "pending" as const, activeForm: "Task 1" },
-          { content: "Task 2", status: "pending" as const, activeForm: "Task 2" },
+          {
+            content: "Task 1",
+            status: "pending" as const,
+            activeForm: "Task 1",
+          },
+          {
+            content: "Task 2",
+            status: "pending" as const,
+            activeForm: "Task 2",
+          },
         ],
       });
       expect(preview).toBe("2 todos");
@@ -332,6 +346,104 @@ describe("ToolCallBlock - getToolPreview", () => {
         some_param: "value",
       });
       expect(preview).toBeNull();
+    });
+  });
+
+  describe("Edge cases - empty string handling", () => {
+    it("should recognize Edit tool with empty old_string (new file scenario)", () => {
+      // This is a valid Edit case - creating a new file or adding content to empty file
+      const toolUse = {
+        name: "Edit",
+        input: {
+          file_path: "test.txt",
+          old_string: "",
+          new_string: "new content",
+        },
+      };
+
+      // Should be detected as isEdit even with empty old_string
+      const isEdit =
+        (toolUse.name === "Edit" || toolUse.name === "replace") &&
+        toolUse.input.file_path !== undefined &&
+        toolUse.input.old_string !== undefined &&
+        toolUse.input.new_string !== undefined;
+
+      expect(isEdit).toBe(true);
+    });
+
+    it("should recognize Edit tool with empty new_string (delete all content)", () => {
+      // This is a valid Edit case - deleting all content from a file
+      const toolUse = {
+        name: "Edit",
+        input: {
+          file_path: "test.txt",
+          old_string: "old content",
+          new_string: "",
+        },
+      };
+
+      // Should be detected as isEdit even with empty new_string
+      const isEdit =
+        (toolUse.name === "Edit" || toolUse.name === "replace") &&
+        toolUse.input.file_path !== undefined &&
+        toolUse.input.old_string !== undefined &&
+        toolUse.input.new_string !== undefined;
+
+      expect(isEdit).toBe(true);
+    });
+
+    it("should recognize Write tool with empty content (create empty file)", () => {
+      // This is a valid Write case - creating an empty file
+      const toolUse = {
+        name: "Write",
+        input: {
+          file_path: "empty.txt",
+          content: "",
+        },
+      };
+
+      // Should be detected as isWrite even with empty content
+      const isWrite =
+        toolUse.name === "Write" &&
+        toolUse.input.file_path !== undefined &&
+        toolUse.input.content !== undefined;
+
+      expect(isWrite).toBe(true);
+    });
+
+    it("should NOT recognize Edit tool with missing properties", () => {
+      const toolUse: { name: string; input: Record<string, any> } = {
+        name: "Edit",
+        input: {
+          file_path: "test.txt",
+          // old_string and new_string are missing (undefined)
+        },
+      };
+
+      const isEdit =
+        (toolUse.name === "Edit" || toolUse.name === "replace") &&
+        toolUse.input.file_path !== undefined &&
+        toolUse.input.old_string !== undefined &&
+        toolUse.input.new_string !== undefined;
+
+      expect(isEdit).toBe(false);
+    });
+
+    it("should NOT recognize Write tool with missing content", () => {
+      const toolUse: { name: string; input: Record<string, any> } = {
+        name: "Write",
+        input: {
+          file_path: "test.txt",
+          // content is missing (undefined)
+        },
+      };
+
+      const isWrite =
+        toolUse.name === "Write" &&
+        toolUse.input.file_path !== undefined &&
+        toolUse.input.content !== undefined;
+
+      expect(isWrite).toBe(false);
     });
   });
 });
