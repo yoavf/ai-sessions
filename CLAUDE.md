@@ -226,3 +226,4 @@ Comprehensive security headers configured for all routes:
 - never commit with --no-verify - it will just fail on ci
 - Refer to real world examples of transcripts in /examples - do not make assumptions on session file structures
 - Use conventional commits conventions
+- Never use emoji for design - use lucide icons if icons are needed
