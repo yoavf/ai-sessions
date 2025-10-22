@@ -1,6 +1,6 @@
 "use client";
 
-import { HelpCircle, LogOut } from "lucide-react";
+import { FileText, HelpCircle, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
@@ -34,6 +34,12 @@ export function SiteHeader({ session }: SiteHeaderProps) {
               <Link href="/my-transcripts">My Transcripts</Link>
             </Button>
           )}
+          <Button variant="ghost" size="icon" asChild title="Changelog">
+            <Link href="/changelog">
+              <FileText className="h-[1.2rem] w-[1.2rem]" />
+              <span className="sr-only">Changelog</span>
+            </Link>
+          </Button>
           <Button variant="ghost" size="icon" asChild title="Help">
             <Link href="/help">
               <HelpCircle className="h-[1.2rem] w-[1.2rem]" />
