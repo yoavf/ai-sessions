@@ -396,7 +396,7 @@ export default function TranscriptViewer({
                 )}
                 <span>{timeAgo}</span>
                 <span className="hidden sm:inline">•</span>
-                <span className="text-primary font-medium">
+                <span className="text-muted-foreground">
                   {formatSource(source)}
                 </span>
                 <span className="hidden sm:inline">•</span>
