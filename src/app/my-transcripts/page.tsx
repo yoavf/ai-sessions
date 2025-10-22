@@ -1,14 +1,15 @@
 "use client";
 
-import { Check, Copy, Loader2, Plus, Terminal } from "lucide-react";
+import { Check, Copy, Loader2, Plus, Terminal, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { SiteHeader } from "@/components/site-header";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { addCsrfToken, useCsrfToken } from "@/hooks/useCsrfToken";
 
 interface Transcript {
@@ -66,8 +67,12 @@ export default function MyTranscriptsPage() {
   const [cliToken, setCliToken] = useState<string | null>(null);
   const [tokenCopied, setTokenCopied] = useState(false);
   const [revokingTokens, setRevokingTokens] = useState(false);
+  const [editingToken, setEditingToken] = useState<string | null>(null);
+  const [editedTitle, setEditedTitle] = useState("");
+  const [savingTitle, setSavingTitle] = useState(false);
   const router = useRouter();
   const csrfToken = useCsrfToken();
+  const editFormRef = useRef<HTMLDivElement>(null);
 
   const fetchTranscripts = useCallback(async () => {
     try {
@@ -112,6 +117,31 @@ export default function MyTranscriptsPage() {
       }
     }
   }, [loading]);
+
+  const handleCancelEdit = useCallback(() => {
+    setEditingToken(null);
+    setEditedTitle("");
+  }, []);
+
+  // Close edit form when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        editingToken &&
+        editFormRef.current &&
+        !editFormRef.current.contains(event.target as Node)
+      ) {
+        handleCancelEdit();
+      }
+    }
+
+    if (editingToken) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [editingToken, handleCancelEdit]);
 
   async function handleDelete(secretToken: string) {
     if (!confirm("Are you sure you want to delete this transcript?")) {
@@ -281,6 +311,60 @@ export default function MyTranscriptsPage() {
     }
   }
 
+  function handleStartEdit(transcript: Transcript) {
+    setEditingToken(transcript.secretToken);
+    setEditedTitle(transcript.title);
+  }
+
+  async function handleSaveTitle(secretToken: string) {
+    if (!csrfToken) {
+      alert(
+        "Security token not loaded. Please refresh the page and try again.",
+      );
+      return;
+    }
+
+    const trimmedTitle = editedTitle.trim();
+    if (!trimmedTitle) {
+      alert("Title cannot be empty");
+      return;
+    }
+
+    setSavingTitle(true);
+    try {
+      const response = await fetch(
+        `/api/transcripts/${secretToken}`,
+        addCsrfToken(csrfToken, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ title: trimmedTitle }),
+        }),
+      );
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || "Failed to update title");
+      }
+
+      // Update local state
+      setTranscripts((prev) =>
+        prev.map((t) =>
+          t.secretToken === secretToken ? { ...t, title: trimmedTitle } : t,
+        ),
+      );
+
+      // Exit edit mode
+      setEditingToken(null);
+      setEditedTitle("");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to update title");
+    } finally {
+      setSavingTitle(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader session={session} />
@@ -333,14 +417,76 @@ export default function MyTranscriptsPage() {
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
-                            <Link
-                              href={`/t/${transcript.secretToken}`}
-                              className="block group"
-                            >
-                              <h3 className="text-lg font-semibold group-hover:text-primary transition-colors truncate">
-                                {transcript.title}
-                              </h3>
-                            </Link>
+                            {editingToken === transcript.secretToken ? (
+                              <div
+                                ref={editFormRef}
+                                className="flex items-center gap-2"
+                              >
+                                <Input
+                                  type="text"
+                                  value={editedTitle}
+                                  onChange={(e) =>
+                                    setEditedTitle(e.target.value)
+                                  }
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                      handleSaveTitle(transcript.secretToken);
+                                    } else if (e.key === "Escape") {
+                                      handleCancelEdit();
+                                    }
+                                  }}
+                                  disabled={savingTitle}
+                                  className="flex-1"
+                                  autoFocus
+                                  aria-label="Edit transcript title"
+                                />
+                                <Button
+                                  type="button"
+                                  onClick={() =>
+                                    handleSaveTitle(transcript.secretToken)
+                                  }
+                                  disabled={savingTitle}
+                                  size="sm"
+                                  variant="default"
+                                  aria-label="Save title"
+                                >
+                                  {savingTitle ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <Check className="w-4 h-4" />
+                                  )}
+                                </Button>
+                                <Button
+                                  type="button"
+                                  onClick={handleCancelEdit}
+                                  disabled={savingTitle}
+                                  size="sm"
+                                  variant="ghost"
+                                  aria-label="Cancel editing"
+                                >
+                                  <X className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2 group/title">
+                                <h3 className="text-lg font-semibold truncate">
+                                  <Link
+                                    href={`/t/${transcript.secretToken}`}
+                                    className="hover:text-primary transition-colors"
+                                  >
+                                    {transcript.title}
+                                  </Link>
+                                </h3>
+                                <button
+                                  type="button"
+                                  onClick={() => handleStartEdit(transcript)}
+                                  className="text-sm text-muted-foreground hover:text-primary opacity-0 group-hover/title:opacity-100 group-focus-within/title:opacity-100 transition-opacity cursor-pointer flex-shrink-0"
+                                  aria-label={`Edit title: ${transcript.title}`}
+                                >
+                                  Edit
+                                </button>
+                              </div>
+                            )}
                             <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                               <span>{formatDate(transcript.createdAt)}</span>
                               <span>•</span>

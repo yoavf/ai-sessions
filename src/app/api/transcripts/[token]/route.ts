@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { checkCsrf } from "@/lib/csrf";
 import { prisma } from "@/lib/prisma";
-import { checkViewRateLimit, getClientIp } from "@/lib/rate-limit";
+import {
+  checkEditRateLimit,
+  checkViewRateLimit,
+  getClientIp,
+} from "@/lib/rate-limit";
 
 export async function GET(
   request: Request,
@@ -87,6 +91,32 @@ export async function PATCH(
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Rate limit title updates (50 per hour per user)
+    const rateLimitResult = await checkEditRateLimit(session.user.id);
+    if (!rateLimitResult.success) {
+      const statusCode = rateLimitResult.error ? 503 : 429;
+      const errorMessage = rateLimitResult.error
+        ? rateLimitResult.error
+        : "Rate limit exceeded";
+      const userMessage = rateLimitResult.error
+        ? "Rate limit service is temporarily unavailable. Please try again later."
+        : "Too many requests. Please try again later.";
+
+      return NextResponse.json(
+        {
+          error: errorMessage,
+          message: userMessage,
+        },
+        {
+          status: statusCode,
+          headers: {
+            "X-RateLimit-Limit": String(rateLimitResult.limit || 50),
+            "X-RateLimit-Remaining": "0",
+          },
+        },
+      );
     }
 
     const { token } = await params;
