@@ -93,6 +93,12 @@ function getToolPreview(
       }
       return null;
 
+    case "update_plan":
+      if (input.plan && Array.isArray(input.plan)) {
+        return `${input.plan.length} step${input.plan.length !== 1 ? "s" : ""}`;
+      }
+      return null;
+
     default:
       return null;
   }
@@ -231,6 +237,38 @@ describe("ToolCallBlock - getToolPreview", () => {
 
     it("should return null for missing todos", () => {
       const preview = getToolPreview("TodoWrite", {});
+      expect(preview).toBeNull();
+    });
+  });
+
+  describe("update_plan tool (Codex)", () => {
+    it("should show count for single step", () => {
+      const preview = getToolPreview("update_plan", {
+        plan: [{ step: "Design the app structure", status: "in_progress" }],
+      });
+      expect(preview).toBe("1 step");
+    });
+
+    it("should show count for multiple steps", () => {
+      const preview = getToolPreview("update_plan", {
+        plan: [
+          { step: "Design the app structure", status: "in_progress" },
+          { step: "Implement the timer logic", status: "pending" },
+          { step: "Test the workflow", status: "pending" },
+        ],
+      });
+      expect(preview).toBe("3 steps");
+    });
+
+    it("should return null for empty plan", () => {
+      const preview = getToolPreview("update_plan", {
+        plan: [],
+      });
+      expect(preview).toBe("0 steps");
+    });
+
+    it("should return null for missing plan", () => {
+      const preview = getToolPreview("update_plan", {});
       expect(preview).toBeNull();
     });
   });
