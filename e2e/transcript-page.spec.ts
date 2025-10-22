@@ -7,7 +7,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
 
-// Create Prisma client
+// Create Prisma client - matches app's setup
 const createPrismaClient = () => {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
@@ -49,6 +49,7 @@ const comprehensiveTranscriptJSONL = `{"type":"user","message":{"role":"user","c
 {"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"The main.py file contains a simple main function."}],"model":"claude-sonnet-4-5-20250929"},"uuid":"msg-022","timestamp":"2024-01-01T10:00:21.000Z","parentUuid":"msg-021","sessionId":"test-session-123"}`;
 
 // Helper to create test transcript
+// NOTE: Returns prisma/pool connections that must be closed by the caller after the test
 const createTestTranscript = async () => {
   const { prisma, pool } = createPrismaClient();
 
@@ -86,11 +87,8 @@ const createTestTranscript = async () => {
     throw new Error("Transcript was not created successfully");
   }
 
-  // Don't disconnect immediately - let it stay open for the app to read
-  await prisma.$disconnect();
-  await pool.end();
-
-  return { transcript: verified, user: testUser };
+  // Return connections to be closed after test completes
+  return { transcript: verified, user: testUser, prisma, pool };
 };
 
 // Cleanup helper
@@ -428,24 +426,34 @@ test.describe("Transcript Page - Interactive Elements", () => {
   });
 
   test("6.5 Expand Tool Call - View Input Parameters", async ({ page }) => {
-    const { transcript, user } = await createTestTranscript();
-    await page.waitForTimeout(500);
+    const { transcript, user, prisma, pool } = await createTestTranscript();
 
     try {
       await page.goto(`http://localhost:3000/t/${transcript.secretToken}`);
       await page.waitForLoadState("load");
 
-      // Find and click Write tool call to expand
-      const writeToolCall = page.getByText("Write: /tmp/hello.py").first();
-      await writeToolCall.click();
+      // Write tool calls are expanded by default and show diff view
+      // Verify the diff view header is visible
+      await expect(page.getByText("Edit /tmp/hello.py").first()).toBeVisible();
 
-      // Wait a moment for expansion
-      await page.waitForTimeout(500);
+      // Verify the code content from the diff is visible
+      await expect(
+        page.getByText("print('Hello, World!')").first(),
+      ).toBeVisible();
 
-      // Verify input parameters are visible (JSON format) - use first()
-      await expect(page.getByText(/file_path|content/i).first()).toBeVisible();
+      // Verify the unified/split view toggle is visible (use .first() for multiple Write tools)
+      await expect(
+        page.getByRole("button", { name: "Unified" }).first(),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: "Split" }).first(),
+      ).toBeVisible();
     } finally {
+      // Cleanup first, then disconnect
       await cleanupTestData(user.id);
+      // Close the connection we opened for this test
+      await prisma.$disconnect();
+      await pool.end();
     }
   });
 
