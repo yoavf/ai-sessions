@@ -501,6 +501,7 @@ export default function MyTranscriptsPage() {
                           </div>
                           <Button
                             type="button"
+                            data-testid={`delete-transcript-${transcript.secretToken}`}
                             onClick={() => handleDelete(transcript.secretToken)}
                             disabled={deleting === transcript.secretToken}
                             variant="ghost"
