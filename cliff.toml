@@ -11,8 +11,8 @@ header = """
 # Custom grouping by date instead of version tags
 body = """
 {%- set current_date = "" -%}
-{% for commit in commits | reverse %}
-    {%- set commit_date = commit.timestamp | date(format="%Y-%m-%d") -%}
+{% for commit in commits %}
+    {%- set commit_date = commit.committer.timestamp | date(format="%Y-%m-%d") -%}
     {%- if commit_date != current_date %}
         {%- if current_date != "" %}
 
@@ -41,6 +41,7 @@ commit_preprocessors = [
 ]
 # regex for parsing and grouping commits
 commit_parsers = [
+    { footer = "^changelog: ?ignore", skip = true },
     { message = "^feat", group = "Features" },
     { message = "^fix", group = "Bug Fixes" },
     { message = "^doc", group = "Documentation" },
