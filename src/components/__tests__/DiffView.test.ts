@@ -255,6 +255,34 @@ describe("DiffView - computeDiff", () => {
         },
       ]);
     });
+
+    it("should handle deleting all content (empty newString)", () => {
+      const oldStr = "line1\nline2\nline3";
+      const newStr = "";
+      const diff = computeDiff(oldStr, newStr);
+
+      // Should show all old lines as removed
+      const removedLines = diff.filter((d) => d.type === "removed");
+      expect(removedLines.length).toBeGreaterThanOrEqual(2);
+      expect(
+        diff.some((d) => d.content === "line1" && d.type === "removed"),
+      ).toBe(true);
+      expect(
+        diff.some((d) => d.content === "line2" && d.type === "removed"),
+      ).toBe(true);
+    });
+
+    it("should handle clearing to empty string (single line)", () => {
+      const oldStr = "const x = 1;";
+      const newStr = "";
+      const diff = computeDiff(oldStr, newStr);
+
+      expect(diff).toContainEqual({
+        type: "removed",
+        content: "const x = 1;",
+        oldLineNumber: 1,
+      });
+    });
   });
 
   describe("complex changes", () => {

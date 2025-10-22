@@ -181,15 +181,15 @@ export default function ToolCallBlock({
   // Support both Claude Code's "Edit" and Gemini's "replace" tools
   const isEdit =
     (toolUse.name === "Edit" || toolUse.name === "replace") &&
-    toolUse.input.file_path &&
-    toolUse.input.old_string &&
-    toolUse.input.new_string;
+    toolUse.input.file_path !== undefined &&
+    toolUse.input.old_string !== undefined &&
+    toolUse.input.new_string !== undefined;
 
   // Write tool should show diff view (treating it as a new file)
   const isWrite =
     toolUse.name === "Write" &&
-    toolUse.input.file_path &&
-    toolUse.input.content;
+    toolUse.input.file_path !== undefined &&
+    toolUse.input.content !== undefined;
 
   // Codex apply_patch tool
   const isApplyPatch =
