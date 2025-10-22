@@ -26,7 +26,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { addCsrfToken, useCsrfToken } from "@/hooks/useCsrfToken";
-import type { ParsedTranscript, TranscriptMetadata } from "@/types/transcript";
+import type { TranscriptMetadata, ParsedTranscript } from "@/types/transcript";
 import FloatingTOC from "./FloatingTOC";
 import MessageRenderer from "./MessageRenderer";
 
