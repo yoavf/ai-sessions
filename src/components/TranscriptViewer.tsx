@@ -1,11 +1,25 @@
 "use client";
 
 import { format, formatDistanceToNow } from "date-fns";
-import { Bot, Check, Hammer, Pencil, Share2, Trash2, User } from "lucide-react";
+import {
+  BarChart3,
+  Bot,
+  Check,
+  Hammer,
+  Pencil,
+  Share2,
+  Trash2,
+  User,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { Message, MessageContent } from "@/components/ai-elements/message";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Tooltip,
   TooltipContent,
@@ -385,130 +399,166 @@ export default function TranscriptViewer({
                 </span>
                 {(userMessageCount !== undefined ||
                   assistantMessageCount !== undefined ||
-                  toolCallCount !== undefined) && (
+                  toolCallCount !== undefined ||
+                  modelStats.length > 0 ||
+                  tokenCounts) && (
                   <>
                     <span className="hidden sm:inline">•</span>
-                    <span className="flex items-center gap-2">
-                      {userMessageCount !== undefined && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="flex items-center gap-1 cursor-help">
-                              <User
-                                className="w-4 h-4"
-                                aria-label="User messages"
-                              />
-                              <span>{userMessageCount}</span>
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            {userMessageCount} user message
-                            {userMessageCount !== 1 ? "s" : ""}
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                      {assistantMessageCount !== undefined && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="flex items-center gap-1 cursor-help">
-                              <Bot
-                                className="w-4 h-4"
-                                aria-label="Assistant messages"
-                              />
-                              <span>{assistantMessageCount}</span>
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            {assistantMessageCount} assistant message
-                            {assistantMessageCount !== 1 ? "s" : ""}
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                      {toolCallCount !== undefined && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="flex items-center gap-1 cursor-help">
-                              <Hammer
-                                className="w-4 h-4"
-                                aria-label="Tool calls"
-                              />
-                              <span>{toolCallCount}</span>
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            {toolCallCount} tool call
-                            {toolCallCount !== 1 ? "s" : ""}
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                    </span>
-                  </>
-                )}
-                {modelStats.length > 0 && (
-                  <>
-                    <span className="hidden sm:inline">•</span>
-                    <span
-                      className="cursor-help"
-                      title={`${modelStats.length === 1 ? "Model" : "Models"}: ${modelStats
-                        .map((s) => `${s.model}: ${s.count} messages`)
-                        .join(", ")}`}
-                    >
-                      {modelStats.length === 1 ? "Model" : "Models"}:{" "}
-                      {modelStats
-                        .map((s) => `${s.model} (${s.percentage}%)`)
-                        .join(", ")}
-                    </span>
-                  </>
-                )}
-                {tokenCounts && (
-                  <>
-                    <span className="hidden sm:inline">•</span>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="cursor-help">
-                          {tokenCounts.totalTokens.toLocaleString()} tokens
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <div className="text-sm space-y-1">
-                          <div>
-                            Input: {tokenCounts.inputTokens.toLocaleString()}
-                            {tokenCounts.cacheReadTokens !== undefined &&
-                              tokenCounts.cacheReadTokens > 0 && (
-                                <span className="text-green-400">
-                                  {" "}
-                                  (
-                                  {tokenCounts.cacheReadTokens.toLocaleString()}{" "}
-                                  cached)
-                                </span>
-                              )}
-                          </div>
-                          <div>
-                            Output: {tokenCounts.outputTokens.toLocaleString()}
-                            {tokenCounts.thinkingTokens !== undefined &&
-                              tokenCounts.thinkingTokens > 0 && (
-                                <span className="text-purple-400">
-                                  {" "}
-                                  ({tokenCounts.thinkingTokens.toLocaleString()}{" "}
-                                  thinking)
-                                </span>
-                              )}
-                          </div>
-                          {tokenCounts.cacheWriteTokens !== undefined &&
-                            tokenCounts.cacheWriteTokens > 0 && (
-                              <div className="text-muted-foreground">
-                                Cache write:{" "}
-                                {tokenCounts.cacheWriteTokens.toLocaleString()}
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-auto p-1 hover:bg-muted"
+                        >
+                          <BarChart3 className="w-4 h-4" />
+                          <span className="ml-1">Stats</span>
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80">
+                        <div className="space-y-4">
+                          <h4 className="font-semibold text-sm">
+                            Session Statistics
+                          </h4>
+
+                          {/* Message counts */}
+                          {(userMessageCount !== undefined ||
+                            assistantMessageCount !== undefined ||
+                            toolCallCount !== undefined) && (
+                            <div className="space-y-2">
+                              <div className="text-xs font-medium text-muted-foreground">
+                                Messages
                               </div>
-                            )}
-                          {tokenCounts.toolTokens !== undefined &&
-                            tokenCounts.toolTokens > 0 && (
-                              <div className="text-muted-foreground">
-                                Tool: {tokenCounts.toolTokens.toLocaleString()}
+                              <div className="space-y-1.5 text-sm">
+                                {userMessageCount !== undefined && (
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <User className="w-4 h-4 text-muted-foreground" />
+                                      <span>User</span>
+                                    </div>
+                                    <span className="font-mono">
+                                      {userMessageCount}
+                                    </span>
+                                  </div>
+                                )}
+                                {assistantMessageCount !== undefined && (
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <Bot className="w-4 h-4 text-muted-foreground" />
+                                      <span>Assistant</span>
+                                    </div>
+                                    <span className="font-mono">
+                                      {assistantMessageCount}
+                                    </span>
+                                  </div>
+                                )}
+                                {toolCallCount !== undefined && (
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <Hammer className="w-4 h-4 text-muted-foreground" />
+                                      <span>Tool calls</span>
+                                    </div>
+                                    <span className="font-mono">
+                                      {toolCallCount}
+                                    </span>
+                                  </div>
+                                )}
                               </div>
-                            )}
+                            </div>
+                          )}
+
+                          {/* Model stats */}
+                          {modelStats.length > 0 && (
+                            <div className="space-y-2">
+                              <div className="text-xs font-medium text-muted-foreground">
+                                Models
+                              </div>
+                              <div className="space-y-1.5 text-sm">
+                                {modelStats.map((stat) => (
+                                  <div
+                                    key={stat.model}
+                                    className="flex items-center justify-between"
+                                  >
+                                    <span>{stat.model}</span>
+                                    <span className="font-mono text-muted-foreground">
+                                      {stat.count} ({stat.percentage}%)
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Token counts */}
+                          {tokenCounts && (
+                            <div className="space-y-2">
+                              <div className="text-xs font-medium text-muted-foreground">
+                                Tokens
+                              </div>
+                              <div className="space-y-1.5 text-sm">
+                                <div className="flex items-center justify-between">
+                                  <span>Input</span>
+                                  <span className="font-mono">
+                                    {tokenCounts.inputTokens.toLocaleString()}
+                                    {tokenCounts.cacheReadTokens !==
+                                      undefined &&
+                                      tokenCounts.cacheReadTokens > 0 && (
+                                        <span className="text-green-600 dark:text-green-400 ml-1">
+                                          (
+                                          {tokenCounts.cacheReadTokens.toLocaleString()}{" "}
+                                          cached)
+                                        </span>
+                                      )}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span>Output</span>
+                                  <span className="font-mono">
+                                    {tokenCounts.outputTokens.toLocaleString()}
+                                    {tokenCounts.thinkingTokens !== undefined &&
+                                      tokenCounts.thinkingTokens > 0 && (
+                                        <span className="text-purple-600 dark:text-purple-400 ml-1">
+                                          (
+                                          {tokenCounts.thinkingTokens.toLocaleString()}{" "}
+                                          thinking)
+                                        </span>
+                                      )}
+                                  </span>
+                                </div>
+                                {tokenCounts.cacheWriteTokens !== undefined &&
+                                  tokenCounts.cacheWriteTokens > 0 && (
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-muted-foreground">
+                                        Cache write
+                                      </span>
+                                      <span className="font-mono text-muted-foreground">
+                                        {tokenCounts.cacheWriteTokens.toLocaleString()}
+                                      </span>
+                                    </div>
+                                  )}
+                                {tokenCounts.toolTokens !== undefined &&
+                                  tokenCounts.toolTokens > 0 && (
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-muted-foreground">
+                                        Tool
+                                      </span>
+                                      <span className="font-mono text-muted-foreground">
+                                        {tokenCounts.toolTokens.toLocaleString()}
+                                      </span>
+                                    </div>
+                                  )}
+                                <div className="flex items-center justify-between border-t pt-1.5 mt-1.5 font-medium">
+                                  <span>Total</span>
+                                  <span className="font-mono">
+                                    {tokenCounts.totalTokens.toLocaleString()}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      </TooltipContent>
-                    </Tooltip>
+                      </PopoverContent>
+                    </Popover>
                   </>
                 )}
               </div>
