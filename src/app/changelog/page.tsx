@@ -22,6 +22,7 @@ export default async function ChangelogPage() {
     const changelogPath = path.join(process.cwd(), "CHANGELOG.md");
     changelogContent = await fs.readFile(changelogPath, "utf-8");
   } catch (error) {
+    console.error("Failed to read CHANGELOG.md:", error);
     changelogContent = "# Changelog\n\nNo changelog available yet.";
   }
 
