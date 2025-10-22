@@ -256,7 +256,6 @@ export class ClaudeCodeProvider implements TranscriptProvider {
         firstTimestamp,
         lastTimestamp,
         messageCount: messages.length,
-        cwd,
       },
     };
   }

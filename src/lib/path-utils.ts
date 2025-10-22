@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { posix } from "node:path";
 
 /**
@@ -22,6 +23,73 @@ function isAbsolutePath(path: string): boolean {
  */
 function normalizePath(path: string): string {
   return path.replace(/\\/g, "/");
+}
+
+/**
+ * Compute SHA256 hash of a string (matches Gemini CLI's project path hashing)
+ */
+function hashProjectPath(path: string): string {
+  const hash = createHash("sha256");
+  hash.update(path);
+  return hash.digest("hex");
+}
+
+/**
+ * Infer the project working directory from Gemini's projectHash
+ * Gemini stores sessions in ~/.gemini/tmp/[PROJECT_HASH]/chats/ where
+ * PROJECT_HASH = SHA256(absolute_project_path)
+ *
+ * This function walks up the directory tree from file paths in tool calls
+ * and hashes each parent directory until finding one that matches the projectHash
+ *
+ * @param projectHash - The SHA256 hash from Gemini session's projectHash field
+ * @param filePaths - Array of absolute file paths from tool calls
+ * @returns The inferred project directory, or undefined if no match found
+ *
+ * @example
+ * inferGeminiProjectPath(
+ *   '2d33ff9193c39ffa4b8352af23f3b106d1ceaff756665e12408cb64657965d22',
+ *   ['/Users/dev/pomodoro/gemini/index.html', '/Users/dev/pomodoro/gemini/style.css']
+ * )
+ * // => '/Users/dev/pomodoro/gemini'
+ */
+export function inferGeminiProjectPath(
+  projectHash: string,
+  filePaths: string[],
+): string | undefined {
+  if (!projectHash || filePaths.length === 0) {
+    return undefined;
+  }
+
+  // Filter to only absolute paths and normalize them
+  const absolutePaths = filePaths.filter(isAbsolutePath).map(normalizePath);
+
+  if (absolutePaths.length === 0) {
+    return undefined;
+  }
+
+  // Try each file path
+  for (const filePath of absolutePaths) {
+    let current = filePath;
+
+    // Walk up the directory tree
+    while (true) {
+      // Hash the current directory
+      if (hashProjectPath(current) === projectHash) {
+        return current;
+      }
+
+      // Get parent directory
+      const lastSlash = current.lastIndexOf("/");
+      if (lastSlash <= 0) {
+        break; // Reached root
+      }
+
+      current = current.substring(0, lastSlash);
+    }
+  }
+
+  return undefined;
 }
 
 /**

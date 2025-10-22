@@ -145,9 +145,11 @@ export async function POST(request: Request) {
 
     // Validate JSONL format and extract metadata
     let messageCount = 0;
+    let cwd: string | undefined;
     try {
       const parsed = parseJSONL(originalFileData, detectedSource);
       messageCount = parsed.metadata.messageCount;
+      cwd = parsed.cwd; // Extract cwd for storage
     } catch (err) {
       console.error("Transcript parsing failed", {
         error: err instanceof Error ? err.message : String(err),
@@ -221,6 +223,7 @@ export async function POST(request: Request) {
         fileData,
         messageCount,
         fileSizeBytes: finalFileSizeBytes,
+        metadata: { cwd }, // Store computed metadata
         createdAt, // Use same date for consistency
       },
     });

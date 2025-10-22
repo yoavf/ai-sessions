@@ -155,7 +155,7 @@ describe("CodexProvider", () => {
       const result = provider.parse(codexNewerFormat);
 
       expect(result.sessionId).toBe("test-session-999");
-      expect(result.metadata.cwd).toBe("/test/project");
+      expect(result.cwd).toBe("/test/project");
     });
 
     it("should extract model from turn_context", () => {
@@ -612,7 +612,7 @@ this is not json
 
       const result = provider.parse(cwdUpdate);
 
-      expect(result.metadata.cwd).toBe("/updated/path");
+      expect(result.cwd).toBe("/updated/path");
     });
 
     it("should not override existing cwd from session_meta", () => {
@@ -622,7 +622,7 @@ this is not json
       const result = provider.parse(cwdNoOverride);
 
       // session_meta cwd should take precedence
-      expect(result.metadata.cwd).toBe("/original/path");
+      expect(result.cwd).toBe("/original/path");
     });
   });
 });

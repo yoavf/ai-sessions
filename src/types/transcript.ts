@@ -79,6 +79,5 @@ export interface ParsedTranscript {
     firstTimestamp: string;
     lastTimestamp: string;
     messageCount: number;
-    cwd?: string; // Kept for backwards compatibility
   };
 }

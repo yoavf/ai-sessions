@@ -745,7 +745,6 @@ export class CodexProvider implements TranscriptProvider {
         firstTimestamp: sessionCtx.firstTimestamp,
         lastTimestamp: sessionCtx.lastTimestamp,
         messageCount: messages.length,
-        cwd: sessionCtx.cwd,
       },
     };
   }
