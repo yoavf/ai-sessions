@@ -239,6 +239,7 @@ export default function TranscriptViewer({
   const assistantMessageCount = cachedMetadata.assistantMessageCount;
   const toolCallCount = cachedMetadata.toolCallCount;
   const modelStats = cachedMetadata.modelStats || [];
+  const tokenCounts = cachedMetadata.tokenCounts;
 
   // Extract user messages for TOC (only real user messages, excluding system messages and tool results)
   const tocItems = useMemo(() => {
@@ -456,6 +457,58 @@ export default function TranscriptViewer({
                         .map((s) => `${s.model} (${s.percentage}%)`)
                         .join(", ")}
                     </span>
+                  </>
+                )}
+                {tokenCounts && (
+                  <>
+                    <span className="hidden sm:inline">•</span>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="cursor-help">
+                          {tokenCounts.totalTokens.toLocaleString()} tokens
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <div className="text-sm space-y-1">
+                          <div>
+                            Input: {tokenCounts.inputTokens.toLocaleString()}
+                            {tokenCounts.cacheReadTokens !== undefined &&
+                              tokenCounts.cacheReadTokens > 0 && (
+                                <span className="text-green-400">
+                                  {" "}
+                                  (
+                                  {tokenCounts.cacheReadTokens.toLocaleString()}{" "}
+                                  cached)
+                                </span>
+                              )}
+                          </div>
+                          <div>
+                            Output: {tokenCounts.outputTokens.toLocaleString()}
+                            {tokenCounts.thinkingTokens !== undefined &&
+                              tokenCounts.thinkingTokens > 0 && (
+                                <span className="text-purple-400">
+                                  {" "}
+                                  ({tokenCounts.thinkingTokens.toLocaleString()}{" "}
+                                  thinking)
+                                </span>
+                              )}
+                          </div>
+                          {tokenCounts.cacheWriteTokens !== undefined &&
+                            tokenCounts.cacheWriteTokens > 0 && (
+                              <div className="text-muted-foreground">
+                                Cache write:{" "}
+                                {tokenCounts.cacheWriteTokens.toLocaleString()}
+                              </div>
+                            )}
+                          {tokenCounts.toolTokens !== undefined &&
+                            tokenCounts.toolTokens > 0 && (
+                              <div className="text-muted-foreground">
+                                Tool: {tokenCounts.toolTokens.toLocaleString()}
+                              </div>
+                            )}
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
                   </>
                 )}
               </div>

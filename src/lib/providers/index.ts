@@ -2,7 +2,7 @@
  * Provider registry and factory for transcript parsing
  */
 
-import type { ParsedTranscript } from "@/types/transcript";
+import type { ParsedTranscript, TokenCounts } from "@/types/transcript";
 import { ClaudeCodeProvider } from "./claude-code";
 import { CodexProvider } from "./codex";
 import { GeminiProvider } from "./gemini";
@@ -159,6 +159,128 @@ export function calculateModelStats(
     .sort((a, b) => b.count - a.count); // Sort by count descending
 
   return stats;
+}
+
+/**
+ * Calculate total token usage from transcript
+ * Extracts and aggregates token information from provider-specific formats
+ * @param content Raw JSONL/JSON content (needed to extract provider-specific token data)
+ * @param providerName Provider name to use correct extraction logic
+ * @returns Aggregated token counts or null if no token data available
+ */
+export function calculateTokenCounts(
+  content: string,
+  providerName: string,
+): TokenCounts | null {
+  const lines = content.trim().split("\n");
+
+  if (providerName === "claude-code") {
+    // Claude Code: Extract from assistant messages with .message.usage
+    let totalInput = 0;
+    let totalOutput = 0;
+    let totalCacheRead = 0;
+    let totalCacheWrite = 0;
+
+    for (const line of lines) {
+      try {
+        const parsed = JSON.parse(line);
+        if (parsed.type === "assistant" && parsed.message?.usage) {
+          const usage = parsed.message.usage;
+          totalInput += usage.input_tokens || 0;
+          totalOutput += usage.output_tokens || 0;
+          totalCacheRead += usage.cache_read_input_tokens || 0;
+          totalCacheWrite += usage.cache_creation_input_tokens || 0;
+        }
+      } catch {
+        // Skip malformed lines
+      }
+    }
+
+    if (totalInput === 0 && totalOutput === 0) return null;
+
+    return {
+      inputTokens: totalInput,
+      outputTokens: totalOutput,
+      totalTokens: totalInput + totalOutput,
+      cacheReadTokens: totalCacheRead > 0 ? totalCacheRead : undefined,
+      cacheWriteTokens: totalCacheWrite > 0 ? totalCacheWrite : undefined,
+    };
+  }
+
+  if (providerName === "gemini-cli") {
+    // Gemini: Parse JSON and extract from .messages[].tokens
+    try {
+      const data = JSON.parse(content);
+      if (!data.messages || !Array.isArray(data.messages)) return null;
+
+      let totalInput = 0;
+      let totalOutput = 0;
+      let totalCached = 0;
+      let totalThinking = 0;
+      let totalTool = 0;
+
+      for (const message of data.messages) {
+        if (message.tokens) {
+          totalInput += message.tokens.input || 0;
+          totalOutput += message.tokens.output || 0;
+          totalCached += message.tokens.cached || 0;
+          totalThinking += message.tokens.thoughts || 0;
+          totalTool += message.tokens.tool || 0;
+        }
+      }
+
+      if (totalInput === 0 && totalOutput === 0) return null;
+
+      return {
+        inputTokens: totalInput,
+        outputTokens: totalOutput,
+        totalTokens: totalInput + totalOutput,
+        cacheReadTokens: totalCached > 0 ? totalCached : undefined,
+        thinkingTokens: totalThinking > 0 ? totalThinking : undefined,
+        toolTokens: totalTool > 0 ? totalTool : undefined,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  if (providerName === "codex") {
+    // Codex: Extract from event_msg with payload.type === "token_count"
+    // Use the last token_count event for cumulative totals
+    let lastTokenData: TokenCounts | null = null;
+
+    for (const line of lines) {
+      try {
+        const parsed = JSON.parse(line);
+        if (
+          parsed.type === "event_msg" &&
+          parsed.payload?.type === "token_count" &&
+          parsed.payload?.info?.total_token_usage
+        ) {
+          const usage = parsed.payload.info.total_token_usage;
+          lastTokenData = {
+            inputTokens: usage.input_tokens || 0,
+            outputTokens: usage.output_tokens || 0,
+            totalTokens: usage.total_tokens || 0,
+            cacheReadTokens:
+              usage.cached_input_tokens > 0
+                ? usage.cached_input_tokens
+                : undefined,
+            thinkingTokens:
+              usage.reasoning_output_tokens > 0
+                ? usage.reasoning_output_tokens
+                : undefined,
+          };
+        }
+      } catch {
+        // Skip malformed lines
+      }
+    }
+
+    return lastTokenData;
+  }
+
+  return null;
 }
 
 // Export providers and types

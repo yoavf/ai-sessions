@@ -152,8 +152,12 @@ export async function POST(request: Request) {
       const parsed = parseJSONL(originalFileData, detectedSource);
       messageCount = parsed.metadata.messageCount;
 
-      // Calculate and store all metadata (message counts, tool counts, model stats, etc.)
-      transcriptMetadata = calculateTranscriptMetadata(parsed, detectedSource);
+      // Calculate and store all metadata (message counts, tool counts, model stats, token counts, etc.)
+      transcriptMetadata = calculateTranscriptMetadata(
+        parsed,
+        originalFileData,
+        detectedSource,
+      );
     } catch (err) {
       console.error("Transcript parsing failed", {
         error: err instanceof Error ? err.message : String(err),

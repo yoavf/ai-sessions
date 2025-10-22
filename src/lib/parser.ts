@@ -1,6 +1,7 @@
 import type { ParsedTranscript, TranscriptMetadata } from "@/types/transcript";
 import {
   calculateModelStats as calculateModelStatsFromProvider,
+  calculateTokenCounts as calculateTokenCountsFromProvider,
   parseTranscript as parseTranscriptWithProvider,
 } from "./providers";
 
@@ -84,11 +85,13 @@ export function parseJSONL(
  * Calculate all metadata statistics for a transcript
  * This should be called on upload and the results stored in the database
  * @param transcript Parsed transcript
- * @param source Source provider name (for model formatting)
+ * @param rawContent Raw JSONL/JSON content (needed for token extraction)
+ * @param source Source provider name (for model formatting and token extraction)
  * @returns Metadata object ready to be stored in database
  */
 export function calculateTranscriptMetadata(
   transcript: ParsedTranscript,
+  rawContent: string,
   source?: string,
 ): TranscriptMetadata {
   // Count messages by role
@@ -113,11 +116,17 @@ export function calculateTranscriptMetadata(
   // Calculate model usage statistics
   const modelStats = calculateModelStatsFromProvider(transcript, source);
 
+  // Calculate token counts from raw content (provider-specific)
+  const tokenCounts = source
+    ? calculateTokenCountsFromProvider(rawContent, source)
+    : null;
+
   return {
     cwd: transcript.cwd,
     userMessageCount,
     assistantMessageCount,
     toolCallCount,
     modelStats,
+    tokenCounts: tokenCounts || undefined,
   };
 }
