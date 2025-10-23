@@ -6,7 +6,8 @@ const INSTALL_SCRIPT_URL =
 export async function GET() {
   try {
     const response = await fetch(INSTALL_SCRIPT_URL, {
-      // Don't cache - always serve fresh script
+      // Always fetch a fresh copy from origin (bypass Next.js cache),
+      // but allow downstream clients (CDN/browser) to cache for 5 minutes via Cache-Control header
       cache: "no-store",
     });
 
