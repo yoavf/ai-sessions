@@ -6,6 +6,7 @@ import { expect, test } from "@playwright/test";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
+import { calculateTranscriptMetadata, parseJSONL } from "@/lib/parser";
 
 // Create Prisma client - matches app's setup
 const createPrismaClient = () => {
@@ -26,27 +27,27 @@ const generateId = (length: number = 8): string => {
 
 // Comprehensive sample transcript with various content types (Claude Code format)
 const comprehensiveTranscriptJSONL = `{"type":"user","message":{"role":"user","content":[{"type":"text","text":"Create a simple hello world program in Python"}]},"uuid":"msg-001","timestamp":"2024-01-01T10:00:00.000Z","parentUuid":null,"sessionId":"test-session-123","cwd":"/test/path"}
-{"type":"assistant","message":{"role":"assistant","content":[{"type":"thinking","thinking":"The user wants a simple Python hello world program. I'll use the Write tool to create a hello.py file with a basic print statement."},{"type":"tool_use","id":"toolu_01ABC123","name":"Write","input":{"file_path":"/tmp/hello.py","content":"print('Hello, World!')"}}],"model":"claude-sonnet-4-5-20250929"},"uuid":"msg-002","timestamp":"2024-01-01T10:00:01.000Z","parentUuid":"msg-001","sessionId":"test-session-123"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"thinking","thinking":"The user wants a simple Python hello world program. I'll use the Write tool to create a hello.py file with a basic print statement."},{"type":"tool_use","id":"toolu_01ABC123","name":"Write","input":{"file_path":"/tmp/hello.py","content":"print('Hello, World!')"}}],"model":"claude-sonnet-4-5-20250929","usage":{"input_tokens":500,"cache_creation_input_tokens":0,"cache_read_input_tokens":100,"output_tokens":150}},"uuid":"msg-002","timestamp":"2024-01-01T10:00:01.000Z","parentUuid":"msg-001","sessionId":"test-session-123"}
 {"type":"user","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_01ABC123","content":"File written successfully"}]},"uuid":"msg-003","timestamp":"2024-01-01T10:00:02.000Z","parentUuid":"msg-002","sessionId":"test-session-123"}
-{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"I've created a simple Python hello world program in /tmp/hello.py. The file contains:\\n\\n\`\`\`python\\nprint('Hello, World!')\\n\`\`\`"}],"model":"claude-sonnet-4-5-20250929"},"uuid":"msg-004","timestamp":"2024-01-01T10:00:03.000Z","parentUuid":"msg-003","sessionId":"test-session-123"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"I've created a simple Python hello world program in /tmp/hello.py. The file contains:\\n\\n\`\`\`python\\nprint('Hello, World!')\\n\`\`\`"}],"model":"claude-sonnet-4-5-20250929","usage":{"input_tokens":800,"cache_creation_input_tokens":0,"cache_read_input_tokens":200,"output_tokens":50}},"uuid":"msg-004","timestamp":"2024-01-01T10:00:03.000Z","parentUuid":"msg-003","sessionId":"test-session-123"}
 {"type":"user","message":{"role":"user","content":[{"type":"text","text":"Now run it and show me the output"}]},"uuid":"msg-005","timestamp":"2024-01-01T10:00:04.000Z","parentUuid":"msg-004","sessionId":"test-session-123"}
-{"type":"assistant","message":{"role":"assistant","content":[{"type":"thinking","thinking":"I'll execute the Python file using the Bash tool to run it and show the output."},{"type":"tool_use","id":"toolu_02DEF456","name":"Bash","input":{"command":"python /tmp/hello.py","description":"Run the hello world script"}}],"model":"claude-sonnet-4-5-20250929"},"uuid":"msg-006","timestamp":"2024-01-01T10:00:05.000Z","parentUuid":"msg-005","sessionId":"test-session-123"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"thinking","thinking":"I'll execute the Python file using the Bash tool to run it and show the output."},{"type":"tool_use","id":"toolu_02DEF456","name":"Bash","input":{"command":"python /tmp/hello.py","description":"Run the hello world script"}}],"model":"claude-sonnet-4-5-20250929","usage":{"input_tokens":900,"cache_creation_input_tokens":0,"cache_read_input_tokens":300,"output_tokens":100}},"uuid":"msg-006","timestamp":"2024-01-01T10:00:05.000Z","parentUuid":"msg-005","sessionId":"test-session-123"}
 {"type":"user","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_02DEF456","content":"Hello, World!"}]},"uuid":"msg-007","timestamp":"2024-01-01T10:00:06.000Z","parentUuid":"msg-006","sessionId":"test-session-123"}
-{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"The program ran successfully and printed **'Hello, World!'** to the console."}],"model":"claude-sonnet-4-5-20250929"},"uuid":"msg-008","timestamp":"2024-01-01T10:00:07.000Z","parentUuid":"msg-007","sessionId":"test-session-123"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"The program ran successfully and printed **'Hello, World!'** to the console."}],"model":"claude-sonnet-4-5-20250929","usage":{"input_tokens":1000,"cache_creation_input_tokens":0,"cache_read_input_tokens":400,"output_tokens":30}},"uuid":"msg-008","timestamp":"2024-01-01T10:00:07.000Z","parentUuid":"msg-007","sessionId":"test-session-123"}
 {"type":"user","message":{"role":"user","content":[{"type":"text","text":"Add error handling to the program"}]},"uuid":"msg-009","timestamp":"2024-01-01T10:00:08.000Z","parentUuid":"msg-008","sessionId":"test-session-123"}
-{"type":"assistant","message":{"role":"assistant","content":[{"type":"thinking","thinking":"I should add a try-except block to handle potential errors gracefully. This is good practice for any Python program."},{"type":"tool_use","id":"toolu_03GHI789","name":"Write","input":{"file_path":"/tmp/hello.py","content":"try:\\n    print('Hello, World!')\\nexcept Exception as e:\\n    print(f'Error: {e}')"}}],"model":"claude-sonnet-4-5-20250929"},"uuid":"msg-010","timestamp":"2024-01-01T10:00:09.000Z","parentUuid":"msg-009","sessionId":"test-session-123"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"thinking","thinking":"I should add a try-except block to handle potential errors gracefully. This is good practice for any Python program."},{"type":"tool_use","id":"toolu_03GHI789","name":"Write","input":{"file_path":"/tmp/hello.py","content":"try:\\n    print('Hello, World!')\\nexcept Exception as e:\\n    print(f'Error: {e}')"}}],"model":"claude-sonnet-4-5-20250929","usage":{"input_tokens":1100,"cache_creation_input_tokens":0,"cache_read_input_tokens":500,"output_tokens":120}},"uuid":"msg-010","timestamp":"2024-01-01T10:00:09.000Z","parentUuid":"msg-009","sessionId":"test-session-123"}
 {"type":"user","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_03GHI789","content":"File written successfully"}]},"uuid":"msg-011","timestamp":"2024-01-01T10:00:10.000Z","parentUuid":"msg-010","sessionId":"test-session-123"}
-{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"I've updated the program with error handling using a try-except block."}],"model":"claude-sonnet-4-5-20250929"},"uuid":"msg-012","timestamp":"2024-01-01T10:00:11.000Z","parentUuid":"msg-011","sessionId":"test-session-123"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"I've updated the program with error handling using a try-except block."}],"model":"claude-sonnet-4-5-20250929","usage":{"input_tokens":1300,"cache_creation_input_tokens":0,"cache_read_input_tokens":600,"output_tokens":25}},"uuid":"msg-012","timestamp":"2024-01-01T10:00:11.000Z","parentUuid":"msg-011","sessionId":"test-session-123"}
 {"type":"user","message":{"role":"user","content":"[Request interrupted by user]"},"uuid":"msg-013","timestamp":"2024-01-01T10:00:12.000Z","parentUuid":"msg-012","sessionId":"test-session-123"}
 {"type":"user","message":{"role":"user","content":[{"type":"text","text":"Can you search for all Python files in the project?"}]},"uuid":"msg-014","timestamp":"2024-01-01T10:00:13.000Z","parentUuid":"msg-013","sessionId":"test-session-123"}
-{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_04JKL012","name":"Glob","input":{"pattern":"**/*.py"}}],"model":"claude-sonnet-4-5-20250929"},"uuid":"msg-015","timestamp":"2024-01-01T10:00:14.000Z","parentUuid":"msg-014","sessionId":"test-session-123"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_04JKL012","name":"Glob","input":{"pattern":"**/*.py"}}],"model":"claude-sonnet-4-5-20250929","usage":{"input_tokens":1400,"cache_creation_input_tokens":0,"cache_read_input_tokens":700,"output_tokens":40}},"uuid":"msg-015","timestamp":"2024-01-01T10:00:14.000Z","parentUuid":"msg-014","sessionId":"test-session-123"}
 {"type":"user","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_04JKL012","content":"/tmp/hello.py\\n/src/main.py\\n/tests/test_main.py"}]},"uuid":"msg-016","timestamp":"2024-01-01T10:00:15.000Z","parentUuid":"msg-015","sessionId":"test-session-123"}
-{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"I found 3 Python files in the project:\\n\\n1. /tmp/hello.py (our test file)\\n2. /src/main.py (main source)\\n3. /tests/test_main.py (test file)"}],"model":"claude-sonnet-4-5-20250929"},"uuid":"msg-017","timestamp":"2024-01-01T10:00:16.000Z","parentUuid":"msg-016","sessionId":"test-session-123"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"I found 3 Python files in the project:\\n\\n1. /tmp/hello.py (our test file)\\n2. /src/main.py (main source)\\n3. /tests/test_main.py (test file)"}],"model":"claude-sonnet-4-5-20250929","usage":{"input_tokens":1500,"cache_creation_input_tokens":0,"cache_read_input_tokens":800,"output_tokens":60}},"uuid":"msg-017","timestamp":"2024-01-01T10:00:16.000Z","parentUuid":"msg-016","sessionId":"test-session-123"}
 {"type":"user","message":{"role":"user","content":"<ide_opened_file>/tmp/hello.py</ide_opened_file>"},"uuid":"msg-018","timestamp":"2024-01-01T10:00:17.000Z","parentUuid":"msg-017","sessionId":"test-session-123"}
 {"type":"user","message":{"role":"user","content":[{"type":"text","text":"Read the main.py file"}]},"uuid":"msg-019","timestamp":"2024-01-01T10:00:18.000Z","parentUuid":"msg-018","sessionId":"test-session-123"}
-{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_05MNO345","name":"Read","input":{"file_path":"/src/main.py"}}],"model":"claude-sonnet-4-5-20250929"},"uuid":"msg-020","timestamp":"2024-01-01T10:00:19.000Z","parentUuid":"msg-019","sessionId":"test-session-123"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_05MNO345","name":"Read","input":{"file_path":"/src/main.py"}}],"model":"claude-sonnet-4-5-20250929","usage":{"input_tokens":1600,"cache_creation_input_tokens":0,"cache_read_input_tokens":900,"output_tokens":35}},"uuid":"msg-020","timestamp":"2024-01-01T10:00:19.000Z","parentUuid":"msg-019","sessionId":"test-session-123"}
 {"type":"user","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_05MNO345","content":"def main():\\n    print('Main application')\\n\\nif __name__ == '__main__':\\n    main()","is_error":false}]},"uuid":"msg-021","timestamp":"2024-01-01T10:00:20.000Z","parentUuid":"msg-020","sessionId":"test-session-123"}
-{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"The main.py file contains a simple main function."}],"model":"claude-sonnet-4-5-20250929"},"uuid":"msg-022","timestamp":"2024-01-01T10:00:21.000Z","parentUuid":"msg-021","sessionId":"test-session-123"}`;
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"The main.py file contains a simple main function."}],"model":"claude-sonnet-4-5-20250929","usage":{"input_tokens":1800,"cache_creation_input_tokens":0,"cache_read_input_tokens":1000,"output_tokens":20}},"uuid":"msg-022","timestamp":"2024-01-01T10:00:21.000Z","parentUuid":"msg-021","sessionId":"test-session-123"}`;
 
 // Helper to create test transcript
 // NOTE: Returns prisma/pool connections that must be closed by the caller after the test
@@ -66,7 +67,15 @@ const createTestTranscript = async () => {
     },
   });
 
-  // Create the comprehensive test transcript
+  // Parse transcript and calculate metadata (like the upload API does)
+  const parsed = parseJSONL(comprehensiveTranscriptJSONL, "claude-code");
+  const metadata = calculateTranscriptMetadata(
+    parsed,
+    comprehensiveTranscriptJSONL,
+    "claude-code",
+  );
+
+  // Create the comprehensive test transcript WITH metadata
   const transcript = await prisma.transcript.create({
     data: {
       userId: testUser.id,
@@ -75,6 +84,7 @@ const createTestTranscript = async () => {
       messageCount: 22,
       fileSizeBytes: Buffer.byteLength(comprehensiveTranscriptJSONL, "utf8"),
       source: "claude-code",
+      metadata: metadata as any, // Prisma JsonValue type
     },
   });
 
@@ -229,22 +239,40 @@ test.describe("Transcript Page - Metadata Display", () => {
       await page.goto(`http://localhost:3000/t/${transcript.secretToken}`);
       await page.waitForLoadState("load");
 
-      // Check for message count icons with aria-labels
-      // Should have User icon with proper accessibility label
-      await expect(page.locator('[aria-label="User messages"]')).toBeVisible();
+      // Find and click the stats popover button
+      const statsButton = page.getByRole("button", { name: /stats/i });
+      await expect(statsButton).toBeVisible();
+      await statsButton.click();
 
-      // Should have Bot icon with proper accessibility label
+      // Wait for popover to open
+      await page.waitForTimeout(300);
+
+      // Verify the popover contains message statistics
+      await expect(page.getByTestId("stats-messages-section")).toBeVisible();
+      await expect(page.getByTestId("stats-user-count")).toBeVisible();
+      await expect(page.getByTestId("stats-assistant-count")).toBeVisible();
+      await expect(page.getByTestId("stats-tool-count")).toBeVisible();
+
+      // Verify the "Tokens" section is visible (since we added usage data)
+      const tokensSection = page.getByTestId("stats-tokens-section");
+      await expect(tokensSection).toBeVisible();
+
+      // Verify specific token fields are displayed
       await expect(
-        page.locator('[aria-label="Assistant messages"]'),
+        tokensSection.getByText("Input", { exact: true }),
+      ).toBeVisible();
+      await expect(
+        tokensSection.getByText("Output", { exact: true }),
+      ).toBeVisible();
+      await expect(
+        tokensSection.getByText("Total", { exact: true }),
       ).toBeVisible();
 
-      // Should have Hammer icon with proper accessibility label
-      await expect(page.locator('[aria-label="Tool calls"]')).toBeVisible();
+      // Verify cache read tokens are displayed (we added cache_read_input_tokens in the test data)
+      await expect(tokensSection.getByText(/cached/)).toBeVisible();
 
-      // Check that numbers are displayed (at least 3 numeric values should be visible)
-      const numberElements = page.locator("span").filter({ hasText: /^\d+$/ });
-      const count = await numberElements.count();
-      expect(count).toBeGreaterThanOrEqual(3); // User count, assistant count, tool count
+      // Close popover by clicking outside or pressing Escape
+      await page.keyboard.press("Escape");
     } finally {
       await cleanupTestData(user.id);
     }

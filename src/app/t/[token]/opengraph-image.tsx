@@ -1,10 +1,7 @@
 import { ImageResponse } from "next/og";
-import {
-  generateDefaultTitle,
-  isUuidOrSessionId,
-  parseJSONL,
-} from "@/lib/parser";
+import { generateDefaultTitle, isUuidOrSessionId } from "@/lib/parser";
 import { prisma } from "@/lib/prisma";
+import type { TranscriptMetadata } from "@/types/transcript";
 
 export const alt = "AI Session Transcript";
 export const size = {
@@ -35,6 +32,7 @@ export default async function Image({ params }: Props) {
         source: true,
         createdAt: true,
         fileData: true,
+        metadata: true, // Fetch cached metadata
         user: {
           select: {
             githubUsername: true,
@@ -63,7 +61,10 @@ export default async function Image({ params }: Props) {
       );
     }
 
-    const parsed = parseJSONL(transcript.fileData);
+    // Use cached metadata
+    const cachedMetadata =
+      (transcript.metadata as TranscriptMetadata | null) || {};
+    const messageCount = cachedMetadata.userMessageCount;
 
     // Determine if we have a custom title or need to generate one
     const hasCustomTitle =
@@ -73,7 +74,6 @@ export default async function Image({ params }: Props) {
       : generateDefaultTitle(transcript.source, transcript.createdAt);
 
     const username = transcript.user?.githubUsername || "Anonymous";
-    const messageCount = parsed.metadata.messageCount;
     const source = SOURCE_DISPLAY_NAMES[transcript.source] || transcript.source;
     const date = new Date(transcript.createdAt).toLocaleDateString("en-US", {
       year: "numeric",
@@ -180,17 +180,19 @@ export default async function Image({ params }: Props) {
               <span style={{ marginRight: "12px" }}>👤</span>
               <span>{username}</span>
             </div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                fontSize: "28px",
-                color: "#999",
-              }}
-            >
-              <span style={{ marginRight: "12px" }}>💬</span>
-              <span>{messageCount} messages</span>
-            </div>
+            {messageCount !== undefined && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  fontSize: "28px",
+                  color: "#999",
+                }}
+              >
+                <span style={{ marginRight: "12px" }}>💬</span>
+                <span>{messageCount} messages</span>
+              </div>
+            )}
             {hasCustomTitle && (
               <div
                 style={{

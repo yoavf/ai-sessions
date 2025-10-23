@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { formatDlpFindings, scanForSensitiveData } from "@/lib/dlp";
 import { verifyCliToken } from "@/lib/jwt";
 import {
+  calculateTranscriptMetadata,
   generateDefaultTitle,
   isUuidOrSessionId,
   parseJSONL,
@@ -10,6 +11,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { detectProvider } from "@/lib/providers";
 import { checkUploadRateLimit } from "@/lib/rate-limit";
+import type { TranscriptMetadata } from "@/types/transcript";
 
 /**
  * CLI upload endpoint
@@ -141,11 +143,19 @@ export async function POST(request: Request) {
       // Ignore detection errors, will fall back to default
     }
 
-    // Validate JSONL format and extract metadata
+    // Validate JSONL format and calculate metadata
     let messageCount = 0;
+    let transcriptMetadata: TranscriptMetadata = {};
     try {
       const parsed = parseJSONL(originalFileData, detectedSource);
       messageCount = parsed.metadata.messageCount;
+
+      // Calculate and store all metadata (message counts, tool counts, model stats, token counts, etc.)
+      transcriptMetadata = calculateTranscriptMetadata(
+        parsed,
+        originalFileData,
+        detectedSource,
+      );
     } catch (_err) {
       return NextResponse.json(
         {
@@ -205,6 +215,9 @@ export async function POST(request: Request) {
         fileData,
         messageCount,
         fileSizeBytes: finalFileSizeBytes,
+        // Store pre-calculated metadata (counts, model stats, etc.)
+        // Ensure JSON serialization to match Prisma's InputJsonValue type
+        metadata: JSON.parse(JSON.stringify(transcriptMetadata)),
         createdAt, // Use same date for consistency
       },
     });
