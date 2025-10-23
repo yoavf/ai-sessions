@@ -168,7 +168,7 @@ export default async function HelpPage() {
                   <div className="text-muted-foreground text-sm space-y-2">
                     <p>Quick install (macOS/Linux/Windows):</p>
                     <code className="block bg-muted px-3 py-2 rounded font-mono text-xs border">
-                      curl -fsSL aisessions.dev/install.sh | bash
+                      curl -fsSL https://aisessions.dev/install.sh | bash
                     </code>
                     <p className="text-xs pt-1">
                       <a
@@ -186,8 +186,8 @@ export default async function HelpPage() {
                     </p>
                     <p className="pt-2">Custom install directory:</p>
                     <code className="block bg-muted px-3 py-2 rounded font-mono text-xs border">
-                      INSTALL_DIR=$HOME/bin curl -fsSL aisessions.dev/install.sh
-                      | bash
+                      INSTALL_DIR=$HOME/bin curl -fsSL
+                      https://aisessions.dev/install.sh | bash
                     </code>
                     <p className="pt-2">Manual download:</p>
                     <p className="text-xs">

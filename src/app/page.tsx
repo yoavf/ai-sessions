@@ -68,7 +68,7 @@ export default async function Home() {
             </div>
             <div className="max-w-2xl mx-auto">
               <code className="block bg-muted px-4 py-3 rounded font-mono text-sm border text-center">
-                curl -fsSL aisessions.dev/install.sh | bash
+                curl -fsSL https://aisessions.dev/install.sh | bash
               </code>
               <div className="mt-3 text-center">
                 <p className="text-xs text-muted-foreground">
