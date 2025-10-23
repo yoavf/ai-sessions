@@ -163,11 +163,47 @@ export default async function HelpPage() {
               <CardContent className="space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold mb-2">
-                    Can I upload from the command line?
+                    How do I install the CLI?
                   </h3>
                   <div className="text-muted-foreground text-sm space-y-2">
-                    <p>
-                      Yes! The{" "}
+                    <p>Quick install (macOS/Linux/Windows):</p>
+                    <code className="block bg-muted px-3 py-2 rounded font-mono text-xs border">
+                      curl -fsSL aisessions.dev/install.sh | bash
+                    </code>
+                    <p className="text-xs pt-1">
+                      <a
+                        href="https://github.com/yoavf/ai-sessions-mcp/blob/main/install.sh"
+                        target="_blank"
+                        className="text-primary hover:underline"
+                        rel="noopener noreferrer"
+                      >
+                        View source
+                      </a>{" "}
+                      · Supports macOS, Linux, and Windows (x64/ARM64)
+                    </p>
+                    <p className="text-xs">
+                      Windows users: Run in Git Bash or WSL
+                    </p>
+                    <p className="pt-2">Custom install directory:</p>
+                    <code className="block bg-muted px-3 py-2 rounded font-mono text-xs border">
+                      INSTALL_DIR=$HOME/bin curl -fsSL aisessions.dev/install.sh
+                      | bash
+                    </code>
+                    <p className="pt-2">Manual download:</p>
+                    <p className="text-xs">
+                      Download pre-built binaries from{" "}
+                      <a
+                        href="https://github.com/yoavf/ai-sessions-mcp/releases"
+                        target="_blank"
+                        className="text-primary hover:underline"
+                        rel="noopener noreferrer"
+                      >
+                        GitHub Releases
+                      </a>
+                      .
+                    </p>
+                    <p className="text-xs pt-2">
+                      The{" "}
                       <a
                         href="https://github.com/yoavf/ai-sessions-mcp"
                         target="_blank"
@@ -176,23 +212,8 @@ export default async function HelpPage() {
                       >
                         ai-sessions-mcp
                       </a>{" "}
-                      executable also serves as an uploader for AI Sessions.{" "}
-                      <br />
-                      Download the pre-built binary or build from source. See
-                      the{" "}
-                      <a
-                        href="https://github.com/yoavf/ai-sessions-mcp?tab=readme-ov-file#installation"
-                        target="_blank"
-                        className="text-primary hover:underline"
-                        rel="noopener"
-                      >
-                        installation guide
-                      </a>
-                      .
-                    </p>
-                    <p className="text-xs pt-1">
-                      (The tool also works as an MCP server for accessing
-                      transcripts across coding agents)
+                      tool also works as an MCP server for accessing transcripts
+                      across coding agents.
                     </p>
                   </div>
                 </div>

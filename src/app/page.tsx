@@ -59,6 +59,39 @@ export default async function Home() {
             </p>
           </div>
 
+          <div className="mt-8 border-t pt-8">
+            <div className="text-center mb-4">
+              <h2 className="text-2xl font-semibold mb-2">CLI Installation</h2>
+              <p className="text-sm text-muted-foreground">
+                Install the CLI to upload transcripts from your terminal
+              </p>
+            </div>
+            <div className="max-w-2xl mx-auto">
+              <code className="block bg-muted px-4 py-3 rounded font-mono text-sm border text-center">
+                curl -fsSL aisessions.dev/install.sh | bash
+              </code>
+              <div className="mt-3 text-center">
+                <p className="text-xs text-muted-foreground">
+                  <a
+                    href="https://github.com/yoavf/ai-sessions-mcp/blob/main/install.sh"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    View source
+                  </a>
+                  {" · "}
+                  <Link
+                    href="/help#cli-upload"
+                    className="text-primary hover:underline"
+                  >
+                    Installation guide
+                  </Link>
+                </p>
+              </div>
+            </div>
+          </div>
+
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
               Need help finding your transcripts?{" "}
