@@ -2,6 +2,7 @@
 
 ## 2025-10-23
 
+- **Bug Fixes**: Token calculation
 - **Features**: Revamped stats ([#33](https://github.com/yoavf/ai-sessions/pull/33))
 - **Features**: Add edit-in-place for session titles in my-transcripts page ([#32](https://github.com/yoavf/ai-sessions/pull/32))
 
