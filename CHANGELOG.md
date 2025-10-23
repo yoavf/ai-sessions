@@ -1,5 +1,10 @@
 # Changelog
 
+## 2025-10-23
+
+- **Features**: Revamped stats ([#33](https://github.com/yoavf/ai-sessions/pull/33))
+- **Features**: Add edit-in-place for session titles in my-transcripts page ([#32](https://github.com/yoavf/ai-sessions/pull/32))
+
 ## 2025-10-22
 
 - **Fix**: Remove per-line horizontal scrollbars in diff views by wrapping long lines ([#28](https://github.com/yoavf/ai-sessions/pull/28))
