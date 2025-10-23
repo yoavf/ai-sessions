@@ -145,7 +145,7 @@ export async function POST(request: Request) {
       });
     }
 
-    // Validate JSONL format and calculate metadata
+    // Validate transcript format (JSONL or JSON) and calculate metadata
     let messageCount = 0;
     let transcriptMetadata: TranscriptMetadata = {};
     try {

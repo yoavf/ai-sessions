@@ -26,7 +26,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { addCsrfToken, useCsrfToken } from "@/hooks/useCsrfToken";
-import type { TranscriptMetadata, ParsedTranscript } from "@/types/transcript";
+import type { ParsedTranscript, TranscriptMetadata } from "@/types/transcript";
 import FloatingTOC from "./FloatingTOC";
 import MessageRenderer from "./MessageRenderer";
 
@@ -425,13 +425,19 @@ export default function TranscriptViewer({
                           {(userMessageCount !== undefined ||
                             assistantMessageCount !== undefined ||
                             toolCallCount !== undefined) && (
-                            <div className="space-y-2">
+                            <div
+                              className="space-y-2"
+                              data-testid="stats-messages-section"
+                            >
                               <div className="text-xs font-medium text-muted-foreground">
                                 Messages
                               </div>
                               <div className="space-y-1.5 text-sm">
                                 {userMessageCount !== undefined && (
-                                  <div className="flex items-center justify-between">
+                                  <div
+                                    className="flex items-center justify-between"
+                                    data-testid="stats-user-count"
+                                  >
                                     <div className="flex items-center gap-2">
                                       <User className="w-4 h-4 text-muted-foreground" />
                                       <span>User</span>
@@ -442,7 +448,10 @@ export default function TranscriptViewer({
                                   </div>
                                 )}
                                 {assistantMessageCount !== undefined && (
-                                  <div className="flex items-center justify-between">
+                                  <div
+                                    className="flex items-center justify-between"
+                                    data-testid="stats-assistant-count"
+                                  >
                                     <div className="flex items-center gap-2">
                                       <Bot className="w-4 h-4 text-muted-foreground" />
                                       <span>Assistant</span>
@@ -453,7 +462,10 @@ export default function TranscriptViewer({
                                   </div>
                                 )}
                                 {toolCallCount !== undefined && (
-                                  <div className="flex items-center justify-between">
+                                  <div
+                                    className="flex items-center justify-between"
+                                    data-testid="stats-tool-count"
+                                  >
                                     <div className="flex items-center gap-2">
                                       <Hammer className="w-4 h-4 text-muted-foreground" />
                                       <span>Tool calls</span>
@@ -491,7 +503,10 @@ export default function TranscriptViewer({
 
                           {/* Token counts */}
                           {tokenCounts && (
-                            <div className="space-y-2">
+                            <div
+                              className="space-y-2"
+                              data-testid="stats-tokens-section"
+                            >
                               <div className="text-xs font-medium text-muted-foreground">
                                 Tokens
                               </div>
