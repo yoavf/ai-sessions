@@ -10,12 +10,33 @@ describe("calculateTokenCounts", () => {
 
       const result = calculateTokenCounts(content, "claude-code");
 
+      // Total = input (250) + max cache read (20) + output (125) = 395
       expect(result).toEqual({
         inputTokens: 250,
         outputTokens: 125,
-        totalTokens: 375,
+        totalTokens: 395,
         cacheReadTokens: 20,
         cacheWriteTokens: 10,
+      });
+    });
+
+    it("should use max for cumulative cache tokens (not sum)", () => {
+      // Claude's API reports cumulative cache tokens, not per-message
+      const content = `{"type":"assistant","message":{"role":"assistant","content":"1","usage":{"input_tokens":100,"output_tokens":50,"cache_read_input_tokens":1000,"cache_creation_input_tokens":500}}}
+{"type":"assistant","message":{"role":"assistant","content":"2","usage":{"input_tokens":200,"output_tokens":75,"cache_read_input_tokens":1500,"cache_creation_input_tokens":800}}}
+{"type":"assistant","message":{"role":"assistant","content":"3","usage":{"input_tokens":300,"output_tokens":100,"cache_read_input_tokens":2000,"cache_creation_input_tokens":1200}}}`;
+
+      const result = calculateTokenCounts(content, "claude-code");
+
+      // Input/output are summed (600, 225)
+      // Cache read uses max (2000) not sum (4500)
+      // Total = input (600) + max cache read (2000) + output (225) = 2825
+      expect(result).toEqual({
+        inputTokens: 600,
+        outputTokens: 225,
+        totalTokens: 2825,
+        cacheReadTokens: 2000, // max, not 4500 (sum)
+        cacheWriteTokens: 1200, // max, not 2500 (sum)
       });
     });
 

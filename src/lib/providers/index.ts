@@ -178,8 +178,8 @@ export function calculateTokenCounts(
     // Claude Code: Extract from assistant messages with .message.usage
     let totalInput = 0;
     let totalOutput = 0;
-    let totalCacheRead = 0;
-    let totalCacheWrite = 0;
+    let maxCacheRead = 0;
+    let maxCacheWrite = 0;
 
     for (const line of lines) {
       try {
@@ -188,8 +188,15 @@ export function calculateTokenCounts(
           const usage = parsed.message.usage;
           totalInput += usage.input_tokens || 0;
           totalOutput += usage.output_tokens || 0;
-          totalCacheRead += usage.cache_read_input_tokens || 0;
-          totalCacheWrite += usage.cache_creation_input_tokens || 0;
+          // Cache tokens are cumulative in Claude's API, so use max instead of sum
+          maxCacheRead = Math.max(
+            maxCacheRead,
+            usage.cache_read_input_tokens || 0,
+          );
+          maxCacheWrite = Math.max(
+            maxCacheWrite,
+            usage.cache_creation_input_tokens || 0,
+          );
         }
       } catch {
         // Skip malformed lines
@@ -201,9 +208,10 @@ export function calculateTokenCounts(
     return {
       inputTokens: totalInput,
       outputTokens: totalOutput,
-      totalTokens: totalInput + totalOutput,
-      cacheReadTokens: totalCacheRead > 0 ? totalCacheRead : undefined,
-      cacheWriteTokens: totalCacheWrite > 0 ? totalCacheWrite : undefined,
+      // Total includes all tokens: fresh input + cached input + output
+      totalTokens: totalInput + maxCacheRead + totalOutput,
+      cacheReadTokens: maxCacheRead > 0 ? maxCacheRead : undefined,
+      cacheWriteTokens: maxCacheWrite > 0 ? maxCacheWrite : undefined,
     };
   }
 
