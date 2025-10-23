@@ -51,7 +51,7 @@ export default async function Home() {
               </Link>
               ,{" "}
               <Link
-                href="/t/NBKE6kb6ZswNSwsS"
+                href="/t/zT6MhMxvoJ0xuG8T"
                 className="text-primary hover:underline"
               >
                 Gemini CLI
