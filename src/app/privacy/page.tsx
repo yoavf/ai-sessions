@@ -9,31 +9,32 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-12">
-        <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-lg p-8">
-          <div className="mb-8">
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="flex h-14 items-center px-4">
+          <div className="flex-1">
             <Link
               href="/"
-              className="text-blue-600 hover:text-blue-700 text-sm"
+              className="font-mono text-lg font-bold hover:text-muted-foreground transition-colors"
             >
-              ← Back to Home
+              ai_sessions
             </Link>
           </div>
-
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Privacy Policy
+        </div>
+      </header>
+      <div className="container mx-auto px-4 py-8 flex-1">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-5xl font-bold tracking-tight font-mono mb-4">
+            privacy_policy
           </h1>
-          <p className="text-sm text-gray-600 mb-8">
+          <p className="text-sm text-muted-foreground mb-12">
             Last updated: October 16, 2025
           </p>
 
-          <div className="prose prose-gray max-w-none">
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-                1. Introduction
-              </h2>
-              <p className="text-gray-700 mb-4">
+          <div className="space-y-8">
+            <section className="space-y-4">
+              <h2 className="text-2xl font-semibold mb-4">1. Introduction</h2>
+              <p className="text-muted-foreground mb-4">
                 AI Sessions ("we", "our", or "us") operates aisessions.dev. This
                 Privacy Policy explains how we collect, use, and protect your
                 personal information when you use our service.
@@ -41,13 +42,13 @@ export default function PrivacyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
                 2. Information We Collect
               </h2>
-              <p className="text-gray-700 mb-4">
+              <p className="text-muted-foreground mb-4">
                 When you use AI Sessions, we collect the following information:
               </p>
-              <ul className="list-disc pl-6 text-gray-700 space-y-2">
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2">
                 <li>
                   <strong>GitHub Account Information:</strong> When you sign in
                   with GitHub OAuth, we collect your GitHub username, name,
@@ -73,13 +74,13 @@ export default function PrivacyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
                 3. How We Use Your Information
               </h2>
-              <p className="text-gray-700 mb-4">
+              <p className="text-muted-foreground mb-4">
                 We use your information solely to:
               </p>
-              <ul className="list-disc pl-6 text-gray-700 space-y-2">
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2">
                 <li>Authenticate your account and maintain your session</li>
                 <li>Store and display your uploaded transcripts</li>
                 <li>
@@ -87,10 +88,10 @@ export default function PrivacyPage() {
                 </li>
                 <li>Generate shareable secret URLs for your transcripts</li>
               </ul>
-              <p className="text-gray-700 mt-4">
+              <p className="text-muted-foreground mt-4">
                 <strong>We do not:</strong>
               </p>
-              <ul className="list-disc pl-6 text-gray-700 space-y-2">
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2">
                 <li>Sell your data to third parties</li>
                 <li>Use your data for advertising</li>
                 <li>Share your data with anyone except as required by law</li>
@@ -99,14 +100,14 @@ export default function PrivacyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
                 4. Data Storage and Security
               </h2>
-              <p className="text-gray-700 mb-4">
+              <p className="text-muted-foreground mb-4">
                 Your data is stored securely in a PostgreSQL database. We use
                 industry-standard security practices including:
               </p>
-              <ul className="list-disc pl-6 text-gray-700 space-y-2">
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2">
                 <li>Encrypted database connections (SSL/TLS)</li>
                 <li>Secure authentication via GitHub OAuth 2.0</li>
                 <li>Secret tokens for transcript access control</li>
@@ -115,46 +116,46 @@ export default function PrivacyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
                 5. Cookies
               </h2>
-              <p className="text-gray-700 mb-4">
+              <p className="text-muted-foreground mb-4">
                 We only use <strong>strictly necessary cookies</strong> for
                 authentication:
               </p>
-              <ul className="list-disc pl-6 text-gray-700 space-y-2">
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2">
                 <li>
-                  <code className="bg-gray-100 px-2 py-1 rounded text-sm">
+                  <code className="bg-muted px-2 py-1 rounded text-sm">
                     authjs.session-token
                   </code>{" "}
                   or{" "}
-                  <code className="bg-gray-100 px-2 py-1 rounded text-sm">
+                  <code className="bg-muted px-2 py-1 rounded text-sm">
                     __Secure-authjs.session-token
                   </code>{" "}
                   - Used to keep you logged in
                 </li>
               </ul>
-              <p className="text-gray-700 mt-4">
+              <p className="text-muted-foreground mt-4">
                 These cookies are essential for the service to function and do
                 not require your consent under GDPR.
               </p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
                 6. Third-Party Services
               </h2>
-              <p className="text-gray-700 mb-4">
+              <p className="text-muted-foreground mb-4">
                 We use the following third-party services:
               </p>
-              <ul className="list-disc pl-6 text-gray-700 space-y-2">
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2">
                 <li>
                   <strong>GitHub OAuth:</strong> For authentication. Refer to{" "}
                   <a
                     href="https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-700 underline"
+                    className="text-primary hover:underline"
                   >
                     GitHub's Privacy Statement
                   </a>
@@ -172,7 +173,7 @@ export default function PrivacyPage() {
                     href="https://cloud.google.com/terms/cloud-privacy-notice"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-700 underline"
+                    className="text-primary hover:underline"
                   >
                     Google Cloud Privacy Notice
                   </a>
@@ -184,7 +185,7 @@ export default function PrivacyPage() {
                     href="https://vercel.com/legal/privacy-policy"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-700 underline"
+                    className="text-primary hover:underline"
                   >
                     Vercel's Privacy Policy
                   </a>
@@ -196,7 +197,7 @@ export default function PrivacyPage() {
                     href="https://neon.tech/privacy-policy"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-700 underline"
+                    className="text-primary hover:underline"
                   >
                     Neon's Privacy Policy
                   </a>
@@ -209,7 +210,7 @@ export default function PrivacyPage() {
                     href="https://upstash.com/trust/privacy.pdf"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-700 underline"
+                    className="text-primary hover:underline"
                   >
                     Upstash's Privacy Policy
                   </a>
@@ -222,7 +223,7 @@ export default function PrivacyPage() {
                     href="https://counter.dev/pages/privacy.html"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-700 underline"
+                    className="text-primary hover:underline"
                   >
                     Counter.dev Privacy Policy
                   </a>
@@ -232,13 +233,13 @@ export default function PrivacyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
                 7. Data Disclosure and Legal Requests
               </h2>
-              <p className="text-gray-700 mb-4">
+              <p className="text-muted-foreground mb-4">
                 We may disclose your information in the following circumstances:
               </p>
-              <ul className="list-disc pl-6 text-gray-700 space-y-2">
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2">
                 <li>
                   <strong>Legal Requirements:</strong> In response to subpoenas,
                   court orders, legal processes, or governmental requests
@@ -293,11 +294,13 @@ export default function PrivacyPage() {
             </div>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
                 9. Your Rights
               </h2>
-              <p className="text-gray-700 mb-4">You have the right to:</p>
-              <ul className="list-disc pl-6 text-gray-700 space-y-2">
+              <p className="text-muted-foreground mb-4">
+                You have the right to:
+              </p>
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2">
                 <li>
                   <strong>Access:</strong> View all transcripts you've uploaded
                   in the "My Transcripts" page
@@ -314,13 +317,13 @@ export default function PrivacyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
                 10. Data Retention
               </h2>
-              <p className="text-gray-700 mb-4">
+              <p className="text-muted-foreground mb-4">
                 We retain your data until you delete it:
               </p>
-              <ul className="list-disc pl-6 text-gray-700 space-y-2">
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2">
                 <li>
                   Transcripts are stored indefinitely until you delete them
                 </li>
@@ -334,10 +337,10 @@ export default function PrivacyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
                 11. Children's Privacy
               </h2>
-              <p className="text-gray-700 mb-4">
+              <p className="text-muted-foreground mb-4">
                 AI Sessions is not intended for users under 13 years of age. You
                 must be at least 13 years old to use this Service. We do not
                 knowingly collect information from children under 13. If you
@@ -347,10 +350,10 @@ export default function PrivacyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
                 12. Changes to This Policy
               </h2>
-              <p className="text-gray-700 mb-4">
+              <p className="text-muted-foreground mb-4">
                 We may update this Privacy Policy from time to time. We will
                 notify you of any changes by updating the "Last updated" date at
                 the top of this page.
@@ -358,17 +361,17 @@ export default function PrivacyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
                 13. Contact Us
               </h2>
-              <p className="text-gray-700 mb-4">
+              <p className="text-muted-foreground mb-4">
                 If you have questions about this Privacy Policy, please contact
                 us by opening an issue at{" "}
                 <a
                   href="https://github.com/yoavf/ai-sessions/issues"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-700 underline"
+                  className="text-primary hover:underline"
                 >
                   github.com/yoavf/ai-sessions/issues
                 </a>
