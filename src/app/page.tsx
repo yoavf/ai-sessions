@@ -33,6 +33,32 @@ export default async function Home() {
             csrfToken={csrfToken}
           />
 
+          <div className="mt-4 text-center">
+            <p className="text-sm text-muted-foreground">
+              Examples:{" "}
+              <Link
+                href="/t/_Vdv6M0GYsfztNVv"
+                className="text-primary hover:underline"
+              >
+                Claude Code
+              </Link>
+              ,{" "}
+              <Link
+                href="/t/NBKE6kb6ZswNSwsS"
+                className="text-primary hover:underline"
+              >
+                Codex
+              </Link>
+              ,{" "}
+              <Link
+                href="/t/zT6MhMxvoJ0xuG8T"
+                className="text-primary hover:underline"
+              >
+                Gemini CLI
+              </Link>
+            </p>
+          </div>
+
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
               Need help finding your transcripts?{" "}
