@@ -6,6 +6,7 @@ let redis: Redis | null = null;
 let uploadRateLimit: Ratelimit | null = null;
 let viewRateLimit: Ratelimit | null = null;
 let accountRateLimit: Ratelimit | null = null;
+let editRateLimit: Ratelimit | null = null;
 
 // Only initialize if Upstash credentials are available
 if (
@@ -39,6 +40,14 @@ if (
     limiter: Ratelimit.slidingWindow(5, "1 h"),
     analytics: true,
     prefix: "ratelimit:account",
+  });
+
+  // Rate limit for edit operations: 50 edits per hour per user
+  editRateLimit = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(50, "1 h"),
+    analytics: true,
+    prefix: "ratelimit:edit",
   });
 } else {
   console.warn(
@@ -123,6 +132,35 @@ export async function checkAccountRateLimit(userId: string): Promise<{
   } catch (error) {
     // Redis/Upstash error - FAIL CLOSED for security
     console.error("Account rate limit check failed (Redis error):", error, {
+      userId,
+      errorType: error instanceof Error ? error.constructor.name : "Unknown",
+    });
+    return {
+      success: false,
+      error: "Rate limit service unavailable",
+    };
+  }
+}
+
+export async function checkEditRateLimit(userId: string): Promise<{
+  success: boolean;
+  limit?: number;
+  remaining?: number;
+  error?: string;
+}> {
+  if (!editRateLimit) {
+    // Rate limiting not configured - allow request
+    return { success: true };
+  }
+
+  try {
+    const { success, limit, remaining } = await editRateLimit.limit(
+      `edit:${userId}`,
+    );
+    return { success, limit, remaining };
+  } catch (error) {
+    // Redis/Upstash error - FAIL CLOSED for security
+    console.error("Edit rate limit check failed (Redis error):", error, {
       userId,
       errorType: error instanceof Error ? error.constructor.name : "Unknown",
     });

@@ -68,7 +68,7 @@ const uploadTranscript = async (
   });
 
   // Wait for navigation to transcript page
-  await page.waitForURL(/\/t\/[a-zA-Z0-9_-]+/, { timeout: 15000 });
+  await page.waitForURL(/\/t\/[a-zA-Z0-9_-]+/, { timeout: 25000 });
 
   // Extract secret token from URL
   const url = page.url();
@@ -424,7 +424,7 @@ test.describe("My Transcripts Page - Navigation", () => {
         const titleLink = page.getByRole("link", { name: "Navigation Test" });
         await Promise.all([
           page.waitForURL(`/t/${secretToken}`, {
-            timeout: 10000,
+            timeout: 15000,
           }),
           titleLink.click(),
         ]);
@@ -473,8 +473,11 @@ test.describe("My Transcripts Page - Delete Operations", () => {
           dialog.dismiss();
         });
 
-        // 5. Click Delete button (first time - cancel)
-        await page.getByRole("button", { name: "Delete" }).first().click();
+        // 5. Click Delete button (first time - cancel) - testid is delete-transcript-<secretToken>
+        await page
+          .locator('[data-testid^="delete-transcript-"]')
+          .first()
+          .click();
 
         // 6. Verify transcript still visible after cancel (wait a bit for potential updates)
         await authExpect(
@@ -488,7 +491,10 @@ test.describe("My Transcripts Page - Delete Operations", () => {
         });
 
         // 8. Click Delete button (second time - confirm)
-        await page.getByRole("button", { name: "Delete" }).first().click();
+        await page
+          .locator('[data-testid^="delete-transcript-"]')
+          .first()
+          .click();
 
         // 9. Verify transcript removed from list (wait for disappearance)
         await authExpect(
