@@ -204,12 +204,14 @@ test.describe("Transcript Page - Metadata Display", () => {
       );
       await expect(usernameLink).toHaveAttribute("target", "_blank");
 
-      // GitHub avatar
-      const avatar = page.locator('img[alt="testuser"]');
-      await expect(avatar).toBeVisible();
+      // GitHub avatar in header
+      const headerAvatar = page.locator('img[alt="testuser"]');
+      await expect(headerAvatar).toBeVisible();
 
-      // Check user avatar appears in messages (not just header)
-      const userMessageAvatars = page.locator('img[alt="testuser"]');
+      // Check user avatar appears in messages (GitHub avatar URL)
+      const userMessageAvatars = page.locator(
+        'img[src="https://avatars.githubusercontent.com/u/1?v=4"]',
+      );
       await expect(userMessageAvatars.first()).toBeVisible();
     } finally {
       await cleanupTestData(user.id);
@@ -378,8 +380,8 @@ test.describe("Transcript Page - Message Rendering", () => {
       // Verify assistant name is displayed
       await expect(page.getByText("claude").first()).toBeVisible();
 
-      // Verify assistant avatar is displayed
-      const assistantAvatar = page.locator('img[alt="claude"]');
+      // Verify assistant avatar is displayed (check for claude.png icon)
+      const assistantAvatar = page.locator('img[src="/claude.png"]');
       await expect(assistantAvatar.first()).toBeVisible();
     } finally {
       await cleanupTestData(user.id);
