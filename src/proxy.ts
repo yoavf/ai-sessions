@@ -9,7 +9,7 @@ const CSRF_TOKEN_COOKIE = "csrf-token";
  * This runs on every request and ensures a consistent token is available
  * for both server-side reading and client-side usage
  */
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const response = NextResponse.next();
 
   // Check if CSRF token cookie already exists
