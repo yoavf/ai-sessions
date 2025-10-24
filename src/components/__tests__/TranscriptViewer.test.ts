@@ -1,4 +1,8 @@
 import { describe, expect, it } from "vitest";
+import {
+  getAssistantIconPath,
+  getShortAssistantName,
+} from "@/lib/source-utils";
 import type {
   ContentBlock,
   ParsedTranscript,
@@ -545,6 +549,52 @@ describe("TranscriptViewer - Message Counting", () => {
       expect(assistantCount).toBe(3);
       expect(toolCallCount).toBe(3);
       expect(userCount + assistantCount).toBe(6);
+    });
+  });
+});
+
+describe("TranscriptViewer - Helper Functions", () => {
+  describe("getAssistantIconPath", () => {
+    it("should return claude icon for claude-code", () => {
+      expect(getAssistantIconPath("claude-code")).toBe("/claude.png");
+    });
+
+    it("should return gemini icon for gemini-cli", () => {
+      expect(getAssistantIconPath("gemini-cli")).toBe("/gemini.jpg");
+    });
+
+    it("should return codex icon for codex", () => {
+      expect(getAssistantIconPath("codex")).toBe("/codex.png");
+    });
+
+    it("should return default claude icon for unknown source", () => {
+      expect(getAssistantIconPath("unknown")).toBe("/claude.png");
+    });
+
+    it("should return default claude icon for empty string", () => {
+      expect(getAssistantIconPath("")).toBe("/claude.png");
+    });
+  });
+
+  describe("getShortAssistantName", () => {
+    it("should return 'claude' for claude-code", () => {
+      expect(getShortAssistantName("claude-code")).toBe("claude");
+    });
+
+    it("should return 'gemini' for gemini-cli", () => {
+      expect(getShortAssistantName("gemini-cli")).toBe("gemini");
+    });
+
+    it("should return 'codex' for codex", () => {
+      expect(getShortAssistantName("codex")).toBe("codex");
+    });
+
+    it("should return 'assistant' for unknown source", () => {
+      expect(getShortAssistantName("unknown")).toBe("assistant");
+    });
+
+    it("should return 'assistant' for empty string", () => {
+      expect(getShortAssistantName("")).toBe("assistant");
     });
   });
 });

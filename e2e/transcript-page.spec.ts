@@ -130,7 +130,7 @@ test.describe("Transcript Page - Page Loading and Basic Rendering", () => {
       ).toBeVisible();
 
       // Verify user metadata section
-      await expect(page.getByText("testuser")).toBeVisible();
+      await expect(page.getByText("testuser").first()).toBeVisible();
 
       // Verify messages are rendered (use first() to avoid TOC duplicate)
       await expect(
@@ -204,9 +204,15 @@ test.describe("Transcript Page - Metadata Display", () => {
       );
       await expect(usernameLink).toHaveAttribute("target", "_blank");
 
-      // GitHub avatar
-      const avatar = page.locator('img[alt="testuser"]');
-      await expect(avatar).toBeVisible();
+      // GitHub avatar in header
+      const headerAvatar = page.locator('img[alt="testuser"]');
+      await expect(headerAvatar).toBeVisible();
+
+      // Check user avatar appears in messages (GitHub avatar URL)
+      const userMessageAvatars = page.locator(
+        'img[src="https://avatars.githubusercontent.com/u/1?v=4"]',
+      );
+      await expect(userMessageAvatars.first()).toBeVisible();
     } finally {
       await cleanupTestData(user.id);
     }
@@ -349,6 +355,9 @@ test.describe("Transcript Page - Message Rendering", () => {
       // Verify it's in a user message container
       const messageContainer = userMessage.locator("..");
       await expect(messageContainer).toBeVisible();
+
+      // Verify username is displayed in message header
+      await expect(page.getByText("testuser").first()).toBeVisible();
     } finally {
       await cleanupTestData(user.id);
     }
@@ -367,6 +376,13 @@ test.describe("Transcript Page - Message Rendering", () => {
         "I've created a simple Python hello world program",
       );
       await expect(assistantMessage).toBeVisible();
+
+      // Verify assistant name is displayed
+      await expect(page.getByText("claude").first()).toBeVisible();
+
+      // Verify assistant avatar is displayed (check for claude.png icon)
+      const assistantAvatar = page.locator('img[src="/claude.png"]');
+      await expect(assistantAvatar.first()).toBeVisible();
     } finally {
       await cleanupTestData(user.id);
     }
@@ -634,7 +650,7 @@ test.describe("Transcript Page - Responsive Design", () => {
       await expect(
         page.getByRole("heading", { name: "Python Hello World Tutorial" }),
       ).toBeVisible();
-      await expect(page.getByText("testuser")).toBeVisible();
+      await expect(page.getByText("testuser").first()).toBeVisible();
       await expect(
         page.getByText("Create a simple hello world program in Python").first(),
       ).toBeVisible();
