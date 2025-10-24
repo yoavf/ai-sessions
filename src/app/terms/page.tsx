@@ -9,41 +9,44 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-12">
-        <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-lg p-8">
-          <div className="mb-8">
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="flex h-14 items-center px-4">
+          <div className="flex-1">
             <Link
               href="/"
-              className="text-blue-600 hover:text-blue-700 text-sm"
+              className="font-mono text-lg font-bold hover:text-muted-foreground transition-colors"
             >
-              ← Back to Home
+              ai_sessions
             </Link>
           </div>
-
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Terms of Service
+        </div>
+      </header>
+      <div className="container mx-auto px-4 py-8 flex-1">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-5xl font-bold tracking-tight font-mono mb-4">
+            terms_of_service
           </h1>
-          <p className="text-sm text-gray-600 mb-8">
+          <p className="text-sm text-muted-foreground mb-12">
             Last updated: October 16, 2025
           </p>
 
-          <div className="prose prose-gray max-w-none">
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+          <div className="space-y-8">
+            <section className="space-y-4">
+              <h2 className="text-2xl font-semibold mb-4">
                 1. Acceptance of Terms
               </h2>
-              <p className="text-gray-700 mb-4">
+              <p className="text-muted-foreground mb-4">
                 By accessing or using AI Sessions ("the Service"), you agree to
                 be bound by these Terms of Service ("Terms"). If you do not
                 agree to these Terms, you may not use the Service.
               </p>
-              <p className="text-gray-700 mb-4">
+              <p className="text-muted-foreground mb-4">
                 <strong>Age Requirement:</strong> You must be at least 13 years
                 old to use this Service. By using AI Sessions, you represent and
                 warrant that you are at least 13 years of age.
               </p>
-              <p className="text-gray-700 mb-4">
+              <p className="text-muted-foreground mb-4">
                 We reserve the right to modify these Terms at any time. Changes
                 will be effective immediately upon posting. Your continued use
                 of the Service after changes constitutes acceptance of the
@@ -52,10 +55,10 @@ export default function TermsPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
                 2. Description of Service
               </h2>
-              <p className="text-gray-700 mb-4">
+              <p className="text-muted-foreground mb-4">
                 AI Sessions is a platform for uploading, storing, and sharing
                 Claude Code session transcripts in JSONL format. The Service
                 generates shareable URLs that allow anyone with the link to view
@@ -128,14 +131,14 @@ export default function TermsPage() {
             </div>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
                 3. User Accounts and Authentication
               </h2>
-              <p className="text-gray-700 mb-4">
+              <p className="text-muted-foreground mb-4">
                 To upload transcripts, you must authenticate using a GitHub
                 account. You are responsible for:
               </p>
-              <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2 mb-4">
                 <li>
                   Maintaining the security of your GitHub account credentials
                 </li>
@@ -145,21 +148,21 @@ export default function TermsPage() {
                   security breach
                 </li>
               </ul>
-              <p className="text-gray-700">
+              <p className="text-muted-foreground">
                 We reserve the right to suspend or terminate accounts that
                 violate these Terms or engage in abusive behavior.
               </p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
                 4. Acceptable Use Policy
               </h2>
-              <p className="text-gray-700 mb-4">
+              <p className="text-muted-foreground mb-4">
                 You agree NOT to use the Service to upload, store, or share
                 content that:
               </p>
-              <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2 mb-4">
                 <li>
                   <strong>
                     Contains proprietary or confidential information:
@@ -211,8 +214,10 @@ export default function TermsPage() {
                   rights
                 </li>
               </ul>
-              <p className="text-gray-700 mb-4">You also agree NOT to:</p>
-              <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
+              <p className="text-muted-foreground mb-4">
+                You also agree NOT to:
+              </p>
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2 mb-4">
                 <li>
                   Attempt to circumvent security measures or access unauthorized
                   areas
@@ -236,16 +241,16 @@ export default function TermsPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
                 5. Content Ownership and Licensing
               </h2>
-              <p className="text-gray-700 mb-4">
+              <p className="text-muted-foreground mb-4">
                 <strong>Your Content:</strong> You retain all ownership rights
                 to the content you upload. However, by uploading content to the
                 Service, you grant us a worldwide, non-exclusive, royalty-free
                 license to:
               </p>
-              <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2 mb-4">
                 <li>
                   Store, process, and display your content for the purpose of
                   operating the Service
@@ -257,27 +262,27 @@ export default function TermsPage() {
                   Create backup copies for reliability and disaster recovery
                 </li>
               </ul>
-              <p className="text-gray-700 mb-4">
+              <p className="text-muted-foreground mb-4">
                 <strong>Important:</strong> Transcripts are accessible to anyone
                 with the secret URL. We do not monitor or control who you share
                 these URLs with. Once shared, the content is effectively public
                 to anyone with the link.
               </p>
-              <p className="text-gray-700">
+              <p className="text-muted-foreground">
                 You represent and warrant that you have all necessary rights to
                 upload the content and grant us this license.
               </p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
                 6. Content Monitoring and Removal
               </h2>
-              <p className="text-gray-700 mb-4">
+              <p className="text-muted-foreground mb-4">
                 While we do not actively monitor user content, we reserve the
                 right to:
               </p>
-              <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2 mb-4">
                 <li>
                   Review content if we receive reports of Terms violations
                 </li>
@@ -297,7 +302,7 @@ export default function TermsPage() {
                   authorities as required by law
                 </li>
               </ul>
-              <p className="text-gray-700">
+              <p className="text-muted-foreground">
                 We may, but are not obligated to, investigate reported
                 violations. Content removal does not constitute an admission of
                 liability.
@@ -305,15 +310,15 @@ export default function TermsPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
                 7. DMCA and Copyright Policy
               </h2>
-              <p className="text-gray-700 mb-4">
+              <p className="text-muted-foreground mb-4">
                 We respect intellectual property rights and expect users to do
                 the same. If you believe content on the Service infringes your
                 copyright, please provide:
               </p>
-              <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2 mb-4">
                 <li>
                   Identification of the copyrighted work claimed to be infringed
                 </li>
@@ -336,13 +341,13 @@ export default function TermsPage() {
                 </li>
                 <li>Your physical or electronic signature</li>
               </ul>
-              <p className="text-gray-700">
+              <p className="text-muted-foreground">
                 Send DMCA notices to us by opening an issue at{" "}
                 <a
                   href="https://github.com/yoavf/ai-sessions/issues"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-700 underline"
+                  className="text-primary hover:underline"
                 >
                   github.com/yoavf/ai-sessions/issues
                 </a>
@@ -351,16 +356,16 @@ export default function TermsPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
                 8. Disclaimers and Limitations of Liability
               </h2>
 
               <div className="space-y-4">
                 <div>
-                  <p className="font-semibold text-gray-900 mb-2">
+                  <p className="font-semibold text-foreground mb-2">
                     AS-IS SERVICE:
                   </p>
-                  <p className="text-gray-700">
+                  <p className="text-muted-foreground">
                     This service is provided "as-is" without any warranties. We
                     make no guarantees about availability, data retention, or
                     functionality.
@@ -368,10 +373,10 @@ export default function TermsPage() {
                 </div>
 
                 <div>
-                  <p className="font-semibold text-gray-900 mb-2">
+                  <p className="font-semibold text-foreground mb-2">
                     LIMITATION OF LIABILITY:
                   </p>
-                  <p className="text-gray-700">
+                  <p className="text-muted-foreground">
                     To the maximum extent permitted by law, we shall not be
                     liable for any indirect, incidental, or consequential
                     damages arising from your use of the service.
@@ -381,16 +386,16 @@ export default function TermsPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
                 9. Indemnification
               </h2>
-              <p className="text-gray-700 mb-4">
+              <p className="text-muted-foreground mb-4">
                 You agree to indemnify, defend, and hold harmless AI Sessions,
                 its operators, affiliates, and service providers from any
                 claims, liabilities, damages, losses, and expenses (including
                 reasonable attorneys' fees) arising from:
               </p>
-              <ul className="list-disc pl-6 text-gray-700 space-y-2">
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2">
                 <li>Your use of the Service</li>
                 <li>Your violation of these Terms</li>
                 <li>Your violation of any rights of another party</li>
@@ -400,16 +405,16 @@ export default function TermsPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
                 10. Data Backup and Loss
               </h2>
-              <p className="text-gray-700 mb-4">
+              <p className="text-muted-foreground mb-4">
                 You are solely responsible for maintaining backup copies of any
                 content you upload. We are not responsible for backing up your
                 content. We may delete content without prior notice in the
                 following circumstances:
               </p>
-              <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2 mb-4">
                 <li>When you delete your account or individual transcripts</li>
                 <li>
                   When we terminate accounts for violations of these Terms
@@ -419,18 +424,20 @@ export default function TermsPage() {
                   In response to legal requirements or valid legal requests
                 </li>
               </ul>
-              <p className="text-gray-700">
+              <p className="text-muted-foreground">
                 We assume no liability for any deletion, loss, or corruption of
                 your content. Always maintain your own backups.
               </p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
                 11. Service Availability and Termination
               </h2>
-              <p className="text-gray-700 mb-4">We reserve the right to:</p>
-              <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
+              <p className="text-muted-foreground mb-4">
+                We reserve the right to:
+              </p>
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2 mb-4">
                 <li>
                   Modify, suspend, or discontinue the Service (or any part
                   thereof) at any time with or without notice
@@ -446,7 +453,7 @@ export default function TermsPage() {
                   transcripts) at our discretion
                 </li>
               </ul>
-              <p className="text-gray-700">
+              <p className="text-muted-foreground">
                 Upon termination, your right to use the Service will cease
                 immediately, and we may delete your account and content without
                 liability.
@@ -454,15 +461,15 @@ export default function TermsPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
                 12. Third-Party Services
               </h2>
-              <p className="text-gray-700 mb-4">
+              <p className="text-muted-foreground mb-4">
                 The Service relies on third-party services (GitHub for
                 authentication, hosting providers, etc.). We are not responsible
                 for:
               </p>
-              <ul className="list-disc pl-6 text-gray-700 space-y-2">
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2">
                 <li>
                   The availability or functionality of third-party services
                 </li>
@@ -478,15 +485,15 @@ export default function TermsPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
                 13. Governing Law and Dispute Resolution
               </h2>
-              <p className="text-gray-700 mb-4">
+              <p className="text-muted-foreground mb-4">
                 These Terms shall be governed by and construed in accordance
                 with the laws of the State of Israel, without regard to conflict
                 of law principles.
               </p>
-              <p className="text-gray-700 mb-4">
+              <p className="text-muted-foreground mb-4">
                 Any disputes arising from these Terms or your use of the Service
                 shall be subject to the exclusive jurisdiction of the courts
                 located in Tel-Aviv, Israel. Both parties consent to the
@@ -495,39 +502,39 @@ export default function TermsPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
                 14. Reporting Violations
               </h2>
-              <p className="text-gray-700 mb-4">
+              <p className="text-muted-foreground mb-4">
                 If you believe content on the Service violates these Terms,
                 please report it by opening an issue at{" "}
                 <a
                   href="https://github.com/yoavf/ai-sessions/issues"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-700 underline"
+                  className="text-primary hover:underline"
                 >
                   github.com/yoavf/ai-sessions/issues
                 </a>
                 . Include:
               </p>
-              <ul className="list-disc pl-6 text-gray-700 space-y-2 mb-4">
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2 mb-4">
                 <li>The secret URL of the offending content</li>
                 <li>A description of the violation</li>
                 <li>Any supporting evidence</li>
                 <li>Your contact information</li>
               </ul>
-              <p className="text-gray-700">
+              <p className="text-muted-foreground">
                 We will investigate reports in good faith but make no guarantees
                 about response time or outcomes.
               </p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
                 15. Severability
               </h2>
-              <p className="text-gray-700">
+              <p className="text-muted-foreground">
                 If any provision of these Terms is held to be invalid or
                 unenforceable, the remaining provisions will continue in full
                 force and effect. The invalid provision will be modified to the
@@ -536,10 +543,10 @@ export default function TermsPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
                 16. Entire Agreement
               </h2>
-              <p className="text-gray-700">
+              <p className="text-muted-foreground">
                 These Terms, together with our Privacy Policy, constitute the
                 entire agreement between you and AI Sessions regarding the
                 Service, superseding any prior agreements.
@@ -547,17 +554,17 @@ export default function TermsPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
                 17. Contact Information
               </h2>
-              <p className="text-gray-700">
+              <p className="text-muted-foreground">
                 For questions about these Terms, please contact us by opening an
                 issue at{" "}
                 <a
                   href="https://github.com/yoavf/ai-sessions/issues"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-700 underline"
+                  className="text-primary hover:underline"
                 >
                   github.com/yoavf/ai-sessions/issues
                 </a>
@@ -566,7 +573,7 @@ export default function TermsPage() {
             </section>
 
             <div className="mt-8 p-4 bg-yellow-50 border-l-4 border-yellow-400">
-              <p className="text-sm text-gray-700">
+              <p className="text-sm text-muted-foreground">
                 <strong>Important:</strong> By using AI Sessions, you
                 acknowledge that you have read, understood, and agree to be
                 bound by these Terms of Service.

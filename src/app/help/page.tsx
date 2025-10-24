@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { auth } from "@/lib/auth";
 
 export const metadata: Metadata = {
@@ -15,65 +14,57 @@ export default async function HelpPage() {
   const session = await auth();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <SiteHeader session={session} />
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 flex-1">
         <div className="max-w-4xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold">Help</h1>
-            <p className="text-muted-foreground mt-2">
-              <s>Frequently</s>Future-ly asked questions about AI Sessions
+          <div className="mb-12">
+            <h1 className="text-5xl font-bold tracking-tight font-mono mb-4">
+              help
+            </h1>
+            <p className="text-sm text-muted-foreground mb-6">
+              <s>Frequently</s>Future-ly asked questions
             </p>
+            <nav className="flex flex-wrap gap-3 text-sm">
+              <Link
+                href="#getting-started"
+                className="text-primary hover:underline"
+              >
+                Getting Started
+              </Link>
+              <span className="text-muted-foreground">•</span>
+              <Link
+                href="#managing-transcripts"
+                className="text-primary hover:underline"
+              >
+                Managing Transcripts
+              </Link>
+              <span className="text-muted-foreground">•</span>
+              <Link href="#cli-upload" className="text-primary hover:underline">
+                CLI Upload
+              </Link>
+              <span className="text-muted-foreground">•</span>
+              <Link
+                href="#account-management"
+                className="text-primary hover:underline"
+              >
+                Account Management
+              </Link>
+              <span className="text-muted-foreground">•</span>
+              <Link
+                href="#privacy-security"
+                className="text-primary hover:underline"
+              >
+                Privacy & Security
+              </Link>
+            </nav>
           </div>
-
-          <Card className="mb-6">
-            <CardContent className="pt-6">
-              <nav className="flex flex-wrap gap-3 text-sm">
-                <Link
-                  href="#getting-started"
-                  className="text-primary hover:underline"
-                >
-                  Getting Started
-                </Link>
-                <span className="text-muted-foreground">•</span>
-                <Link
-                  href="#managing-transcripts"
-                  className="text-primary hover:underline"
-                >
-                  Managing Transcripts
-                </Link>
-                <span className="text-muted-foreground">•</span>
-                <Link
-                  href="#cli-upload"
-                  className="text-primary hover:underline"
-                >
-                  CLI Upload
-                </Link>
-                <span className="text-muted-foreground">•</span>
-                <Link
-                  href="#account-management"
-                  className="text-primary hover:underline"
-                >
-                  Account Management
-                </Link>
-                <span className="text-muted-foreground">•</span>
-                <Link
-                  href="#privacy-security"
-                  className="text-primary hover:underline"
-                >
-                  Privacy & Security
-                </Link>
-              </nav>
-            </CardContent>
-          </Card>
 
           <div className="space-y-6">
             {/* biome-ignore lint/correctness/useUniqueElementIds: Static IDs needed for anchor links in TOC */}
-            <Card id="getting-started">
-              <CardHeader>
-                <CardTitle>Getting Started</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
+            <section className="border rounded-lg p-6" id="getting-started">
+              <h2 className="text-2xl font-semibold mb-6">Getting Started</h2>
+              <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold mb-2">
                     How do I upload a transcript?
@@ -112,15 +103,18 @@ export default async function HelpPage() {
                     ~/.gemini/tmp/&lt;project-hash&gt;/chats/session-&lt;timestamp&gt;.json
                   </code>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </section>
 
             {/* biome-ignore lint/correctness/useUniqueElementIds: Static IDs needed for anchor links in TOC */}
-            <Card id="managing-transcripts">
-              <CardHeader>
-                <CardTitle>Managing Transcripts</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
+            <section
+              className="border rounded-lg p-6"
+              id="managing-transcripts"
+            >
+              <h2 className="text-2xl font-semibold mb-6">
+                Managing Transcripts
+              </h2>
+              <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold mb-2">
                     How do I delete a transcript?
@@ -152,22 +146,56 @@ export default async function HelpPage() {
                     No. Delete and re-upload if you need to make changes.
                   </p>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </section>
 
             {/* biome-ignore lint/correctness/useUniqueElementIds: Static IDs needed for anchor links in TOC */}
-            <Card id="cli-upload">
-              <CardHeader>
-                <CardTitle>CLI Upload</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
+            <section className="border rounded-lg p-6" id="cli-upload">
+              <h2 className="text-2xl font-semibold mb-6">CLI Upload</h2>
+              <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold mb-2">
-                    Can I upload from the command line?
+                    How do I install the CLI?
                   </h3>
                   <div className="text-muted-foreground text-sm space-y-2">
-                    <p>
-                      Yes! The{" "}
+                    <p>Quick install (macOS/Linux/Windows):</p>
+                    <code className="block bg-muted px-3 py-2 rounded font-mono text-xs border">
+                      curl -fsSL https://aisessions.dev/install.sh | bash
+                    </code>
+                    <p className="text-xs pt-1">
+                      <a
+                        href="https://github.com/yoavf/ai-sessions-mcp/blob/main/install.sh"
+                        target="_blank"
+                        className="text-primary hover:underline"
+                        rel="noopener noreferrer"
+                      >
+                        View source
+                      </a>{" "}
+                      · Supports macOS, Linux, and Windows (x64/ARM64)
+                    </p>
+                    <p className="text-xs">
+                      Windows users: Run in Git Bash or WSL
+                    </p>
+                    <p className="pt-2">Custom install directory:</p>
+                    <code className="block bg-muted px-3 py-2 rounded font-mono text-xs border">
+                      INSTALL_DIR=$HOME/bin curl -fsSL
+                      https://aisessions.dev/install.sh | bash
+                    </code>
+                    <p className="pt-2">Manual download:</p>
+                    <p className="text-xs">
+                      Download pre-built binaries from{" "}
+                      <a
+                        href="https://github.com/yoavf/ai-sessions-mcp/releases"
+                        target="_blank"
+                        className="text-primary hover:underline"
+                        rel="noopener noreferrer"
+                      >
+                        GitHub Releases
+                      </a>
+                      .
+                    </p>
+                    <p className="text-xs pt-2">
+                      The{" "}
                       <a
                         href="https://github.com/yoavf/ai-sessions-mcp"
                         target="_blank"
@@ -176,23 +204,8 @@ export default async function HelpPage() {
                       >
                         ai-sessions-mcp
                       </a>{" "}
-                      executable also serves as an uploader for AI Sessions.{" "}
-                      <br />
-                      Download the pre-built binary or build from source. See
-                      the{" "}
-                      <a
-                        href="https://github.com/yoavf/ai-sessions-mcp?tab=readme-ov-file#installation"
-                        target="_blank"
-                        className="text-primary hover:underline"
-                        rel="noopener"
-                      >
-                        installation guide
-                      </a>
-                      .
-                    </p>
-                    <p className="text-xs pt-1">
-                      (The tool also works as an MCP server for accessing
-                      transcripts across coding agents)
+                      tool also works as an MCP server for accessing transcripts
+                      across coding agents.
                     </p>
                   </div>
                 </div>
@@ -233,15 +246,15 @@ export default async function HelpPage() {
                     .
                   </p>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </section>
 
             {/* biome-ignore lint/correctness/useUniqueElementIds: Static IDs needed for anchor links in TOC */}
-            <Card id="account-management">
-              <CardHeader>
-                <CardTitle>Account Management</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
+            <section className="border rounded-lg p-6" id="account-management">
+              <h2 className="text-2xl font-semibold mb-6">
+                Account Management
+              </h2>
+              <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold mb-2">
                     How do I delete my account?
@@ -274,15 +287,15 @@ export default async function HelpPage() {
                     No. Deletion is immediate and permanent.
                   </p>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </section>
 
             {/* biome-ignore lint/correctness/useUniqueElementIds: Static IDs needed for anchor links in TOC */}
-            <Card id="privacy-security">
-              <CardHeader>
-                <CardTitle>Privacy & Security</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
+            <section className="border rounded-lg p-6" id="privacy-security">
+              <h2 className="text-2xl font-semibold mb-6">
+                Privacy & Security
+              </h2>
+              <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold mb-2">
                     Who can view my transcripts?
@@ -327,39 +340,32 @@ export default async function HelpPage() {
                     , licensed under the MIT License.
                   </p>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </section>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Need More Help?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground text-sm">
-                  Check our{" "}
-                  <Link href="/terms" className="text-primary hover:underline">
-                    Terms
-                  </Link>{" "}
-                  and{" "}
-                  <Link
-                    href="/privacy"
-                    className="text-primary hover:underline"
-                  >
-                    Privacy Policy
-                  </Link>
-                  , or open an issue on{" "}
-                  <a
-                    href="https://github.com/yoavf/ai-sessions/issues"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline"
-                  >
-                    GitHub
-                  </a>
-                  .
-                </p>
-              </CardContent>
-            </Card>
+            <section className="border rounded-lg p-6">
+              <h2 className="text-2xl font-semibold mb-6">Need More Help?</h2>
+              <p className="text-muted-foreground text-sm">
+                Check our{" "}
+                <Link href="/terms" className="text-primary hover:underline">
+                  Terms
+                </Link>{" "}
+                and{" "}
+                <Link href="/privacy" className="text-primary hover:underline">
+                  Privacy Policy
+                </Link>
+                , or open an issue on{" "}
+                <a
+                  href="https://github.com/yoavf/ai-sessions/issues"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  GitHub
+                </a>
+                .
+              </p>
+            </section>
           </div>
         </div>
       </div>

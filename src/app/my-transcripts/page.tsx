@@ -8,7 +8,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { SiteHeader } from "@/components/site-header";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { addCsrfToken, useCsrfToken } from "@/hooks/useCsrfToken";
 
@@ -366,9 +365,9 @@ export default function MyTranscriptsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <SiteHeader session={session} />
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 flex-1">
         <div className="max-w-4xl mx-auto">
           {loading ? (
             <div className="flex items-center justify-center gap-2 text-muted-foreground">
@@ -381,11 +380,13 @@ export default function MyTranscriptsPage() {
             </Alert>
           ) : (
             <>
-              <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center justify-between mb-12">
                 <div>
-                  <h1 className="text-3xl font-bold">My Transcripts</h1>
-                  <p className="text-muted-foreground mt-2">
-                    Manage your uploaded AI coding sessions
+                  <h1 className="text-5xl font-bold tracking-tight font-mono mb-4">
+                    my_transcripts
+                  </h1>
+                  <p className="text-sm text-muted-foreground">
+                    Manage your uploaded sessions
                   </p>
                 </div>
                 <Button asChild>
@@ -397,268 +398,258 @@ export default function MyTranscriptsPage() {
               </div>
 
               {transcripts.length === 0 ? (
-                <Card>
-                  <CardContent className="p-8 text-center">
-                    <p className="text-muted-foreground mb-4">
-                      You haven't uploaded any transcripts yet.
-                    </p>
-                    <Button asChild>
-                      <Link href="/">Go to Home to Upload</Link>
-                    </Button>
-                  </CardContent>
-                </Card>
+                <div className="border rounded-lg p-12 text-center">
+                  <p className="text-muted-foreground mb-6">
+                    You haven't uploaded any transcripts yet.
+                  </p>
+                  <Button asChild>
+                    <Link href="/">Go to Home to Upload</Link>
+                  </Button>
+                </div>
               ) : (
-                <Card>
-                  <div className="divide-y">
-                    {transcripts.map((transcript) => (
-                      <div
-                        key={transcript.id}
-                        className="p-6 hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1 min-w-0">
-                            {editingToken === transcript.secretToken ? (
-                              <div
-                                ref={editFormRef}
-                                className="flex items-center gap-2"
+                <div className="border rounded-lg divide-y">
+                  {transcripts.map((transcript) => (
+                    <div
+                      key={transcript.id}
+                      className="p-6 hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          {editingToken === transcript.secretToken ? (
+                            <div
+                              ref={editFormRef}
+                              className="flex items-center gap-2"
+                            >
+                              <Input
+                                type="text"
+                                value={editedTitle}
+                                onChange={(e) => setEditedTitle(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    handleSaveTitle(transcript.secretToken);
+                                  } else if (e.key === "Escape") {
+                                    handleCancelEdit();
+                                  }
+                                }}
+                                disabled={savingTitle}
+                                className="flex-1"
+                                autoFocus
+                                aria-label="Edit transcript title"
+                              />
+                              <Button
+                                type="button"
+                                onClick={() =>
+                                  handleSaveTitle(transcript.secretToken)
+                                }
+                                disabled={savingTitle}
+                                size="sm"
+                                variant="default"
+                                aria-label="Save title"
                               >
-                                <Input
-                                  type="text"
-                                  value={editedTitle}
-                                  onChange={(e) =>
-                                    setEditedTitle(e.target.value)
-                                  }
-                                  onKeyDown={(e) => {
-                                    if (e.key === "Enter") {
-                                      handleSaveTitle(transcript.secretToken);
-                                    } else if (e.key === "Escape") {
-                                      handleCancelEdit();
-                                    }
-                                  }}
-                                  disabled={savingTitle}
-                                  className="flex-1"
-                                  autoFocus
-                                  aria-label="Edit transcript title"
-                                />
-                                <Button
-                                  type="button"
-                                  onClick={() =>
-                                    handleSaveTitle(transcript.secretToken)
-                                  }
-                                  disabled={savingTitle}
-                                  size="sm"
-                                  variant="default"
-                                  aria-label="Save title"
-                                >
-                                  {savingTitle ? (
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                  ) : (
-                                    <Check className="w-4 h-4" />
-                                  )}
-                                </Button>
-                                <Button
-                                  type="button"
-                                  onClick={handleCancelEdit}
-                                  disabled={savingTitle}
-                                  size="sm"
-                                  variant="ghost"
-                                  aria-label="Cancel editing"
-                                >
-                                  <X className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-2 group/title">
-                                <h3 className="text-lg font-semibold truncate">
-                                  <Link
-                                    href={`/t/${transcript.secretToken}`}
-                                    className="hover:text-primary transition-colors"
-                                  >
-                                    {transcript.title}
-                                  </Link>
-                                </h3>
-                                <button
-                                  type="button"
-                                  onClick={() => handleStartEdit(transcript)}
-                                  className="text-sm text-muted-foreground hover:text-primary opacity-0 group-hover/title:opacity-100 group-focus-within/title:opacity-100 transition-opacity cursor-pointer flex-shrink-0"
-                                  aria-label={`Edit title: ${transcript.title}`}
-                                >
-                                  Edit
-                                </button>
-                              </div>
-                            )}
-                            <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                              <span>{formatDate(transcript.createdAt)}</span>
-                              <span>•</span>
-                              <span className="text-primary font-medium">
-                                {formatSource(transcript.source)}
-                              </span>
-                              <span>•</span>
-                              <span>{transcript.messageCount} messages</span>
-                              <span>•</span>
-                              <span>{formatBytes(transcript.fileSize)}</span>
+                                {savingTitle ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <Check className="w-4 h-4" />
+                                )}
+                              </Button>
+                              <Button
+                                type="button"
+                                onClick={handleCancelEdit}
+                                disabled={savingTitle}
+                                size="sm"
+                                variant="ghost"
+                                aria-label="Cancel editing"
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
                             </div>
+                          ) : (
+                            <div className="flex items-center gap-2 group/title">
+                              <h3 className="text-lg font-semibold truncate">
+                                <Link
+                                  href={`/t/${transcript.secretToken}`}
+                                  className="hover:text-primary transition-colors"
+                                >
+                                  {transcript.title}
+                                </Link>
+                              </h3>
+                              <button
+                                type="button"
+                                onClick={() => handleStartEdit(transcript)}
+                                className="text-sm text-muted-foreground hover:text-primary opacity-0 group-hover/title:opacity-100 group-focus-within/title:opacity-100 transition-opacity cursor-pointer flex-shrink-0"
+                                aria-label={`Edit title: ${transcript.title}`}
+                              >
+                                Edit
+                              </button>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                            <span>{formatDate(transcript.createdAt)}</span>
+                            <span>•</span>
+                            <span className="text-primary font-medium">
+                              {formatSource(transcript.source)}
+                            </span>
+                            <span>•</span>
+                            <span>{transcript.messageCount} messages</span>
+                            <span>•</span>
+                            <span>{formatBytes(transcript.fileSize)}</span>
                           </div>
-                          <Button
-                            type="button"
-                            data-testid={`delete-transcript-${transcript.secretToken}`}
-                            onClick={() => handleDelete(transcript.secretToken)}
-                            disabled={deleting === transcript.secretToken}
-                            variant="ghost"
-                            size="sm"
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                          >
-                            {deleting === transcript.secretToken
-                              ? "Deleting..."
-                              : "Delete"}
-                          </Button>
                         </div>
+                        <Button
+                          type="button"
+                          data-testid={`delete-transcript-${transcript.secretToken}`}
+                          onClick={() => handleDelete(transcript.secretToken)}
+                          disabled={deleting === transcript.secretToken}
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          {deleting === transcript.secretToken
+                            ? "Deleting..."
+                            : "Delete"}
+                        </Button>
                       </div>
-                    ))}
-                  </div>
-                </Card>
+                    </div>
+                  ))}
+                </div>
               )}
 
               {!loading && !error && (
                 // biome-ignore lint/correctness/useUniqueElementIds: Static ID needed for anchor link from help page
-                <Card className="mt-12" id="cli-access">
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Terminal className="w-5 h-5" />
-                      <h2 className="text-lg font-semibold">CLI Access</h2>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Generate an authentication token to upload transcripts
-                      from the command line. Tokens are valid for 90 days.
-                    </p>
+                <div className="mt-12 border rounded-lg p-6" id="cli-access">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Terminal className="w-5 h-5" />
+                    <h2 className="text-lg font-semibold">CLI Access</h2>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Generate an authentication token to upload transcripts from
+                    the command line. Tokens are valid for 90 days.
+                  </p>
 
-                    {!cliToken ? (
-                      <div className="space-y-4">
-                        <Button
-                          type="button"
-                          onClick={handleGenerateToken}
-                          disabled={generatingToken}
-                        >
-                          {generatingToken
-                            ? "Generating..."
-                            : "Generate CLI Token"}
-                        </Button>
-
-                        <div className="bg-muted/50 p-4 rounded-lg">
-                          <h3 className="text-sm font-semibold mb-2">
-                            Usage Instructions
-                          </h3>
-                          <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
-                            <li>Generate a token using the button above</li>
-                            <li>
-                              Copy the token and configure it in your CLI tool
-                            </li>
-                            <li>
-                              Upload transcripts:{" "}
-                              <code className="bg-muted px-1 py-0.5 rounded">
-                                aisessions upload session.jsonl
-                              </code>
-                            </li>
-                          </ol>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        <Alert>
-                          <AlertDescription className="space-y-2">
-                            <p className="font-semibold">
-                              Make sure to copy your token now. You won't be
-                              able to see it again!
-                            </p>
-                            <div className="flex items-center gap-2 mt-2">
-                              <code
-                                data-testid="cli-token"
-                                className="flex-1 bg-muted px-3 py-2 rounded text-xs font-mono break-all"
-                              >
-                                {cliToken}
-                              </code>
-                              <Button
-                                type="button"
-                                onClick={handleCopyToken}
-                                variant="outline"
-                                size="sm"
-                                className="min-w-[90px]"
-                              >
-                                {tokenCopied ? (
-                                  <>
-                                    <Check className="w-4 h-4" />
-                                    Copied
-                                  </>
-                                ) : (
-                                  <>
-                                    <Copy className="w-4 h-4" />
-                                    Copy
-                                  </>
-                                )}
-                              </Button>
-                            </div>
-                          </AlertDescription>
-                        </Alert>
-
-                        <Button
-                          type="button"
-                          onClick={() => setCliToken(null)}
-                          variant="outline"
-                          size="sm"
-                        >
-                          Close
-                        </Button>
-                      </div>
-                    )}
-
-                    <div className="mt-6 pt-6 border-t">
-                      <h3 className="text-sm font-semibold mb-2">
-                        Revoke All CLI Tokens
-                      </h3>
-                      <p className="text-sm text-muted-foreground mb-3">
-                        If you believe a token has been compromised, you can
-                        revoke all existing CLI tokens.
-                      </p>
+                  {!cliToken ? (
+                    <div className="space-y-4">
                       <Button
                         type="button"
-                        onClick={handleRevokeTokens}
-                        disabled={revokingTokens}
+                        onClick={handleGenerateToken}
+                        disabled={generatingToken}
+                      >
+                        {generatingToken
+                          ? "Generating..."
+                          : "Generate CLI Token"}
+                      </Button>
+
+                      <div className="bg-muted/50 p-4 rounded-lg">
+                        <h3 className="text-sm font-semibold mb-2">
+                          Usage Instructions
+                        </h3>
+                        <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
+                          <li>Generate a token using the button above</li>
+                          <li>
+                            Copy the token and configure it in your CLI tool
+                          </li>
+                          <li>
+                            Upload transcripts:{" "}
+                            <code className="bg-muted px-1 py-0.5 rounded">
+                              aisessions upload session.jsonl
+                            </code>
+                          </li>
+                        </ol>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <Alert>
+                        <AlertDescription className="space-y-2">
+                          <p className="font-semibold">
+                            Make sure to copy your token now. You won't be able
+                            to see it again!
+                          </p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <code
+                              data-testid="cli-token"
+                              className="flex-1 bg-muted px-3 py-2 rounded text-xs font-mono break-all"
+                            >
+                              {cliToken}
+                            </code>
+                            <Button
+                              type="button"
+                              onClick={handleCopyToken}
+                              variant="outline"
+                              size="sm"
+                              className="min-w-[90px]"
+                            >
+                              {tokenCopied ? (
+                                <>
+                                  <Check className="w-4 h-4" />
+                                  Copied
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-4 h-4" />
+                                  Copy
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </AlertDescription>
+                      </Alert>
+
+                      <Button
+                        type="button"
+                        onClick={() => setCliToken(null)}
                         variant="outline"
                         size="sm"
                       >
-                        {revokingTokens ? "Revoking..." : "Revoke All Tokens"}
+                        Close
                       </Button>
                     </div>
-                  </CardContent>
-                </Card>
+                  )}
+
+                  <div className="mt-6 pt-6 border-t">
+                    <h3 className="text-sm font-semibold mb-2">
+                      Revoke All CLI Tokens
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      If you believe a token has been compromised, you can
+                      revoke all existing CLI tokens.
+                    </p>
+                    <Button
+                      type="button"
+                      onClick={handleRevokeTokens}
+                      disabled={revokingTokens}
+                      variant="outline"
+                      size="sm"
+                    >
+                      {revokingTokens ? "Revoking..." : "Revoke All Tokens"}
+                    </Button>
+                  </div>
+                </div>
               )}
 
               {!loading && !error && (
                 // biome-ignore lint/correctness/useUniqueElementIds: Static ID needed for anchor link from help page
-                <Card
-                  className="mt-12 border-2 border-destructive/20"
+                <div
+                  className="mt-12 border-2 border-destructive/20 rounded-lg p-6"
                   id="delete-account"
                 >
-                  <CardContent className="p-6">
-                    <h2 className="text-lg font-semibold text-destructive mb-2">
-                      Delete Account
-                    </h2>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Permanently delete your account and all associated data.
-                      This action cannot be undone.
-                    </p>
-                    <Button
-                      type="button"
-                      onClick={handleDeleteAccount}
-                      disabled={deletingAccount}
-                      variant="destructive"
-                    >
-                      {deletingAccount
-                        ? "Deleting Account..."
-                        : "Delete My Account"}
-                    </Button>
-                  </CardContent>
-                </Card>
+                  <h2 className="text-lg font-semibold text-destructive mb-2">
+                    Delete Account
+                  </h2>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Permanently delete your account and all associated data.
+                    This action cannot be undone.
+                  </p>
+                  <Button
+                    type="button"
+                    onClick={handleDeleteAccount}
+                    disabled={deletingAccount}
+                    variant="destructive"
+                  >
+                    {deletingAccount
+                      ? "Deleting Account..."
+                      : "Delete My Account"}
+                  </Button>
+                </div>
               )}
             </>
           )}

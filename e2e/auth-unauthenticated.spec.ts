@@ -8,10 +8,8 @@ test.describe("Unauthenticated User Experience", () => {
     // 2. Verify page title contains "AI Sessions"
     await expect(page).toHaveTitle(/AI Sessions/);
 
-    // 3. Verify header displays "AI Sessions" branding
-    await expect(
-      page.getByRole("banner").getByRole("link", { name: "AI Sessions" }),
-    ).toBeVisible();
+    // 3. Header logo is hidden on homepage
+    // (Logo "ai_sessions" only appears on non-homepage pages)
 
     // 4. Verify Help icon/link is visible in header
     await expect(
@@ -28,13 +26,13 @@ test.describe("Unauthenticated User Experience", () => {
       page.getByRole("banner").getByRole("button", { name: "Sign out" }),
     ).not.toBeVisible();
 
-    // 7. Verify main heading "AI Sessions" is visible
+    // 7. Verify main heading "ai_sessions" is visible
     await expect(
-      page.getByRole("heading", { name: "AI Sessions", level: 1 }),
+      page.getByRole("heading", { name: "ai_sessions", level: 1 }),
     ).toBeVisible();
 
-    // 8. Verify subtitle "Share AI coding sessions" is visible
-    await expect(page.getByText("Share AI coding sessions")).toBeVisible();
+    // 8. Verify examples section is visible
+    await expect(page.getByText("Examples:")).toBeVisible();
 
     // 9. Verify upload dropzone is visible with text about dropping transcripts
     await expect(page.getByText("Drop your transcript")).toBeVisible();
