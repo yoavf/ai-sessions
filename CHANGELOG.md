@@ -1,5 +1,9 @@
 # Changelog
 
+## 2025-10-24
+
+- **Features**: Quick install script ([#40](https://github.com/yoavf/ai-sessions/pull/40))
+
 ## 2025-10-23
 
 - **Features**: Add links to examples on the homepage ([#38](https://github.com/yoavf/ai-sessions/pull/38))
