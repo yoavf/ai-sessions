@@ -208,9 +208,9 @@ test.describe("My Transcripts Page - Authentication and Access Control", () => {
 
       // 3. Verify no transcript data is exposed
       // Verify that transcript-specific content is not visible
-      await expect(page.getByText("My Transcripts")).not.toBeVisible();
+      await expect(page.getByText("my_transcripts")).not.toBeVisible();
       await expect(
-        page.getByText("Manage your uploaded AI coding sessions"),
+        page.getByText("Manage your uploaded sessions"),
       ).not.toBeVisible();
       await expect(page.getByText("Upload New")).not.toBeVisible();
     });
@@ -246,9 +246,9 @@ test.describe("My Transcripts Page - Authentication and Access Control", () => {
           throw new Error(`Page loaded with error: ${errorText}`);
         }
 
-        // 5. Verify header shows "My Transcripts" title
+        // 5. Verify header shows "my_transcripts" title
         await authExpect(
-          page.getByRole("heading", { name: "My Transcripts", level: 1 }),
+          page.getByRole("heading", { name: "my_transcripts", level: 1 }),
         ).toBeVisible();
 
         // 6. Verify site header displays logout button
@@ -256,9 +256,9 @@ test.describe("My Transcripts Page - Authentication and Access Control", () => {
           page.getByRole("banner").getByRole("button", { name: "Sign out" }),
         ).toBeVisible();
 
-        // 7. Verify page subtitle "Manage your uploaded AI coding sessions"
+        // 7. Verify page subtitle "Manage your uploaded sessions"
         await authExpect(
-          page.getByText("Manage your uploaded AI coding sessions"),
+          page.getByText("Manage your uploaded sessions"),
         ).toBeVisible();
       },
     );

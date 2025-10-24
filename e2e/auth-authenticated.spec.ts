@@ -34,10 +34,8 @@ test.describe("Authenticated User Experience", () => {
     // 1. Navigate to homepage
     await page.goto("http://localhost:3000");
 
-    // 2. Verify header shows "AI Sessions" branding
-    await expect(
-      page.getByRole("banner").getByRole("link", { name: "AI Sessions" }),
-    ).toBeVisible();
+    // 2. Header logo is hidden on homepage, so we skip that check
+    // (Logo "ai_sessions" only appears on non-homepage pages)
 
     // 3. Verify "My Transcripts" link IS visible in header (authenticated only)
     await expect(
@@ -139,8 +137,8 @@ test.describe("Authenticated User Experience", () => {
       page.getByRole("banner").getByRole("link", { name: "My Transcripts" }),
     ).toBeVisible();
 
-    // 4. Click "AI Sessions" logo to return to homepage
-    await page.getByRole("link", { name: "AI Sessions" }).click();
+    // 4. Click "ai_sessions" logo to return to homepage
+    await page.getByRole("link", { name: "ai_sessions" }).click();
 
     // 5. Verify still authenticated on homepage (no overlay)
     await expect(page).toHaveURL("http://localhost:3000/");
