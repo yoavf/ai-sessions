@@ -710,10 +710,10 @@ export default function TranscriptViewer({
                       <div className="flex items-center gap-2 mb-2">
                         {isUser ? (
                           <>
-                            {userImage && githubUsername && (
+                            {userImage && (
                               <MessageAvatar
                                 src={userImage}
-                                name={githubUsername}
+                                name={githubUsername || "User"}
                                 className="size-6"
                               />
                             )}
