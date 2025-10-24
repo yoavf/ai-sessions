@@ -2,6 +2,8 @@
 
 ## 2025-10-24
 
+- **Features**: Add avatars and names to transcript messages ([#42](https://github.com/yoavf/ai-sessions/pull/42))
+- **Bug Fixes**: Remove constant session polling ([#43](https://github.com/yoavf/ai-sessions/pull/43))
 - **Features**: Quick install script ([#40](https://github.com/yoavf/ai-sessions/pull/40))
 
 ## 2025-10-23
