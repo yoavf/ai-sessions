@@ -207,6 +207,10 @@ test.describe("Transcript Page - Metadata Display", () => {
       // GitHub avatar
       const avatar = page.locator('img[alt="testuser"]');
       await expect(avatar).toBeVisible();
+
+      // Check user avatar appears in messages (not just header)
+      const userMessageAvatars = page.locator('img[alt="testuser"]');
+      await expect(userMessageAvatars.first()).toBeVisible();
     } finally {
       await cleanupTestData(user.id);
     }
@@ -349,6 +353,9 @@ test.describe("Transcript Page - Message Rendering", () => {
       // Verify it's in a user message container
       const messageContainer = userMessage.locator("..");
       await expect(messageContainer).toBeVisible();
+
+      // Verify username is displayed in message header
+      await expect(page.getByText("testuser").first()).toBeVisible();
     } finally {
       await cleanupTestData(user.id);
     }
@@ -367,6 +374,13 @@ test.describe("Transcript Page - Message Rendering", () => {
         "I've created a simple Python hello world program",
       );
       await expect(assistantMessage).toBeVisible();
+
+      // Verify assistant name is displayed
+      await expect(page.getByText("claude")).toBeVisible();
+
+      // Verify assistant avatar is displayed
+      const assistantAvatar = page.locator('img[alt="claude"]');
+      await expect(assistantAvatar.first()).toBeVisible();
     } finally {
       await cleanupTestData(user.id);
     }

@@ -12,7 +12,11 @@ import {
   User,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Message, MessageContent } from "@/components/ai-elements/message";
+import {
+  Message,
+  MessageAvatar,
+  MessageContent,
+} from "@/components/ai-elements/message";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -26,6 +30,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { addCsrfToken, useCsrfToken } from "@/hooks/useCsrfToken";
+import {
+  getAssistantIconPath,
+  getShortAssistantName,
+} from "@/lib/source-utils";
 import type { ParsedTranscript, TranscriptMetadata } from "@/types/transcript";
 import FloatingTOC from "./FloatingTOC";
 import MessageRenderer from "./MessageRenderer";
@@ -700,9 +708,31 @@ export default function TranscriptViewer({
                       }
                     >
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-medium opacity-70">
-                          {isUser ? "User" : "Assistant"}
-                        </span>
+                        {isUser ? (
+                          <>
+                            {userImage && githubUsername && (
+                              <MessageAvatar
+                                src={userImage}
+                                name={githubUsername}
+                                className="size-6"
+                              />
+                            )}
+                            <span className="text-xs font-medium opacity-70">
+                              {githubUsername || "User"}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <MessageAvatar
+                              src={getAssistantIconPath(source)}
+                              name={getShortAssistantName(source)}
+                              className="size-6"
+                            />
+                            <span className="text-xs font-medium opacity-70">
+                              {getShortAssistantName(source)}
+                            </span>
+                          </>
+                        )}
                         {line.timestamp && (
                           <span className="text-xs opacity-50">
                             {format(new Date(line.timestamp), "HH:mm:ss")}
