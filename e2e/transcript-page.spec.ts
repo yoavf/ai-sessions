@@ -130,7 +130,7 @@ test.describe("Transcript Page - Page Loading and Basic Rendering", () => {
       ).toBeVisible();
 
       // Verify user metadata section
-      await expect(page.getByText("testuser")).toBeVisible();
+      await expect(page.getByText("testuser").first()).toBeVisible();
 
       // Verify messages are rendered (use first() to avoid TOC duplicate)
       await expect(
@@ -376,7 +376,7 @@ test.describe("Transcript Page - Message Rendering", () => {
       await expect(assistantMessage).toBeVisible();
 
       // Verify assistant name is displayed
-      await expect(page.getByText("claude")).toBeVisible();
+      await expect(page.getByText("claude").first()).toBeVisible();
 
       // Verify assistant avatar is displayed
       const assistantAvatar = page.locator('img[alt="claude"]');
@@ -648,7 +648,7 @@ test.describe("Transcript Page - Responsive Design", () => {
       await expect(
         page.getByRole("heading", { name: "Python Hello World Tutorial" }),
       ).toBeVisible();
-      await expect(page.getByText("testuser")).toBeVisible();
+      await expect(page.getByText("testuser").first()).toBeVisible();
       await expect(
         page.getByText("Create a simple hello world program in Python").first(),
       ).toBeVisible();
