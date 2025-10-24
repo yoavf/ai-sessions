@@ -5,13 +5,15 @@
 /**
  * Map source to assistant icon path
  */
+const DEFAULT_ASSISTANT_ICON = "/claude.png";
+
 export function getAssistantIconPath(source: string): string {
   const iconMap: Record<string, string> = {
     "claude-code": "/claude.png",
     "gemini-cli": "/gemini.jpg",
     codex: "/codex.png",
   };
-  return iconMap[source] || "/claude.png"; // fallback to claude
+  return iconMap[source] || DEFAULT_ASSISTANT_ICON;
 }
 
 /**
