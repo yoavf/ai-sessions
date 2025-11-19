@@ -1,21 +1,18 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
-// Create Redis client - will use UPSTASH_REDIS_KV_REST_API_URL and UPSTASH_REDIS_KV_REST_API_TOKEN from env
+// Create Redis client - will use KV_REST_API_URL and KV_REST_API_TOKEN from Vercel KV
 let redis: Redis | null = null;
 let uploadRateLimit: Ratelimit | null = null;
 let viewRateLimit: Ratelimit | null = null;
 let accountRateLimit: Ratelimit | null = null;
 let editRateLimit: Ratelimit | null = null;
 
-// Only initialize if Upstash credentials are available
-if (
-  process.env.UPSTASH_REDIS_KV_REST_API_URL &&
-  process.env.UPSTASH_REDIS_KV_REST_API_TOKEN
-) {
+// Only initialize if Vercel KV credentials are available
+if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
   redis = new Redis({
-    url: process.env.UPSTASH_REDIS_KV_REST_API_URL,
-    token: process.env.UPSTASH_REDIS_KV_REST_API_TOKEN,
+    url: process.env.KV_REST_API_URL,
+    token: process.env.KV_REST_API_TOKEN,
   });
 
   // Rate limit for uploads: 10 uploads per hour per user
@@ -51,7 +48,7 @@ if (
   });
 } else {
   console.warn(
-    "Rate limiting disabled: UPSTASH_REDIS_KV_REST_API_URL and UPSTASH_REDIS_KV_REST_API_TOKEN not configured",
+    "Rate limiting disabled: KV_REST_API_URL and KV_REST_API_TOKEN not configured",
   );
 }
 

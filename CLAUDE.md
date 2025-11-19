@@ -110,9 +110,9 @@ Optional (for sensitive data detection):
 - `GOOGLE_APPLICATION_CREDENTIALS`: Path to service account key JSON file (for local development)
 - `GOOGLE_APPLICATION_CREDENTIALS_JSON`: Full JSON content of service account key (for Vercel/production)
 
-Optional (for rate limiting - recommended for production):
-- `UPSTASH_REDIS_REST_URL`: Upstash Redis REST API URL
-- `UPSTASH_REDIS_REST_TOKEN`: Upstash Redis REST API token
+Optional (for rate limiting - provided by Upstash via Vercel integration):
+- `KV_REST_API_URL`: Upstash Redis REST API URL
+- `KV_REST_API_TOKEN`: Upstash Redis REST API token
 
 ## OpenGraph & Social Media
 
@@ -183,9 +183,9 @@ Rate limiting protects the app from abuse and controls API costs:
 - Gracefully degrades if Redis not configured (allows requests)
 - Returns 429 status with `X-RateLimit-*` headers when limit exceeded
 
-**Setup** (Optional but recommended for production):
-1. Create free Upstash Redis database at https://console.upstash.com
-2. Add `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` to `.env`
+**Setup** (Via Vercel Marketplace):
+1. Add Upstash Redis to your project via Vercel dashboard (Storage → Upstash)
+2. Vercel automatically provides `KV_REST_API_URL` and `KV_REST_API_TOKEN`
 3. Deploy - rate limiting will automatically activate
 
 ### CSRF Protection (`src/lib/csrf.ts`)
