@@ -6,11 +6,11 @@ A web platform for sharing and viewing AI coding session transcripts with beauti
 
 ## Features
 
-- 🔐 **Secure Sharing** - Generate secret URLs for your transcripts
-- ⚡ **Fast & Responsive** - Handles conversations with 1000+ messages smoothly
-- ✨ **Beautiful UI** - Syntax highlighting, collapsible diffs, and organized tool calls
-- 🔑 **GitHub OAuth** - Secure authentication for uploading transcripts
-- 📦 **Serverless Ready** - Designed to run on Vercel with Vercel Postgres
+- **Secure Sharing** - Generate secret URLs for your transcripts
+- **Fast & Responsive** - Handles conversations with 1000+ messages smoothly
+- **Beautiful UI** - Syntax highlighting, collapsible diffs, and organized tool calls
+- **GitHub OAuth** - Secure authentication for uploading transcripts
+- **Serverless Ready** - Designed to run on Vercel with PostgreSQL
 
 ## Tech Stack
 
@@ -27,7 +27,7 @@ A web platform for sharing and viewing AI coding session transcripts with beauti
 ### Prerequisites
 
 - Node.js 20+
-- PostgreSQL database (or use Vercel Postgres)
+- PostgreSQL database
 - GitHub OAuth App
 
 ### 1. Clone and Install
@@ -98,10 +98,10 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Deployment to Vercel
 
-### 1. Set Up Vercel Postgres
+### 1. Set Up PostgreSQL Database
 
 1. Create a new project on Vercel
-2. Go to Storage → Create Database → Postgres
+2. Set up a PostgreSQL database (you can use any PostgreSQL provider)
 3. Copy the connection string
 
 ### 2. Set Up GitHub OAuth for Production
@@ -116,7 +116,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 In Vercel project settings, add:
 
 ```
-DATABASE_URL=<from-vercel-postgres>
+DATABASE_URL=<your-postgres-connection-string>
 NEXTAUTH_URL=https://your-app.vercel.app
 NEXTAUTH_SECRET=<generate-new-secret>
 GITHUB_CLIENT_ID=<production-oauth-app-id>
