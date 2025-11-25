@@ -40,11 +40,11 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.counter.dev", // unsafe-inline needed for Next.js, unsafe-eval for dev
-              "style-src 'self' 'unsafe-inline'", // unsafe-inline needed for Tailwind and styled components
-              "img-src 'self' data: https:", // Allow images from GitHub avatars
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.counter.dev",
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' data: https:",
               "font-src 'self' data:",
-              "connect-src 'self' https://t.counter.dev", // Allow counter.dev analytics
+              "connect-src 'self' https://t.counter.dev",
               "frame-ancestors 'self'",
               "base-uri 'self'",
               "form-action 'self'",
@@ -55,6 +55,22 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+
+  async rewrites() {
+    return [
+      {
+        source: "/ingest/static/:path*",
+        destination: "https://eu-assets.i.posthog.com/static/:path*",
+      },
+      {
+        source: "/ingest/:path*",
+        destination: "https://eu.i.posthog.com/:path*",
+      },
+    ];
+  },
+
+  // This is required to support PostHog trailing slash API requests
+  skipTrailingSlashRedirect: true,
 };
 
 export default nextConfig;
