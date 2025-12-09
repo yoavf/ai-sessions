@@ -11,6 +11,7 @@ import {
   Trash2,
   User,
 } from "lucide-react";
+import posthog from "posthog-js";
 import { useMemo, useState } from "react";
 import {
   Message,
@@ -202,6 +203,7 @@ export default function TranscriptViewer({
   };
 
   const handleShareClick = () => {
+    posthog.capture("transcript_shared", { transcriptId: secretToken });
     const url = window.location.href;
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
@@ -215,6 +217,8 @@ export default function TranscriptViewer({
     );
 
     if (!confirmed) return;
+
+    posthog.capture("transcript_deleted", { transcriptId: secretToken });
 
     // Ensure we have a CSRF token before proceeding
     if (!csrfToken) {

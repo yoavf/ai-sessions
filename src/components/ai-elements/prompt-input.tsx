@@ -12,6 +12,7 @@ import {
   XIcon,
 } from "lucide-react";
 import { nanoid } from "nanoid";
+import posthog from "posthog-js";
 import {
   type ChangeEvent,
   type ChangeEventHandler,
@@ -685,6 +686,11 @@ export const PromptInput = ({
           return (formData.get("message") as string) || "";
         })();
 
+    posthog.capture("prompt_submitted", {
+      has_text: text.trim().length > 0,
+      attachment_count: files.length,
+    });
+
     // Reset form immediately after capturing text to avoid race condition
     // where user input during async blob conversion would be lost
     if (!usingProvider) {
@@ -1102,6 +1108,7 @@ export const PromptInputSpeechButton = ({
   const toggleListening = useCallback(() => {
     if (!recognition) return;
 
+    posthog.capture("speech_recognition_toggled", { enabled: !isListening });
     if (isListening) {
       recognition.stop();
     } else {

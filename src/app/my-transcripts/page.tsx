@@ -4,6 +4,7 @@ import { Check, Copy, Loader2, Plus, Terminal, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import posthog from "posthog-js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { SiteHeader } from "@/components/site-header";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -168,6 +169,10 @@ export default function MyTranscriptsPage() {
         throw new Error("Failed to delete transcript");
       }
 
+      posthog.capture("transcript_deleted", {
+        transcript_secret_token: secretToken,
+      });
+
       // Remove from local state
       setTranscripts((prev) =>
         prev.filter((t) => t.secretToken !== secretToken),
@@ -203,6 +208,7 @@ export default function MyTranscriptsPage() {
       const data = await response.json();
       setCliToken(data.token);
       setTokenCopied(false);
+      posthog.capture("cli_token_generated");
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to generate token");
     } finally {

@@ -4,6 +4,7 @@ import { HelpCircle, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import posthog from "posthog-js";
 import { Button } from "@/components/ui/button";
 
 interface SiteHeaderProps {
@@ -41,7 +42,14 @@ export function SiteHeader({ session }: SiteHeaderProps) {
             </Button>
           )}
           <Button variant="ghost" size="icon" asChild title="Help">
-            <Link href="/help">
+            <Link
+              href="/help"
+              onClick={() =>
+                posthog.capture("help_button_clicked", {
+                  current_page: pathname,
+                })
+              }
+            >
               <HelpCircle className="h-[1.2rem] w-[1.2rem]" />
               <span className="sr-only">Help</span>
             </Link>
@@ -50,7 +58,10 @@ export function SiteHeader({ session }: SiteHeaderProps) {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => signOut({ callbackUrl: "/" })}
+              onClick={() => {
+                posthog.capture("user_signed_out");
+                signOut({ callbackUrl: "/" });
+              }}
               title="Sign out"
             >
               <LogOut className="h-[1.2rem] w-[1.2rem]" />

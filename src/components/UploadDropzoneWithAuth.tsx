@@ -3,6 +3,7 @@
 import { Loader2, Lock, Upload } from "lucide-react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
+import posthog from "posthog-js";
 import { useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -45,6 +46,12 @@ export default function UploadDropzoneWithAuth({
         );
         return;
       }
+
+      posthog.capture("transcript_upload_initiated", {
+        file_name: file.name,
+        file_size: file.size,
+        file_type: file.type,
+      });
 
       // Upload immediately (no confirmation dialog on homepage)
       const result = await uploadTranscript(file);
@@ -146,7 +153,12 @@ export default function UploadDropzoneWithAuth({
               Authenticate to share your transcripts
             </p>
             <Button
-              onClick={() => signIn("github", { callbackUrl: "/" })}
+              onClick={() => {
+                posthog.capture("sign_in_to_upload_clicked", {
+                  provider: "github",
+                });
+                signIn("github", { callbackUrl: "/" });
+              }}
               size="lg"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
