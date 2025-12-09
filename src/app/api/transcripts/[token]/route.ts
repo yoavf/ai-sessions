@@ -69,6 +69,10 @@ export async function GET(
       );
     }
 
+    log.info("Transcript viewed", {
+      transcriptId: transcript.id,
+    });
+
     return NextResponse.json(transcript);
   } catch (error) {
     log.error("Fetch transcript error", {
