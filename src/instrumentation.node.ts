@@ -32,13 +32,4 @@ export function registerOTel() {
   });
 
   sdk.start();
-
-  process.on("SIGTERM", () => {
-    sdk
-      .shutdown()
-      .then(() => console.log("OpenTelemetry SDK shut down successfully"))
-      .catch((error) =>
-        console.error("Error shutting down OpenTelemetry SDK", error),
-      );
-  });
 }

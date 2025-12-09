@@ -25,11 +25,23 @@ function emit(
   }
 
   // Emit to OpenTelemetry (will be sent to PostHog if configured)
+  // Filter out undefined values before emitting
+  const filteredAttributes: Record<string, string | number | boolean> = {};
+  if (attributes) {
+    for (const [key, value] of Object.entries(attributes)) {
+      if (value !== undefined) {
+        filteredAttributes[key] = value;
+      }
+    }
+  }
+
   logger.emit({
     severityNumber,
     severityText,
     body: message,
-    attributes: attributes as Record<string, string | number | boolean>,
+    ...(Object.keys(filteredAttributes).length > 0
+      ? { attributes: filteredAttributes }
+      : {}),
   });
 }
 

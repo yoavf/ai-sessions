@@ -62,6 +62,9 @@ export function detectProvider(content: string): DetectionResult {
   if (detectionErrors.length === providers.length) {
     log.error("All providers failed detection", {
       providerCount: detectionErrors.length,
+      errors: detectionErrors
+        .map((e) => `${e.provider}: ${e.error}`)
+        .join("; "),
     });
   }
 
