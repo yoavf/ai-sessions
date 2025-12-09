@@ -1,7 +1,10 @@
+import { logs } from "@opentelemetry/api-logs";
 import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-http";
 import { resourceFromAttributes } from "@opentelemetry/resources";
-import { BatchLogRecordProcessor } from "@opentelemetry/sdk-logs";
-import { NodeSDK } from "@opentelemetry/sdk-node";
+import {
+  BatchLogRecordProcessor,
+  LoggerProvider,
+} from "@opentelemetry/sdk-logs";
 
 export function registerOTel() {
   const projectToken = process.env.POSTHOG_PROJECT_TOKEN;
@@ -13,18 +16,22 @@ export function registerOTel() {
     return;
   }
 
-  const sdk = new NodeSDK({
-    resource: resourceFromAttributes({
-      "service.name": "ai-sessions",
-    }),
-    logRecordProcessor: new BatchLogRecordProcessor(
-      new OTLPLogExporter({
-        url: `https://eu.i.posthog.com/i/v1/logs?token=${projectToken}`,
-      }),
-    ),
+  const resource = resourceFromAttributes({
+    "service.name": "ai-sessions",
   });
 
-  sdk.start();
+  const logExporter = new OTLPLogExporter({
+    url: "https://eu.i.posthog.com/i/v1/logs",
+    headers: {
+      Authorization: `Bearer ${projectToken}`,
+    },
+  });
 
-  console.log("OpenTelemetry logging initialized for PostHog");
+  const loggerProvider = new LoggerProvider({
+    resource,
+    processors: [new BatchLogRecordProcessor(logExporter)],
+  });
+
+  // Register globally so logs.getLogger() uses our provider
+  logs.setGlobalLoggerProvider(loggerProvider);
 }

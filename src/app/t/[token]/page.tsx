@@ -5,6 +5,7 @@ import TranscriptPageDropzone from "@/components/TranscriptPageDropzone";
 import TranscriptViewer from "@/components/TranscriptViewer";
 import { auth } from "@/lib/auth";
 import { getCsrfToken } from "@/lib/csrf";
+import { log } from "@/lib/logger";
 import {
   generateDefaultTitle,
   isUuidOrSessionId,
@@ -141,6 +142,10 @@ export default async function TranscriptPage({ params }: PageProps) {
     if (!transcript) {
       notFound();
     }
+
+    log.info("Transcript viewed", {
+      transcriptId: transcript.id,
+    });
 
     const parsed = parseJSONL(transcript.fileData);
     const isOwner = session?.user?.id === transcript.userId;
