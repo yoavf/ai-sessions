@@ -2,6 +2,7 @@ import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
 import { formatDlpFindings, scanForSensitiveData } from "@/lib/dlp";
 import { verifyCliToken } from "@/lib/jwt";
+import { log } from "@/lib/logger";
 import {
   calculateTranscriptMetadata,
   generateDefaultTitle,
@@ -93,9 +94,9 @@ export async function POST(request: Request) {
     try {
       body = await request.json();
     } catch (jsonError) {
-      console.warn("Invalid JSON in CLI upload request", {
+      log.warn("Invalid JSON in CLI upload request", {
         userId,
-        error:
+        errorMessage:
           jsonError instanceof Error ? jsonError.message : String(jsonError),
       });
       return NextResponse.json(
@@ -237,7 +238,9 @@ export async function POST(request: Request) {
       },
     );
   } catch (error) {
-    console.error("CLI upload error:", error);
+    log.error("CLI upload error", {
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

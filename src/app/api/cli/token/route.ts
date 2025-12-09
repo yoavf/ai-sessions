@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { checkCsrf } from "@/lib/csrf";
 import { signCliToken } from "@/lib/jwt";
+import { log } from "@/lib/logger";
 import { checkAccountRateLimit } from "@/lib/rate-limit";
 
 /**
@@ -73,7 +74,9 @@ export async function POST(request: Request) {
       },
     );
   } catch (error) {
-    console.error("CLI token generation error:", error);
+    log.error("CLI token generation error", {
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

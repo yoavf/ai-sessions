@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { checkCsrf } from "@/lib/csrf";
+import { log } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { checkAccountRateLimit } from "@/lib/rate-limit";
 
@@ -56,7 +57,9 @@ export async function DELETE(request: Request) {
       message: "Account deleted successfully",
     });
   } catch (error) {
-    console.error("Error deleting account:", error);
+    log.error("Error deleting account", {
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { error: "Failed to delete account" },
       { status: 500 },

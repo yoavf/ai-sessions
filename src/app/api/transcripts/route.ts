@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { checkCsrf } from "@/lib/csrf";
 import { formatDlpFindings, scanForSensitiveData } from "@/lib/dlp";
+import { log } from "@/lib/logger";
 import {
   calculateTranscriptMetadata,
   generateDefaultTitle,
@@ -54,7 +55,9 @@ export async function GET() {
 
     return NextResponse.json(transcriptsWithMetadata);
   } catch (error) {
-    console.error("Fetch transcripts error:", error);
+    log.error("Fetch transcripts error", {
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },
@@ -131,17 +134,15 @@ export async function POST(request: Request) {
 
       // Log low-confidence detections
       if (detection.confidence === "low") {
-        console.warn("Low confidence provider detection", {
+        log.warn("Low confidence provider detection", {
           provider: detection.provider,
           fileSize: fileSizeBytes,
-          preview: originalFileData.substring(0, 200),
         });
       }
     } catch (err) {
-      console.error("Provider detection failed, falling back to claude-code", {
-        error: err instanceof Error ? err.message : String(err),
+      log.error("Provider detection failed, falling back to claude-code", {
+        errorMessage: err instanceof Error ? err.message : String(err),
         fileSize: fileSizeBytes,
-        contentPreview: originalFileData.substring(0, 200),
       });
     }
 
@@ -159,11 +160,10 @@ export async function POST(request: Request) {
         detectedSource,
       );
     } catch (err) {
-      console.error("Transcript parsing failed", {
-        error: err instanceof Error ? err.message : String(err),
+      log.error("Transcript parsing failed", {
+        errorMessage: err instanceof Error ? err.message : String(err),
         provider: detectedSource,
         fileSize: fileSizeBytes,
-        contentPreview: originalFileData.substring(0, 200),
       });
 
       // Provide specific error message from parser
@@ -243,7 +243,9 @@ export async function POST(request: Request) {
       id: transcript.id,
     });
   } catch (error) {
-    console.error("Upload error:", error);
+    log.error("Upload error", {
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

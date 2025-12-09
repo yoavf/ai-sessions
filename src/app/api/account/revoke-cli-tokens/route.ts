@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { checkCsrf } from "@/lib/csrf";
+import { log } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { checkAccountRateLimit } from "@/lib/rate-limit";
 
@@ -60,10 +61,12 @@ export async function POST(request: Request) {
         select: { cliTokensRevokedBefore: true },
       });
     } catch (dbError) {
-      console.error("Failed to revoke CLI tokens (database error):", dbError, {
+      log.error("Failed to revoke CLI tokens (database error)", {
         userId: session.user.id,
         errorType:
           dbError instanceof Error ? dbError.constructor.name : "Unknown",
+        errorMessage:
+          dbError instanceof Error ? dbError.message : String(dbError),
       });
 
       return NextResponse.json(
@@ -78,9 +81,8 @@ export async function POST(request: Request) {
 
     // Verify the update was successful
     if (!updateResult || !updateResult.cliTokensRevokedBefore) {
-      console.error("Token revocation succeeded but verification failed", {
+      log.error("Token revocation succeeded but verification failed", {
         userId: session.user.id,
-        updateResult,
       });
 
       return NextResponse.json(
@@ -108,7 +110,9 @@ export async function POST(request: Request) {
     );
   } catch (error) {
     // This catch block should now only catch unexpected errors
-    console.error("Unexpected error in token revocation:", error);
+    log.error("Unexpected error in token revocation", {
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },
