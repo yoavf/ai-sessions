@@ -2,6 +2,7 @@
  * Provider registry and factory for transcript parsing
  */
 
+import { log } from "@/lib/logger";
 import type { ParsedTranscript, TokenCounts } from "@/types/transcript";
 import { ClaudeCodeProvider } from "./claude-code";
 import { CodexProvider } from "./codex";
@@ -49,14 +50,22 @@ export function detectProvider(content: string): DetectionResult {
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
-      console.error(`Provider ${provider.name} detection failed:`, error);
+      log.error(`Provider ${provider.name} detection failed`, {
+        provider: provider.name,
+        errorMessage: errorMsg,
+      });
       detectionErrors.push({ provider: provider.name, error: errorMsg });
     }
   }
 
   // Log if all providers failed
   if (detectionErrors.length === providers.length) {
-    console.error("All providers failed detection", { detectionErrors });
+    log.error("All providers failed detection", {
+      providerCount: detectionErrors.length,
+      errors: detectionErrors
+        .map((e) => `${e.provider}: ${e.error}`)
+        .join("; "),
+    });
   }
 
   // Fallback to claude-code with low confidence

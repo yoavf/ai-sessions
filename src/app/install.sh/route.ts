@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { log } from "@/lib/logger";
 
 const INSTALL_SCRIPT_URL =
   "https://raw.githubusercontent.com/yoavf/ai-sessions-mcp/main/install.sh";
@@ -12,9 +13,10 @@ export async function GET() {
     });
 
     if (!response.ok) {
-      console.error(
-        `Failed to fetch install script: ${response.status} ${response.statusText}`,
-      );
+      log.error("Failed to fetch install script", {
+        status: response.status,
+        statusText: response.statusText,
+      });
       return new NextResponse("Install script temporarily unavailable", {
         status: 503,
         headers: {
@@ -34,7 +36,9 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error("Error fetching install script:", error);
+    log.error("Error fetching install script", {
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
     return new NextResponse("Failed to fetch install script", {
       status: 500,
       headers: {

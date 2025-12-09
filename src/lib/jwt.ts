@@ -1,5 +1,6 @@
 import { jwtVerify, SignJWT } from "jose";
 import { nanoid } from "nanoid";
+import { log } from "./logger";
 import { prisma } from "./prisma";
 
 const ISSUER = "aisessions";
@@ -23,7 +24,7 @@ interface CliTokenPayload {
  */
 export async function signCliToken(userId: string): Promise<string> {
   if (!process.env.NEXTAUTH_SECRET) {
-    console.error("NEXTAUTH_SECRET is not configured");
+    log.error("NEXTAUTH_SECRET is not configured");
     throw new Error("Authentication system is not configured");
   }
 
@@ -45,9 +46,10 @@ export async function signCliToken(userId: string): Promise<string> {
 
     return token;
   } catch (error) {
-    console.error("JWT signing error:", error, {
+    log.error("JWT signing error", {
       userId,
       errorType: error instanceof Error ? error.constructor.name : "Unknown",
+      errorMessage: error instanceof Error ? error.message : String(error),
     });
     throw new Error("Failed to generate authentication token");
   }
@@ -95,9 +97,11 @@ export async function verifyCliToken(
     } catch (dbError) {
       // Database error - FAIL CLOSED for security
       // Cannot verify token revocation status, must reject
-      console.error("Database error during token verification:", dbError, {
+      log.error("Database error during token verification", {
         userId: typedPayload.sub,
         jti: typedPayload.jti,
+        errorMessage:
+          dbError instanceof Error ? dbError.message : String(dbError),
       });
       throw new Error("System error: unable to verify token status");
     }
@@ -136,11 +140,14 @@ export async function verifyCliToken(
         throw error;
       }
       // JWT verification errors - log details but return generic message
-      console.error("Token verification error:", error.message, {
+      log.error("Token verification error", {
+        errorMessage: error.message,
         errorType: error.constructor.name,
       });
     } else {
-      console.error("Unknown token verification error:", error);
+      log.error("Unknown token verification error", {
+        errorMessage: String(error),
+      });
     }
     throw new Error("Token verification failed");
   }

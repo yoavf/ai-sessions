@@ -1,5 +1,6 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
+import { log } from "./logger";
 
 // Create Redis client - will use KV_REST_API_URL and KV_REST_API_TOKEN from Vercel KV
 let redis: Redis | null = null;
@@ -47,7 +48,7 @@ if (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) {
     prefix: "ratelimit:edit",
   });
 } else {
-  console.warn(
+  log.warn(
     "Rate limiting disabled: KV_REST_API_URL and KV_REST_API_TOKEN not configured",
   );
 }
@@ -70,9 +71,10 @@ export async function checkUploadRateLimit(userId: string): Promise<{
     return { success, limit, remaining };
   } catch (error) {
     // Redis/Upstash error - FAIL CLOSED for security
-    console.error("Upload rate limit check failed (Redis error):", error, {
+    log.error("Upload rate limit check failed (Redis error)", {
       userId,
       errorType: error instanceof Error ? error.constructor.name : "Unknown",
+      errorMessage: error instanceof Error ? error.message : String(error),
     });
     return {
       success: false,
@@ -99,9 +101,10 @@ export async function checkViewRateLimit(identifier: string): Promise<{
     return { success, limit, remaining };
   } catch (error) {
     // Redis/Upstash error - FAIL CLOSED for security
-    console.error("View rate limit check failed (Redis error):", error, {
+    log.error("View rate limit check failed (Redis error)", {
       identifier,
       errorType: error instanceof Error ? error.constructor.name : "Unknown",
+      errorMessage: error instanceof Error ? error.message : String(error),
     });
     return {
       success: false,
@@ -128,9 +131,10 @@ export async function checkAccountRateLimit(userId: string): Promise<{
     return { success, limit, remaining };
   } catch (error) {
     // Redis/Upstash error - FAIL CLOSED for security
-    console.error("Account rate limit check failed (Redis error):", error, {
+    log.error("Account rate limit check failed (Redis error)", {
       userId,
       errorType: error instanceof Error ? error.constructor.name : "Unknown",
+      errorMessage: error instanceof Error ? error.message : String(error),
     });
     return {
       success: false,
@@ -157,9 +161,10 @@ export async function checkEditRateLimit(userId: string): Promise<{
     return { success, limit, remaining };
   } catch (error) {
     // Redis/Upstash error - FAIL CLOSED for security
-    console.error("Edit rate limit check failed (Redis error):", error, {
+    log.error("Edit rate limit check failed (Redis error)", {
       userId,
       errorType: error instanceof Error ? error.constructor.name : "Unknown",
+      errorMessage: error instanceof Error ? error.message : String(error),
     });
     return {
       success: false,

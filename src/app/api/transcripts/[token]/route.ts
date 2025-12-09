@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { checkCsrf } from "@/lib/csrf";
+import { log } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import {
   checkEditRateLimit,
@@ -70,7 +71,9 @@ export async function GET(
 
     return NextResponse.json(transcript);
   } catch (error) {
-    console.error("Fetch error:", error);
+    log.error("Fetch transcript error", {
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },
@@ -163,7 +166,9 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("Update error:", error);
+    log.error("Update transcript error", {
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },
@@ -218,7 +223,9 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Delete error:", error);
+    log.error("Delete transcript error", {
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },
