@@ -13,22 +13,15 @@ export function registerOTel() {
     return;
   }
 
-  const resource = resourceFromAttributes({
-    "service.name": "ai-sessions",
-    "service.version": process.env.npm_package_version || "1.0.0",
-    "deployment.environment": process.env.NODE_ENV || "development",
-  });
-
-  const logExporter = new OTLPLogExporter({
-    url: "https://eu.i.posthog.com/i/v1/logs",
-    headers: {
-      Authorization: `Bearer ${projectToken}`,
-    },
-  });
-
   const sdk = new NodeSDK({
-    resource,
-    logRecordProcessor: new BatchLogRecordProcessor(logExporter),
+    resource: resourceFromAttributes({
+      "service.name": "ai-sessions",
+    }),
+    logRecordProcessor: new BatchLogRecordProcessor(
+      new OTLPLogExporter({
+        url: `https://eu.i.posthog.com/i/v1/logs?token=${projectToken}`,
+      }),
+    ),
   });
 
   sdk.start();
