@@ -32,4 +32,6 @@ export function registerOTel() {
   });
 
   sdk.start();
+
+  console.log("OpenTelemetry logging initialized for PostHog");
 }
