@@ -58,9 +58,21 @@ export interface Message {
   model?: string; // AI model used for this message (e.g., "claude-sonnet-4-20250514")
 }
 
+/**
+ * System events like model changes, displayed as dividers in the UI
+ */
+export interface SystemEvent {
+  eventType: "model_change";
+  data: {
+    newModel: string;
+    previousModel?: string;
+  };
+}
+
 export interface TranscriptLine {
-  type: "user" | "assistant" | "file-history-snapshot";
+  type: "user" | "assistant" | "file-history-snapshot" | "system_event";
   message?: Message;
+  systemEvent?: SystemEvent;
   uuid: string;
   timestamp: string;
   parentUuid: string | null;

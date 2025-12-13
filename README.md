@@ -2,7 +2,7 @@
 
 A web platform for sharing and viewing AI coding session transcripts with beautiful syntax highlighting, collapsible tool calls, and seamless navigation for long conversations.
 
-**Supports:** Claude Code, Codex, and Gemini CLI
+**Supports:** Claude Code, Codex, Gemini CLI, Mistral Vibe, and Copilot CLI
 
 ## Features
 
@@ -158,6 +158,16 @@ Or use Vercel's console to run the command.
 **Gemini CLI** saves session transcripts at:
 ```
 ~/.gemini/tmp/<project-hash>/chats/session-<timestamp>.json
+```
+
+**Mistral Vibe** saves session transcripts at:
+```
+~/.vibe/logs/session/session_<timestamp>_<session-id>.json
+```
+
+**Copilot CLI** saves session transcripts at:
+```
+~/.copilot/session-state/<session-id>.jsonl
 ```
 
 Each directory contains JSON/JSONL files with the complete conversation history.

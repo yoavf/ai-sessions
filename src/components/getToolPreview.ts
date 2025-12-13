@@ -14,6 +14,7 @@ export function getToolPreview(
   switch (toolName) {
     case "Read":
     case "read_file":
+    case "view": // Copilot CLI
       return input.file_path
         ? makeRelativePath(input.file_path, cwd)
         : input.path
@@ -23,6 +24,7 @@ export function getToolPreview(
     case "Write":
     case "write_file":
     case "Edit":
+    case "edit": // Copilot CLI
     case "replace":
     case "search_replace":
       return input.file_path

@@ -631,6 +631,28 @@ export default function TranscriptViewer({
           <div className="container mx-auto px-4 py-8 max-w-4xl lg:pr-8">
             <div className="space-y-6">
               {transcript.messages.map((line, idx) => {
+                // Handle system events first (they don't have a message)
+                if (line.type === "system_event" && line.systemEvent) {
+                  if (line.systemEvent.eventType === "model_change") {
+                    return (
+                      <div
+                        key={line.uuid || idx}
+                        className="flex items-center gap-4 py-2"
+                      >
+                        <div className="flex-1 h-px bg-border" />
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Bot className="w-3 h-3" />
+                          <span>
+                            Model changed to {line.systemEvent.data.newModel}
+                          </span>
+                        </div>
+                        <div className="flex-1 h-px bg-border" />
+                      </div>
+                    );
+                  }
+                  return null;
+                }
+
                 if (!line.message) return null;
 
                 const isUser = line.message.role === "user";

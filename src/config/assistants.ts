@@ -10,6 +10,7 @@ export interface AssistantConfig {
 
 export const ASSISTANTS_CONFIG: Record<string, AssistantConfig> = {
   "claude-code": { name: "claude", icon: "/claude.png" },
+  "copilot-cli": { name: "copilot", icon: "/copilot-cli.png" },
   "gemini-cli": { name: "gemini", icon: "/gemini.jpg" },
   codex: { name: "codex", icon: "/codex.png" },
   "mistral-vibe": { name: "mistral-vibe", icon: "/mistral-vibe.png" },
