@@ -239,10 +239,17 @@ export class CopilotCliProvider implements TranscriptProvider {
                   continue;
                 }
 
-                const args =
-                  typeof toolReq.arguments === "string"
-                    ? JSON.parse(toolReq.arguments)
-                    : toolReq.arguments;
+                let args;
+                if (typeof toolReq.arguments === "string") {
+                  try {
+                    args = JSON.parse(toolReq.arguments);
+                  } catch {
+                    // Malformed JSON, skip this tool request
+                    continue;
+                  }
+                } else {
+                  args = toolReq.arguments;
+                }
 
                 contentBlocks.push({
                   type: "tool_use",
