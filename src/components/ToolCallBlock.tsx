@@ -1,5 +1,6 @@
 "use client";
 
+import { CheckCircleIcon, WrenchIcon } from "lucide-react";
 import { useState } from "react";
 import {
   Tool,
@@ -7,11 +8,34 @@ import {
   ToolHeader,
   ToolInput,
 } from "@/components/ai-elements/tool";
+import { Badge } from "@/components/ui/badge";
 import type { ToolResult, ToolUse } from "@/types/transcript";
 import DiffView from "./DiffView";
 import { getToolPreview } from "./getToolPreview";
 import PatchDiffView from "./PatchDiffView";
 import TodoListBlock from "./TodoListBlock";
+
+/**
+ * Parse Mistral Vibe's search_replace content format into diff blocks
+ * Format: <<<<<<< SEARCH\n[old]\n=======\n[new]\n>>>>>>> REPLACE
+ */
+function parseSearchReplaceBlocks(
+  content: string,
+): Array<{ oldText: string; newText: string }> {
+  const blocks: Array<{ oldText: string; newText: string }> = [];
+  // Handle trailing whitespace on marker lines and flexible newlines
+  const pattern =
+    /<<<<<<< SEARCH[ \t]*\r?\n([\s\S]*?)\r?\n[ \t]*=======[ \t]*\r?\n([\s\S]*?)\r?\n[ \t]*>>>>>>> REPLACE/g;
+
+  for (const match of content.matchAll(pattern)) {
+    blocks.push({
+      oldText: match[1],
+      newText: match[2],
+    });
+  }
+
+  return blocks;
+}
 
 interface ToolCallBlockProps {
   toolUse: ToolUse;
@@ -59,17 +83,31 @@ function normalizeTodoList(
   status: "pending" | "in_progress" | "completed";
   activeForm: string;
 }> | null {
-  // Claude Code format: TodoWrite with todos array
+  // Claude Code: TodoWrite
   if (toolName === "TodoWrite" && input.todos && Array.isArray(input.todos)) {
     return input.todos;
   }
 
-  // Codex format: update_plan with plan array
+  // Mistral Vibe: todo
+  if (toolName === "todo" && input.todos && Array.isArray(input.todos)) {
+    return input.todos.map(
+      (item: { id?: string; content: string; status?: string }) => ({
+        content: item.content,
+        status: (item.status || "pending") as
+          | "pending"
+          | "in_progress"
+          | "completed",
+        activeForm: item.content,
+      }),
+    );
+  }
+
+  // Codex: update_plan
   if (toolName === "update_plan" && input.plan && Array.isArray(input.plan)) {
     return input.plan.map((item: { step: string; status: string }) => ({
       content: item.step,
       status: item.status as "pending" | "in_progress" | "completed",
-      activeForm: item.step, // Codex doesn't have activeForm, use step as fallback
+      activeForm: item.step,
     }));
   }
 
@@ -80,45 +118,57 @@ export default function ToolCallBlock({
   toolResults = [],
   cwd,
 }: ToolCallBlockProps) {
-  // Normalize todo list data from both TodoWrite and update_plan
   const todoList = normalizeTodoList(toolUse.name, toolUse.input);
   const isTodoList = todoList !== null;
 
-  // Edit tools should be expanded by default to show the diff
-  // Support both Claude Code's "Edit" and Gemini's "replace" tools
+  const filePath = toolUse.input.file_path || toolUse.input.path;
+
+  // Claude Code "Edit", Gemini "replace"
   const isEdit =
     (toolUse.name === "Edit" || toolUse.name === "replace") &&
-    toolUse.input.file_path !== undefined &&
-    toolUse.input.old_string !== undefined &&
-    toolUse.input.new_string !== undefined;
+    filePath !== undefined &&
+    (toolUse.input.old_string !== undefined ||
+      toolUse.input.old_text !== undefined) &&
+    (toolUse.input.new_string !== undefined ||
+      toolUse.input.new_text !== undefined);
 
-  // Write tool should show diff view (treating it as a new file)
-  // Support both Claude Code's "Write" and Gemini's "write_file" tools
+  // Mistral Vibe "search_replace" uses SEARCH/REPLACE blocks in content
+  const isSearchReplace =
+    toolUse.name === "search_replace" &&
+    filePath !== undefined &&
+    typeof toolUse.input.content === "string" &&
+    toolUse.input.content.includes("<<<<<<< SEARCH");
+
+  const searchReplaceBlocks = isSearchReplace
+    ? parseSearchReplaceBlocks(toolUse.input.content)
+    : [];
+
+  // Claude Code "Write", Gemini/Mistral Vibe "write_file"
   const isWrite =
     (toolUse.name === "Write" || toolUse.name === "write_file") &&
-    toolUse.input.file_path !== undefined &&
+    filePath !== undefined &&
     toolUse.input.content !== undefined;
 
-  // Codex apply_patch tool
+  // Codex "apply_patch"
   const isApplyPatch =
     toolUse.name === "apply_patch" &&
     toolUse.input.input &&
     typeof toolUse.input.input === "string";
 
   const [isOpen, setIsOpen] = useState(
-    isTodoList || isEdit || isWrite || isApplyPatch,
+    isTodoList || isEdit || isWrite || isApplyPatch || isSearchReplace,
   );
   const preview = getToolPreview(toolUse.name, toolUse.input, cwd);
+  const isShellLikeTool = toolUse.name === "shell" || toolUse.name === "bash";
 
-  // For shell tool, show just the command without the "shell:" prefix
   const getTitle = () => {
-    if (toolUse.name === "shell" && preview) {
+    // Shell tools: show command directly without tool name prefix
+    if (isShellLikeTool && preview) {
       return preview;
     }
     return preview ? `${toolUse.name}: ${preview}` : toolUse.name;
   };
 
-  // Special handling for todo lists - show visual todo list instead of JSON
   if (isTodoList) {
     return (
       <Tool open={isOpen} onOpenChange={setIsOpen}>
@@ -126,9 +176,7 @@ export default function ToolCallBlock({
           title={getTitle()}
           type="tool-call"
           state="output-available"
-          className={
-            toolUse.name === "shell" ? "[&_span]:font-mono" : undefined
-          }
+          className={isShellLikeTool ? "[&_span]:font-mono" : undefined}
         />
         <ToolContent>
           <div className="p-4 space-y-3">
@@ -140,11 +188,14 @@ export default function ToolCallBlock({
     );
   }
 
-  // Special handling for Edit and Write - show diff view instead of JSON
   if (isEdit || isWrite) {
-    const filePath = toolUse.input.file_path;
-    const oldString = isEdit ? toolUse.input.old_string : "";
-    const newString = isEdit ? toolUse.input.new_string : toolUse.input.content;
+    const displayFilePath = toolUse.input.file_path || toolUse.input.path;
+    const oldString = isEdit
+      ? toolUse.input.old_string || toolUse.input.old_text || ""
+      : "";
+    const newString = isEdit
+      ? toolUse.input.new_string || toolUse.input.new_text || ""
+      : toolUse.input.content;
 
     return (
       <Tool open={isOpen} onOpenChange={setIsOpen}>
@@ -155,7 +206,7 @@ export default function ToolCallBlock({
         />
         <ToolContent>
           <DiffView
-            filePath={filePath}
+            filePath={displayFilePath}
             oldString={oldString}
             newString={newString}
             cwd={cwd}
@@ -166,7 +217,6 @@ export default function ToolCallBlock({
     );
   }
 
-  // Special handling for Codex apply_patch - parse and show diff
   if (isApplyPatch) {
     return (
       <Tool open={isOpen} onOpenChange={setIsOpen}>
@@ -183,16 +233,90 @@ export default function ToolCallBlock({
     );
   }
 
+  if (isSearchReplace) {
+    const displayFilePath = toolUse.input.file_path || toolUse.input.path;
+    if (searchReplaceBlocks.length > 0) {
+      return (
+        <Tool open={isOpen} onOpenChange={setIsOpen}>
+          <ToolHeader
+            title={getTitle()}
+            type="tool-call"
+            state="output-available"
+          />
+          <ToolContent>
+            {searchReplaceBlocks.map((block, index) => (
+              <DiffView
+                key={index}
+                filePath={displayFilePath}
+                oldString={block.oldText}
+                newString={block.newText}
+                cwd={cwd}
+              />
+            ))}
+            <ToolResultsList results={toolResults} />
+          </ToolContent>
+        </Tool>
+      );
+    }
+    // Malformed search_replace content - show raw content with warning
+    return (
+      <Tool open={isOpen} onOpenChange={setIsOpen}>
+        <ToolHeader
+          title={getTitle()}
+          type="tool-call"
+          state="output-available"
+        />
+        <ToolContent>
+          <div className="p-4 space-y-2">
+            <p className="text-xs text-muted-foreground">
+              Could not parse SEARCH/REPLACE blocks
+            </p>
+            <pre className="whitespace-pre-wrap text-xs font-mono bg-muted/50 p-2 rounded-md overflow-x-auto">
+              {toolUse.input.content}
+            </pre>
+          </div>
+          <ToolResultsList results={toolResults} />
+        </ToolContent>
+      </Tool>
+    );
+  }
+
+  // Only show parameters if >1 arg (single args already in header preview)
+  const inputKeys = Object.keys(toolUse.input || {});
+  const showParameters = inputKeys.length > 1;
+  const hasExpandableContent = showParameters || toolResults.length > 0;
+
+  if (!hasExpandableContent) {
+    return (
+      <div className="not-prose mb-4 w-full rounded-md border">
+        <div className="flex w-full items-center gap-4 p-3">
+          <div className="flex items-center gap-2">
+            <WrenchIcon className="size-4 text-muted-foreground" />
+            <span
+              className={`font-medium text-sm ${isShellLikeTool ? "font-mono" : ""}`}
+            >
+              {getTitle()}
+            </span>
+            <Badge className="gap-1.5 rounded-full text-xs" variant="secondary">
+              <CheckCircleIcon className="size-4 text-green-600" />
+              Completed
+            </Badge>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Tool open={isOpen} onOpenChange={setIsOpen}>
       <ToolHeader
         title={getTitle()}
         type="tool-call"
         state="output-available"
-        className={toolUse.name === "shell" ? "[&_span]:font-mono" : undefined}
+        className={isShellLikeTool ? "[&_span]:font-mono" : undefined}
       />
       <ToolContent>
-        <ToolInput input={toolUse.input} cwd={cwd} />
+        {showParameters && <ToolInput input={toolUse.input} cwd={cwd} />}
         <ToolResultsList results={toolResults} />
       </ToolContent>
     </Tool>

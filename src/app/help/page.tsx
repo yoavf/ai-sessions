@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { auth } from "@/lib/auth";
 
@@ -19,12 +25,9 @@ export default async function HelpPage() {
       <div className="container mx-auto px-4 py-8 flex-1">
         <div className="max-w-4xl mx-auto">
           <div className="mb-12">
-            <h1 className="text-5xl font-bold tracking-tight font-mono mb-4">
+            <h1 className="text-5xl font-bold tracking-tight font-mono mb-6">
               help
             </h1>
-            <p className="text-sm text-muted-foreground mb-6">
-              <s>Frequently</s>Future-ly asked questions
-            </p>
             <nav className="flex flex-wrap gap-3 text-sm">
               <Link
                 href="#getting-started"
@@ -81,27 +84,56 @@ export default async function HelpPage() {
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">
+                  <h3 className="text-lg font-semibold mb-3">
                     Where do I find my transcripts?
                   </h3>
-                  <p className="text-muted-foreground text-sm mb-2">
-                    <strong>Claude Code</strong> saves transcripts to:
-                  </p>
-                  <code className="block bg-muted p-3 rounded font-mono text-xs border mb-3">
-                    ~/.claude/projects/&lt;project-name&gt;/&lt;session-id&gt;.jsonl
-                  </code>
-                  <p className="text-muted-foreground text-sm mb-2">
-                    <strong>Codex</strong> saves transcripts to:
-                  </p>
-                  <code className="block bg-muted p-3 rounded font-mono text-xs border mb-3">
-                    ~/.codex/sessions/&lt;year&gt;/&lt;month&gt;/&lt;day&gt;/&lt;session-id&gt;.jsonl
-                  </code>
-                  <p className="text-muted-foreground text-sm mb-2">
-                    <strong>Gemini CLI</strong> saves transcripts to:
-                  </p>
-                  <code className="block bg-muted p-3 rounded font-mono text-xs border">
-                    ~/.gemini/tmp/&lt;project-hash&gt;/chats/session-&lt;timestamp&gt;.json
-                  </code>
+                  <Accordion
+                    type="single"
+                    collapsible
+                    defaultValue="claude-code"
+                    className="w-full"
+                  >
+                    <AccordionItem value="claude-code">
+                      <AccordionTrigger className="text-sm font-medium">
+                        Claude Code
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <code className="block bg-muted p-3 rounded font-mono text-xs border">
+                          ~/.claude/projects/&lt;project-name&gt;/&lt;session-id&gt;.jsonl
+                        </code>
+                      </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="codex">
+                      <AccordionTrigger className="text-sm font-medium">
+                        Codex
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <code className="block bg-muted p-3 rounded font-mono text-xs border">
+                          ~/.codex/sessions/&lt;year&gt;/&lt;month&gt;/&lt;day&gt;/&lt;session-id&gt;.jsonl
+                        </code>
+                      </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="gemini">
+                      <AccordionTrigger className="text-sm font-medium">
+                        Gemini CLI
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <code className="block bg-muted p-3 rounded font-mono text-xs border">
+                          ~/.gemini/tmp/&lt;project-hash&gt;/chats/session-&lt;timestamp&gt;.json
+                        </code>
+                      </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="mistral-vibe">
+                      <AccordionTrigger className="text-sm font-medium">
+                        Mistral Vibe
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <code className="block bg-muted p-3 rounded font-mono text-xs border">
+                          ~/.vibe/logs/session/session_&lt;timestamp&gt;_&lt;session-id&gt;.json
+                        </code>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
                 </div>
               </div>
             </section>

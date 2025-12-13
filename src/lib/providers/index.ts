@@ -7,6 +7,7 @@ import type { ParsedTranscript, TokenCounts } from "@/types/transcript";
 import { ClaudeCodeProvider } from "./claude-code";
 import { CodexProvider } from "./codex";
 import { GeminiProvider } from "./gemini";
+import { MistralVibeProvider } from "./mistral-vibe";
 import type { DetectionResult, TranscriptProvider } from "./types";
 
 /**
@@ -16,6 +17,7 @@ const providers: TranscriptProvider[] = [
   new ClaudeCodeProvider(),
   new CodexProvider(),
   new GeminiProvider(),
+  new MistralVibeProvider(),
 ];
 
 /**
@@ -297,6 +299,30 @@ export function calculateTokenCounts(
     return lastTokenData;
   }
 
+  if (providerName === "mistral-vibe") {
+    // Mistral Vibe: Parse JSON and extract from metadata.stats
+    try {
+      const data = JSON.parse(content);
+      if (!data.metadata?.stats) return null;
+
+      const stats = data.metadata.stats;
+      const inputTokens = stats.session_prompt_tokens || 0;
+      const outputTokens = stats.session_completion_tokens || 0;
+      const totalTokens =
+        stats.session_total_llm_tokens || inputTokens + outputTokens;
+
+      if (inputTokens === 0 && outputTokens === 0) return null;
+
+      return {
+        inputTokens,
+        outputTokens,
+        totalTokens,
+      };
+    } catch {
+      return null;
+    }
+  }
+
   return null;
 }
 
@@ -304,4 +330,5 @@ export function calculateTokenCounts(
 export { ClaudeCodeProvider } from "./claude-code";
 export { CodexProvider } from "./codex";
 export { GeminiProvider } from "./gemini";
+export { MistralVibeProvider } from "./mistral-vibe";
 export type { DetectionResult, TranscriptProvider } from "./types";

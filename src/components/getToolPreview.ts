@@ -13,28 +13,37 @@ export function getToolPreview(
 ): string | null {
   switch (toolName) {
     case "Read":
-      return input.file_path ? makeRelativePath(input.file_path, cwd) : null;
+    case "read_file":
+      return input.file_path
+        ? makeRelativePath(input.file_path, cwd)
+        : input.path
+          ? makeRelativePath(input.path, cwd)
+          : null;
 
     case "Write":
-    case "write_file": // Gemini's write tool
+    case "write_file":
     case "Edit":
-    case "replace": // Gemini's edit tool
-      return input.file_path ? makeRelativePath(input.file_path, cwd) : null;
+    case "replace":
+    case "search_replace":
+      return input.file_path
+        ? makeRelativePath(input.file_path, cwd)
+        : input.path
+          ? makeRelativePath(input.path, cwd)
+          : null;
 
     case "Glob":
       return input.pattern || null;
 
     case "Grep":
+    case "grep":
       return input.pattern ? `"${input.pattern}"` : null;
 
-    case "Bash": {
+    case "Bash":
+    case "bash": {
       if (!input.command) return null;
       const cmd = input.command as string;
-
-      // Extract the main command (first meaningful token)
       const trimmed = cmd.trim();
 
-      // Handle common patterns
       if (trimmed.startsWith("npx ")) {
         const match = trimmed.match(/^npx\s+([^\s]+)/);
         return match ? `npx ${match[1]}` : "npx";
@@ -49,7 +58,6 @@ export function getToolPreview(
           : "npm";
       }
 
-      // For other commands, get first ~50 chars or until &&, ||, |, ;
       const breakPoints = /[&|;]/;
       const breakIndex = cmd.search(breakPoints);
       const displayCmd =
@@ -70,6 +78,7 @@ export function getToolPreview(
       return input.command || null;
 
     case "TodoWrite":
+    case "todo":
       if (input.todos && Array.isArray(input.todos)) {
         return `${input.todos.length} todo${input.todos.length !== 1 ? "s" : ""}`;
       }
@@ -82,13 +91,11 @@ export function getToolPreview(
       return null;
 
     case "shell": {
-      // Codex shell tool
       if (!input.command) return null;
 
-      // Parse command - it's usually an array like ["bash", "-lc", "actual command"]
+      // Codex: command is usually ["bash", "-lc", "actual command"]
       let actualCommand: string;
       if (Array.isArray(input.command)) {
-        // Skip "bash", "-lc" and get the actual command
         const filtered = input.command.filter(
           (arg: string) => arg !== "bash" && arg !== "-lc",
         );
@@ -99,10 +106,7 @@ export function getToolPreview(
         return null;
       }
 
-      // Get first line if multiline
       const firstLine = actualCommand.trim().split("\n")[0];
-
-      // For commands, get first ~60 chars or until &&, ||, |, ;
       const breakPoints = /[&|;]/;
       const breakIndex = firstLine.search(breakPoints);
       const displayCmd =
@@ -116,7 +120,6 @@ export function getToolPreview(
     }
 
     default: {
-      // For unknown tools, try to find a likely preview field
       const previewFields = [
         "path",
         "file_path",
