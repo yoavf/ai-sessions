@@ -9,6 +9,13 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXTAUTH_URL || "https://aisessions.dev"),
   title: "AI Sessions",
   description: "Share AI coding sessions",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.png", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
   openGraph: {
     type: "website",
     locale: "en_US",

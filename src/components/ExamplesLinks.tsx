@@ -12,6 +12,7 @@ interface ExampleLink {
   icon: string;
   name: string;
   rounded?: boolean;
+  size?: number;
 }
 
 const examples: ExampleLink[] = [
@@ -24,7 +25,8 @@ const examples: ExampleLink[] = [
   {
     href: "/t/NBKE6kb6ZswNSwsS",
     icon: "/codex.png",
-    name: "Codex",
+    name: "OpenAI Codex",
+    size: 28,
   },
   {
     href: "/t/zT6MhMxvoJ0xuG8T",
@@ -38,12 +40,17 @@ const examples: ExampleLink[] = [
     name: "Mistral Vibe",
     rounded: true,
   },
+  {
+    href: "/t/4YElxo7KO0kZJx8w",
+    icon: "/copilot-cli.png",
+    name: "Copilot CLI",
+  },
 ];
 
 export function ExamplesLinks() {
   return (
     <TooltipProvider delayDuration={100}>
-      <span className="inline-flex items-center gap-2">
+      <span className="inline-flex items-center gap-3 text-base">
         <span>Examples:</span>
         {examples.map((example) => (
           <Tooltip key={example.href}>
@@ -52,8 +59,8 @@ export function ExamplesLinks() {
                 <Image
                   src={example.icon}
                   alt={example.name}
-                  width={16}
-                  height={16}
+                  width={example.size || 22}
+                  height={example.size || 22}
                   className={`inline-block hover:scale-110 transition-transform ${example.rounded ? "rounded-full" : ""}`}
                 />
               </Link>
