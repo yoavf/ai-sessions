@@ -33,7 +33,7 @@ const examples: ExampleLink[] = [
     rounded: true,
   },
   {
-    href: "/t/6sdtGVhxRvEq1Avu",
+    href: "/t/rzjYpWkpaK5YcqDD",
     icon: "/mistral-vibe.png",
     name: "Mistral Vibe",
     rounded: true,
