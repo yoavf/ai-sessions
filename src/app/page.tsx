@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import { ExamplesLinks } from "@/components/ExamplesLinks";
 import { SiteHeader } from "@/components/site-header";
 import UploadDropzoneWithAuth from "@/components/UploadDropzoneWithAuth";
 import { auth } from "@/lib/auth";
@@ -24,49 +24,8 @@ export default async function Home() {
             <h1 className="text-6xl font-bold mb-4 tracking-tight font-mono">
               ai_sessions
             </h1>
-            <p className="text-sm text-muted-foreground mb-6 flex items-center gap-1">
-              <span>Examples:</span>
-              <Link
-                href="/t/_Vdv6M0GYsfztNVv"
-                className="text-primary hover:underline inline-flex items-center gap-1"
-              >
-                <Image
-                  src="/claude.png"
-                  alt=""
-                  width={16}
-                  height={16}
-                  className="inline-block rounded-full"
-                />
-                Claude Code
-              </Link>
-              <span>·</span>
-              <Link
-                href="/t/NBKE6kb6ZswNSwsS"
-                className="text-primary hover:underline inline-flex items-center gap-1"
-              >
-                <Image
-                  src="/codex.png"
-                  alt=""
-                  width={16}
-                  height={16}
-                  className="inline-block"
-                />
-                Codex
-              </Link>
-              <span>·</span>
-              <Link
-                href="/t/zT6MhMxvoJ0xuG8T"
-                className="text-primary hover:underline inline-flex items-center gap-1"
-              >
-                <Image
-                  src="/gemini.jpg"
-                  alt=""
-                  width={16}
-                  height={16}
-                  className="inline-block rounded-full"
-                />
-                Gemini CLI
-              </Link>
+            <p className="text-sm text-muted-foreground mb-6">
+              <ExamplesLinks />
             </p>
           </div>
 
