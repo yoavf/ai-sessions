@@ -16,7 +16,6 @@ const EVENT_SESSION_INFO = "session.info";
 const EVENT_MODEL_CHANGE = "session.model_change";
 const EVENT_USER_MESSAGE = "user.message";
 const EVENT_ASSISTANT_MESSAGE = "assistant.message";
-const EVENT_TOOL_COMPLETE = "tool.execution_complete";
 
 interface CopilotEvent {
   type: string;
@@ -59,43 +58,6 @@ interface CopilotToolRequest {
   toolCallId: string;
   name: string;
   arguments: Record<string, unknown> | string;
-}
-
-interface CopilotToolResult {
-  toolCallId: string;
-  toolName: string;
-  arguments?: Record<string, unknown>;
-  success?: boolean;
-  result?: {
-    content?: string;
-  };
-}
-
-function formatCopilotModelName(modelId: string): string | null {
-  if (!modelId) return null;
-
-  if (modelId.startsWith("gpt-")) {
-    return modelId.replace("gpt-", "GPT-").toUpperCase();
-  }
-
-  if (modelId.startsWith("gemini-")) {
-    return modelId
-      .split("-")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
-  }
-
-  if (modelId.startsWith("claude-")) {
-    return modelId
-      .split("-")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
-  }
-
-  return modelId
-    .split("-")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
 }
 
 export class CopilotCliProvider implements TranscriptProvider {
@@ -278,12 +240,6 @@ export class CopilotCliProvider implements TranscriptProvider {
             }
             break;
           }
-
-          case EVENT_TOOL_COMPLETE: {
-            // Skip tool completion events - the tool_use blocks are sufficient
-            // Tool results in Copilot format don't need separate rendering
-            break;
-          }
         }
       } catch {
         continue;
@@ -304,9 +260,5 @@ export class CopilotCliProvider implements TranscriptProvider {
         messageCount: messages.length,
       },
     };
-  }
-
-  formatModelName(modelId: string): string | null {
-    return formatCopilotModelName(modelId);
   }
 }
