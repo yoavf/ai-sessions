@@ -187,33 +187,20 @@ describe("CopilotCliProvider", () => {
   });
 
   describe("model change handling", () => {
-    test("should create model change divider messages", () => {
+    test("should create system_event for model changes", () => {
       const result = provider.parse(COPILOT_CLI_MODEL_CHANGE_SAMPLE);
 
-      // Find the model change message
-      const modelChangeMessage = result.messages.find((m) => {
-        const content = m.message?.content;
-        if (!Array.isArray(content)) return false;
-        return content.some(
-          (b) =>
-            b.type === "text" &&
-            typeof b.text === "string" &&
-            b.text.startsWith("__MODEL_CHANGE__"),
-        );
-      });
+      // Find the model change event
+      const modelChangeEvent = result.messages.find(
+        (m) => m.type === "system_event",
+      );
 
-      expect(modelChangeMessage).toBeDefined();
-
-      if (modelChangeMessage) {
-        const content = modelChangeMessage.message?.content;
-        if (Array.isArray(content)) {
-          const textBlock = content.find((b) => b.type === "text") as {
-            type: string;
-            text: string;
-          };
-          expect(textBlock.text).toBe("__MODEL_CHANGE__gpt-5.2");
-        }
-      }
+      expect(modelChangeEvent).toBeDefined();
+      expect(modelChangeEvent?.systemEvent?.eventType).toBe("model_change");
+      expect(modelChangeEvent?.systemEvent?.data.newModel).toBe("gpt-5.2");
+      expect(modelChangeEvent?.systemEvent?.data.previousModel).toBe(
+        "claude-sonnet-4.5",
+      );
     });
   });
 

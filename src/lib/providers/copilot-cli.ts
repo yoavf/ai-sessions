@@ -138,23 +138,19 @@ export class CopilotCliProvider implements TranscriptProvider {
                 cwd = match[1];
               }
             }
-            // Skip session.info model messages - we handle model changes via EVENT_MODEL_CHANGE
             break;
           }
 
           case EVENT_MODEL_CHANGE: {
-            // Create a visual divider for model changes
             const data = event.data as unknown as CopilotModelChange;
             messages.push({
-              type: "assistant",
-              message: {
-                role: "assistant",
-                content: [
-                  {
-                    type: "text",
-                    text: `__MODEL_CHANGE__${data.newModel}`,
-                  },
-                ],
+              type: "system_event",
+              systemEvent: {
+                eventType: "model_change",
+                data: {
+                  newModel: data.newModel,
+                  previousModel: data.previousModel,
+                },
               },
               uuid: event.id,
               timestamp: event.timestamp,

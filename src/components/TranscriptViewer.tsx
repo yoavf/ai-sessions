@@ -631,6 +631,28 @@ export default function TranscriptViewer({
           <div className="container mx-auto px-4 py-8 max-w-4xl lg:pr-8">
             <div className="space-y-6">
               {transcript.messages.map((line, idx) => {
+                // Handle system events first (they don't have a message)
+                if (line.type === "system_event" && line.systemEvent) {
+                  if (line.systemEvent.eventType === "model_change") {
+                    return (
+                      <div
+                        key={line.uuid || idx}
+                        className="flex items-center gap-4 py-2"
+                      >
+                        <div className="flex-1 h-px bg-border" />
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Bot className="w-3 h-3" />
+                          <span>
+                            Model changed to {line.systemEvent.data.newModel}
+                          </span>
+                        </div>
+                        <div className="flex-1 h-px bg-border" />
+                      </div>
+                    );
+                  }
+                  return null;
+                }
+
                 if (!line.message) return null;
 
                 const isUser = line.message.role === "user";
@@ -694,33 +716,6 @@ export default function TranscriptViewer({
                           </span>
                         )}
                       </div>
-                    </div>
-                  );
-                }
-
-                // Check for model change divider (Copilot CLI)
-                const content = line.message.content;
-                if (
-                  Array.isArray(content) &&
-                  content.length === 1 &&
-                  content[0].type === "text" &&
-                  content[0].text.startsWith("__MODEL_CHANGE__")
-                ) {
-                  const modelName = content[0].text.replace(
-                    "__MODEL_CHANGE__",
-                    "",
-                  );
-                  return (
-                    <div
-                      key={line.uuid || idx}
-                      className="flex items-center gap-4 py-2"
-                    >
-                      <div className="flex-1 h-px bg-border" />
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Bot className="w-3 h-3" />
-                        <span>Model changed to {modelName}</span>
-                      </div>
-                      <div className="flex-1 h-px bg-border" />
                     </div>
                   );
                 }
