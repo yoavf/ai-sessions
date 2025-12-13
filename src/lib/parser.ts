@@ -13,6 +13,7 @@ export function generateDefaultTitle(source: string, createdAt: Date): string {
   const sourceDisplayNames: Record<string, string> = {
     "claude-code": "Claude Code",
     codex: "Codex",
+    "copilot-cli": "Copilot CLI",
     "gemini-cli": "Gemini CLI",
     "mistral-vibe": "Mistral Vibe",
   };

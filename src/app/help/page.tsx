@@ -133,6 +133,16 @@ export default async function HelpPage() {
                         </code>
                       </AccordionContent>
                     </AccordionItem>
+                    <AccordionItem value="copilot-cli">
+                      <AccordionTrigger className="text-sm font-medium">
+                        Copilot CLI
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <code className="block bg-muted p-3 rounded font-mono text-xs border">
+                          ~/.copilot/session-state/&lt;session-id&gt;.jsonl
+                        </code>
+                      </AccordionContent>
+                    </AccordionItem>
                   </Accordion>
                 </div>
               </div>

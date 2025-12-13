@@ -123,14 +123,18 @@ export default function ToolCallBlock({
 
   const filePath = toolUse.input.file_path || toolUse.input.path;
 
-  // Claude Code "Edit", Gemini "replace"
+  // Claude Code "Edit", Gemini "replace", Copilot "edit"
   const isEdit =
-    (toolUse.name === "Edit" || toolUse.name === "replace") &&
+    (toolUse.name === "Edit" ||
+      toolUse.name === "edit" ||
+      toolUse.name === "replace") &&
     filePath !== undefined &&
     (toolUse.input.old_string !== undefined ||
-      toolUse.input.old_text !== undefined) &&
+      toolUse.input.old_text !== undefined ||
+      toolUse.input.old_str !== undefined) &&
     (toolUse.input.new_string !== undefined ||
-      toolUse.input.new_text !== undefined);
+      toolUse.input.new_text !== undefined ||
+      toolUse.input.new_str !== undefined);
 
   // Mistral Vibe "search_replace" uses SEARCH/REPLACE blocks in content
   const isSearchReplace =
@@ -191,10 +195,16 @@ export default function ToolCallBlock({
   if (isEdit || isWrite) {
     const displayFilePath = toolUse.input.file_path || toolUse.input.path;
     const oldString = isEdit
-      ? toolUse.input.old_string || toolUse.input.old_text || ""
+      ? toolUse.input.old_string ||
+        toolUse.input.old_text ||
+        toolUse.input.old_str ||
+        ""
       : "";
     const newString = isEdit
-      ? toolUse.input.new_string || toolUse.input.new_text || ""
+      ? toolUse.input.new_string ||
+        toolUse.input.new_text ||
+        toolUse.input.new_str ||
+        ""
       : toolUse.input.content;
 
     return (

@@ -6,6 +6,7 @@ import { log } from "@/lib/logger";
 import type { ParsedTranscript, TokenCounts } from "@/types/transcript";
 import { ClaudeCodeProvider } from "./claude-code";
 import { CodexProvider } from "./codex";
+import { CopilotCliProvider } from "./copilot-cli";
 import { GeminiProvider } from "./gemini";
 import { MistralVibeProvider } from "./mistral-vibe";
 import type { DetectionResult, TranscriptProvider } from "./types";
@@ -16,6 +17,7 @@ import type { DetectionResult, TranscriptProvider } from "./types";
 const providers: TranscriptProvider[] = [
   new ClaudeCodeProvider(),
   new CodexProvider(),
+  new CopilotCliProvider(),
   new GeminiProvider(),
   new MistralVibeProvider(),
 ];
@@ -329,6 +331,7 @@ export function calculateTokenCounts(
 // Export providers and types
 export { ClaudeCodeProvider } from "./claude-code";
 export { CodexProvider } from "./codex";
+export { CopilotCliProvider } from "./copilot-cli";
 export { GeminiProvider } from "./gemini";
 export { MistralVibeProvider } from "./mistral-vibe";
 export type { DetectionResult, TranscriptProvider } from "./types";
