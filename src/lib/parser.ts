@@ -14,6 +14,7 @@ export function generateDefaultTitle(source: string, createdAt: Date): string {
     "claude-code": "Claude Code",
     codex: "Codex",
     "gemini-cli": "Gemini CLI",
+    "mistral-vibe": "Mistral Vibe",
   };
 
   const sourceName = sourceDisplayNames[source] || source;
