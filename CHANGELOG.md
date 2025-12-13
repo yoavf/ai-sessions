@@ -1,5 +1,23 @@
 # Changelog
 
+## 2025-12-13
+
+- **Features**: Add support for mistral-vibe ([#51](https://github.com/yoavf/ai-sessions/pull/51))
+
+## 2025-12-09
+
+- **Bug Fixes**: Use LoggerProvider directly with Authorization header for PostHog OTLP
+- **Bug Fixes**: Match PostHog OTLP docs exactly
+- **Features**: Add info log when transcript is viewed
+
+## 2025-11-21
+
+- **Documentation**: Update README to reflect PostgreSQL usage and remove emojis
+
+## 2025-11-19
+
+- **Bug Fixes**: Use correct Upstash env var names from Vercel integration
+
 ## 2025-10-24
 
 - **Features**: Add avatars and names to transcript messages ([#42](https://github.com/yoavf/ai-sessions/pull/42))
