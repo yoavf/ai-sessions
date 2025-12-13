@@ -3,6 +3,8 @@
 ## 2025-12-13
 
 - **Features**: Add support for mistral-vibe ([#51](https://github.com/yoavf/ai-sessions/pull/51))
+- **Features**: Add copilot cli support ([#55](https://github.com/yoavf/ai-sessions/pull/55))
+- **Features**: Extract example links to new components and add mistral-vibe ([#53](https://github.com/yoavf/ai-sessions/pull/53))
 
 ## 2025-12-09
 
