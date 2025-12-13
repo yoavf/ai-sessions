@@ -240,7 +240,7 @@ export class MistralVibeProvider implements TranscriptProvider {
           timestamp:
             toolTimestamp ||
             vibeMessage.tool_call_results?.[0]?.timestamp ||
-            new Date().toISOString(),
+            session.metadata.start_time,
           parentUuid: null,
           sessionId: session.metadata.session_id,
           cwd: session.metadata.environment?.working_directory,

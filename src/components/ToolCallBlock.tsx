@@ -23,8 +23,9 @@ function parseSearchReplaceBlocks(
   content: string,
 ): Array<{ oldText: string; newText: string }> {
   const blocks: Array<{ oldText: string; newText: string }> = [];
+  // Handle trailing whitespace on marker lines and flexible newlines
   const pattern =
-    /<<<<<<< SEARCH\n([\s\S]*?)\n=======\n([\s\S]*?)\n>>>>>>> REPLACE/g;
+    /<<<<<<< SEARCH[ \t]*\r?\n([\s\S]*?)\r?\n[ \t]*=======[ \t]*\r?\n([\s\S]*?)\r?\n[ \t]*>>>>>>> REPLACE/g;
 
   for (const match of content.matchAll(pattern)) {
     blocks.push({
@@ -232,8 +233,32 @@ export default function ToolCallBlock({
     );
   }
 
-  if (isSearchReplace && searchReplaceBlocks.length > 0) {
+  if (isSearchReplace) {
     const displayFilePath = toolUse.input.file_path || toolUse.input.path;
+    if (searchReplaceBlocks.length > 0) {
+      return (
+        <Tool open={isOpen} onOpenChange={setIsOpen}>
+          <ToolHeader
+            title={getTitle()}
+            type="tool-call"
+            state="output-available"
+          />
+          <ToolContent>
+            {searchReplaceBlocks.map((block, index) => (
+              <DiffView
+                key={index}
+                filePath={displayFilePath}
+                oldString={block.oldText}
+                newString={block.newText}
+                cwd={cwd}
+              />
+            ))}
+            <ToolResultsList results={toolResults} />
+          </ToolContent>
+        </Tool>
+      );
+    }
+    // Malformed search_replace content - show raw content with warning
     return (
       <Tool open={isOpen} onOpenChange={setIsOpen}>
         <ToolHeader
@@ -242,15 +267,14 @@ export default function ToolCallBlock({
           state="output-available"
         />
         <ToolContent>
-          {searchReplaceBlocks.map((block, index) => (
-            <DiffView
-              key={index}
-              filePath={displayFilePath}
-              oldString={block.oldText}
-              newString={block.newText}
-              cwd={cwd}
-            />
-          ))}
+          <div className="p-4 space-y-2">
+            <p className="text-xs text-muted-foreground">
+              Could not parse SEARCH/REPLACE blocks
+            </p>
+            <pre className="whitespace-pre-wrap text-xs font-mono bg-muted/50 p-2 rounded-md overflow-x-auto">
+              {toolUse.input.content}
+            </pre>
+          </div>
           <ToolResultsList results={toolResults} />
         </ToolContent>
       </Tool>

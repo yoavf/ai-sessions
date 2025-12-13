@@ -89,6 +89,30 @@ describe("MistralVibeProvider", () => {
     expect(() => provider.parse("invalid json")).toThrow();
     expect(() => provider.parse("[]")).toThrow();
   });
+
+  test("should skip messages with unknown roles", () => {
+    const sessionWithUnknownRole = JSON.stringify({
+      metadata: {
+        session_id: "test-unknown-role",
+        start_time: "2025-12-10T20:34:09.851367",
+        end_time: "2025-12-10T20:38:20.448625",
+        environment: { working_directory: "/test" },
+      },
+      messages: [
+        { role: "user", content: "Hello" },
+        { role: "unknown_role", content: "This should be skipped" },
+        { role: "tool", content: "This should also be skipped" },
+        { role: "assistant", content: "Hi there" },
+      ],
+    });
+
+    const result = provider.parse(sessionWithUnknownRole);
+
+    // Only user and assistant messages should be included
+    expect(result.messages.length).toBe(2);
+    expect(result.messages[0].type).toBe("user");
+    expect(result.messages[1].type).toBe("assistant");
+  });
 });
 
 describe("Mistral Vibe token counting", () => {
