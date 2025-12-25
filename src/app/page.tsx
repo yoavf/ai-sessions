@@ -17,7 +17,7 @@ export default async function Home() {
   return (
     <div className="flex-1 bg-background flex flex-col">
       <SiteHeader session={session} />
-      <div className="container mx-auto px-4 flex-1 flex items-center">
+      <div className="container mx-auto px-4 pb-12 md:pb-0 flex-1 flex items-center">
         <div className="max-w-5xl mx-auto w-full">
           {/* Header */}
           <div className="mb-8">
