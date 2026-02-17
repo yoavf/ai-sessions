@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { log } from "@/lib/logger";
 
+// TODO: Update to hcentelles/ai-sessions-mcp once the MCP repo is forked
 const INSTALL_SCRIPT_URL =
-  "https://raw.githubusercontent.com/hcentelles/ai-sessions-mcp/main/install.sh";
+  "https://raw.githubusercontent.com/yoavf/ai-sessions-mcp/main/install.sh";
 
 export async function GET() {
   try {
