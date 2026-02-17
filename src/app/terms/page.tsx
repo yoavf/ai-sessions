@@ -344,12 +344,12 @@ export default function TermsPage() {
               <p className="text-muted-foreground">
                 Send DMCA notices to us by opening an issue at{" "}
                 <a
-                  href="https://github.com/yoavf/ai-sessions/issues"
+                  href="https://github.com/hcentelles/ai-sessions/issues"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary hover:underline"
                 >
-                  github.com/yoavf/ai-sessions/issues
+                  github.com/hcentelles/ai-sessions/issues
                 </a>
                 . Repeat infringers will have their accounts terminated.
               </p>
@@ -509,12 +509,12 @@ export default function TermsPage() {
                 If you believe content on the Service violates these Terms,
                 please report it by opening an issue at{" "}
                 <a
-                  href="https://github.com/yoavf/ai-sessions/issues"
+                  href="https://github.com/hcentelles/ai-sessions/issues"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary hover:underline"
                 >
-                  github.com/yoavf/ai-sessions/issues
+                  github.com/hcentelles/ai-sessions/issues
                 </a>
                 . Include:
               </p>
@@ -561,12 +561,12 @@ export default function TermsPage() {
                 For questions about these Terms, please contact us by opening an
                 issue at{" "}
                 <a
-                  href="https://github.com/yoavf/ai-sessions/issues"
+                  href="https://github.com/hcentelles/ai-sessions/issues"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary hover:underline"
                 >
-                  github.com/yoavf/ai-sessions/issues
+                  github.com/hcentelles/ai-sessions/issues
                 </a>
                 .
               </p>

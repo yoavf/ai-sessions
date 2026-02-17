@@ -368,12 +368,12 @@ export default function PrivacyPage() {
                 If you have questions about this Privacy Policy, please contact
                 us by opening an issue at{" "}
                 <a
-                  href="https://github.com/yoavf/ai-sessions/issues"
+                  href="https://github.com/hcentelles/ai-sessions/issues"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary hover:underline"
                 >
-                  github.com/yoavf/ai-sessions/issues
+                  github.com/hcentelles/ai-sessions/issues
                 </a>
                 .
               </p>

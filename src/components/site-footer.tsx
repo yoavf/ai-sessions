@@ -39,7 +39,7 @@ export function SiteFooter() {
           <div className="flex flex-col sm:flex-row items-center gap-3">
             <Button variant="outline" size="sm" asChild className="h-8">
               <Link
-                href="https://github.com/yoavf/ai-sessions"
+                href="https://github.com/hcentelles/ai-sessions"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5"
@@ -61,12 +61,12 @@ export function SiteFooter() {
               <span className="hidden sm:inline">•</span>
               <span>Built by</span>
               <Link
-                href="https://github.com/yoavf"
+                href="https://github.com/hcentelles"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors font-medium"
               >
-                @yoavf
+                @hcentelles
               </Link>
             </div>
           </div>

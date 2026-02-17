@@ -7,11 +7,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yoavf/ai-sessions.git"
+    "url": "https://github.com/hcentelles/ai-sessions.git"
   },
-  "homepage": "https://github.com/yoavf/ai-sessions#readme",
+  "homepage": "https://github.com/hcentelles/ai-sessions#readme",
   "bugs": {
-    "url": "https://github.com/yoavf/ai-sessions/issues"
+    "url": "https://github.com/hcentelles/ai-sessions/issues"
   },
   "keywords": [
     "ai",

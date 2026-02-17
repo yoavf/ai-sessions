@@ -206,7 +206,7 @@ export default async function HelpPage() {
                     </code>
                     <p className="text-xs pt-1">
                       <a
-                        href="https://github.com/yoavf/ai-sessions-mcp/blob/main/install.sh"
+                        href="https://github.com/hcentelles/ai-sessions-mcp/blob/main/install.sh"
                         target="_blank"
                         className="text-primary hover:underline"
                         rel="noopener noreferrer"
@@ -227,7 +227,7 @@ export default async function HelpPage() {
                     <p className="text-xs">
                       Download pre-built binaries from{" "}
                       <a
-                        href="https://github.com/yoavf/ai-sessions-mcp/releases"
+                        href="https://github.com/hcentelles/ai-sessions-mcp/releases"
                         target="_blank"
                         className="text-primary hover:underline"
                         rel="noopener noreferrer"
@@ -239,7 +239,7 @@ export default async function HelpPage() {
                     <p className="text-xs pt-2">
                       The{" "}
                       <a
-                        href="https://github.com/yoavf/ai-sessions-mcp"
+                        href="https://github.com/hcentelles/ai-sessions-mcp"
                         target="_blank"
                         className="text-primary hover:underline"
                         rel="noopener"
@@ -372,7 +372,7 @@ export default async function HelpPage() {
                   <p className="text-muted-foreground text-sm">
                     Yes! The source code is available on{" "}
                     <a
-                      href="https://github.com/yoavf/ai-sessions"
+                      href="https://github.com/hcentelles/ai-sessions"
                       target="_blank"
                       className="text-primary hover:underline"
                       rel="noopener"
@@ -398,7 +398,7 @@ export default async function HelpPage() {
                 </Link>
                 , or open an issue on{" "}
                 <a
-                  href="https://github.com/yoavf/ai-sessions/issues"
+                  href="https://github.com/hcentelles/ai-sessions/issues"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary hover:underline"

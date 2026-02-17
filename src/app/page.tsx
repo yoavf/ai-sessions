@@ -72,7 +72,7 @@ export default async function Home() {
 
                 <div className="flex gap-4 text-xs pt-2">
                   <a
-                    href="https://github.com/yoavf/ai-sessions-mcp/blob/main/install.sh"
+                    href="https://github.com/hcentelles/ai-sessions-mcp/blob/main/install.sh"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-muted-foreground hover:text-foreground underline"
@@ -91,7 +91,7 @@ export default async function Home() {
               <p className="text-xs text-muted-foreground mt-8 pt-6 border-t">
                 Also works as an{" "}
                 <a
-                  href="https://github.com/yoavf/ai-sessions-mcp#setup"
+                  href="https://github.com/hcentelles/ai-sessions-mcp#setup"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary hover:underline"

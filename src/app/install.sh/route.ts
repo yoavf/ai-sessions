@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { log } from "@/lib/logger";
 
 const INSTALL_SCRIPT_URL =
-  "https://raw.githubusercontent.com/yoavf/ai-sessions-mcp/main/install.sh";
+  "https://raw.githubusercontent.com/hcentelles/ai-sessions-mcp/main/install.sh";
 
 export async function GET() {
   try {

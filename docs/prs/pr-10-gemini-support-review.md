@@ -1,6 +1,6 @@
 # PR #10 Review: Gemini CLI Support
 
-**PR URL:** https://github.com/yoavf/ai-sessions/pull/10
+**PR URL:** https://github.com/hcentelles/ai-sessions/pull/10
 **Review Date:** 2025-10-19
 **Reviewers:** Automated PR Review Toolkit (code-reviewer, pr-test-analyzer, silent-failure-hunter)
 

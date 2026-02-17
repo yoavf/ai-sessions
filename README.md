@@ -33,7 +33,7 @@ A web platform for sharing and viewing AI coding session transcripts with beauti
 ### 1. Clone and Install
 
 ```bash
-git clone git@github.com:yoavf/ai-sessions.git
+git clone git@github.com:hcentelles/ai-sessions.git
 cd ai-sessions
 npm install
 ```
