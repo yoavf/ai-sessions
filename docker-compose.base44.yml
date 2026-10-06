@@ -1,0 +1,45 @@
+services:
+  postgres:
+    image: postgres:15
+    restart: on-failure
+    environment:
+      POSTGRES_USER: ai_sessions
+      POSTGRES_PASSWORD: ai_sessions_dev
+      POSTGRES_DB: ai_sessions
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ai_sessions"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    image: node:22
+    restart: on-failure
+    working_dir: /app
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://ai_sessions:ai_sessions_dev@postgres:5432/ai_sessions?schema=public
+      - NEXTAUTH_URL=http://localhost:3000
+      - BASE44_PUBLIC_HOST_SUFFIX=${BASE44_PUBLIC_HOST_SUFFIX}
+    env_file:
+      - ./.env.base44-defaults
+      - /run/base44/app.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["sh", "-ec", "npm ci && npx prisma generate && npx prisma migrate deploy && exec npx next dev --turbopack -H 0.0.0.0 -p 3000"]
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 90s
+
+volumes:
+  postgres-data:
